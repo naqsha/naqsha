@@ -11,6 +11,8 @@ module Naksha.Core.Position
        , equator, northPole, southPole
          -- ** Some common longitude
        , greenwich
+       -- ** Objects with elevation
+       , Elevated, elevate, altitude
        -- * A geographic position.
        , Location(..)
        ) where
@@ -129,6 +131,24 @@ second = (1/3600)
 -- | The coordinates of a point on the earth's surface.
 data Geo = Geo {-# UNPACK #-} !Latitude
                {-# UNPACK #-} !Longitude
+
+-- | An object that is elevated, i.e. that comes with an elevation.
+data Elevated a = Elevated { unElevate   :: a
+                           , altitude :: Double
+                           }
+
+-- | Attach an elevation to an object.
+elevate  :: a            -- ^ Stuff to which an elevation has to be attached.
+         -> Double       -- ^ Elevation in meters from mean-sealevel
+         -> Elevated a
+elevate  = Elevated
+
+
+instance Location a => Location (Elevated a) where
+  latitude     = latitude    . unElevate
+  longitude    = longitude   . unElevate
+  geoPosition  = geoPosition . unElevate
+
 
 instance Eq Geo where
   (==) (Geo xlat xlong) (Geo ylat ylong)
