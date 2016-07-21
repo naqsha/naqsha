@@ -1,3 +1,7 @@
+{-# LANGUAGE CPP                        #-}
+{-# LANGUAGE MultiParamTypeClasses      #-}
+{-# LANGUAGE TypeFamilies               #-}
+
 module Naksha.Core.Position
        ( -- * Latitude and longitude and geopositions.
          -- $latandlong$
@@ -11,9 +15,13 @@ module Naksha.Core.Position
 
        ) where
 
-import Data.Int
-import Data.Monoid
-import Data.Group
+import           Control.Monad               ( liftM )
+import           Data.Group
+import           Data.Int
+import           Data.Monoid
+import           Data.Vector.Unboxed         ( MVector(..), Vector)
+import qualified Data.Vector.Generic         as GV
+import qualified Data.Vector.Generic.Mutable as GVM
 
 -- $latandlong$
 --
@@ -40,7 +48,7 @@ import Data.Group
 -- that have a valid geo location.
 --
 
-newtype Latitude = Latitude Int64 deriving Eq
+newtype Latitude = Latitude { unLat :: Int64 } deriving Eq
 
 -- | Convert a real number to a latitude.
 lat :: Double -> Latitude
@@ -64,7 +72,7 @@ instance Group Latitude where
   invert (Latitude x) = Latitude (-x)
 
 -- | Longitude of a point
-newtype Longitude = Longitude Int64
+newtype Longitude = Longitude { unLong :: Int64 }
 
 -- | Convert a real number to a longitude.
 long :: Double -> Longitude
@@ -192,3 +200,170 @@ instance Location Geo where
   latitude  (Geo x _) = x
   longitude (Geo _ y) = y
   geoPosition         = id
+
+
+
+------------------- Making stuff suitable for unboxed vector. --------------------------
+
+newtype instance MVector s Latitude = MLatV (MVector s Int64)
+newtype instance Vector    Latitude = LatV  (Vector Int64)
+
+
+newtype instance MVector s Longitude = MLongV (MVector s Int64)
+newtype instance Vector    Longitude = LongV  (Vector Int64)
+
+
+newtype instance MVector s Geo = MGeoV (MVector s (Int64,Int64))
+newtype instance Vector    Geo = GeoV  (Vector    (Int64,Int64))
+
+
+-------------------- Instance for latitude --------------------------------------------
+
+instance GVM.MVector MVector Latitude where
+  {-# INLINE basicLength #-}
+  {-# INLINE basicUnsafeSlice #-}
+  {-# INLINE basicOverlaps #-}
+  {-# INLINE basicUnsafeNew #-}
+  {-# INLINE basicUnsafeReplicate #-}
+  {-# INLINE basicUnsafeRead #-}
+  {-# INLINE basicUnsafeWrite #-}
+  {-# INLINE basicClear #-}
+  {-# INLINE basicSet #-}
+  {-# INLINE basicUnsafeCopy #-}
+  {-# INLINE basicUnsafeGrow #-}
+  basicLength          (MLatV v)              = GVM.basicLength v
+  basicUnsafeSlice i n (MLatV v)              = MLatV $ GVM.basicUnsafeSlice i n v
+  basicOverlaps (MLatV v1) (MLatV v2)         = GVM.basicOverlaps v1 v2
+
+  basicUnsafeRead  (MLatV v) i                = Latitude `liftM` GVM.basicUnsafeRead v i
+  basicUnsafeWrite (MLatV v) i (Latitude x)   = GVM.basicUnsafeWrite v i x
+
+  basicClear (MLatV v)                        = GVM.basicClear v
+  basicSet   (MLatV v)         (Latitude x)   = GVM.basicSet v x
+
+  basicUnsafeNew n                            = MLatV `liftM` GVM.basicUnsafeNew n
+  basicUnsafeReplicate n     (Latitude x)     = MLatV `liftM` GVM.basicUnsafeReplicate n x
+  basicUnsafeCopy (MLatV v1) (MLatV v2)       = GVM.basicUnsafeCopy v1 v2
+  basicUnsafeGrow (MLatV v)   n               = MLatV `liftM` GVM.basicUnsafeGrow v n
+
+#if MIN_VERSION_vector(0,11,0)
+  basicInitialize (MLatV v)                   = GVM.basicInitialize v
+#endif
+
+instance GV.Vector Vector Latitude where
+  {-# INLINE basicUnsafeFreeze #-}
+  {-# INLINE basicUnsafeThaw #-}
+  {-# INLINE basicLength #-}
+  {-# INLINE basicUnsafeSlice #-}
+  {-# INLINE basicUnsafeIndexM #-}
+  {-# INLINE elemseq #-}
+  basicUnsafeFreeze (MLatV v)         = LatV  `liftM` GV.basicUnsafeFreeze v
+  basicUnsafeThaw (LatV v)            = MLatV `liftM` GV.basicUnsafeThaw v
+  basicLength (LatV v)                = GV.basicLength v
+  basicUnsafeSlice i n (LatV v)       = LatV $ GV.basicUnsafeSlice i n v
+  basicUnsafeIndexM (LatV v) i        = Latitude   `liftM`  GV.basicUnsafeIndexM v i
+
+  basicUnsafeCopy (MLatV mv) (LatV v) = GV.basicUnsafeCopy mv v
+  elemseq _ (Latitude x)              = GV.elemseq (undefined :: Vector a) x
+
+
+-------------------------------- Instance for Longitude -----------------------------------
+
+instance GVM.MVector MVector Longitude where
+  {-# INLINE basicLength #-}
+  {-# INLINE basicUnsafeSlice #-}
+  {-# INLINE basicOverlaps #-}
+  {-# INLINE basicUnsafeNew #-}
+  {-# INLINE basicUnsafeReplicate #-}
+  {-# INLINE basicUnsafeRead #-}
+  {-# INLINE basicUnsafeWrite #-}
+  {-# INLINE basicClear #-}
+  {-# INLINE basicSet #-}
+  {-# INLINE basicUnsafeCopy #-}
+  {-# INLINE basicUnsafeGrow #-}
+  basicLength          (MLongV v)             = GVM.basicLength v
+  basicUnsafeSlice i n (MLongV v)             = MLongV $ GVM.basicUnsafeSlice i n v
+  basicOverlaps (MLongV v1) (MLongV v2)       = GVM.basicOverlaps v1 v2
+
+  basicUnsafeRead  (MLongV v) i               = Longitude `liftM` GVM.basicUnsafeRead v i
+  basicUnsafeWrite (MLongV v) i (Longitude x) = GVM.basicUnsafeWrite v i x
+
+  basicClear (MLongV v)                       = GVM.basicClear v
+  basicSet   (MLongV v)         (Longitude x) = GVM.basicSet v x
+
+  basicUnsafeNew n                             = MLongV `liftM` GVM.basicUnsafeNew n
+  basicUnsafeReplicate n     (Longitude x)     = MLongV `liftM` GVM.basicUnsafeReplicate n x
+  basicUnsafeCopy (MLongV v1) (MLongV v2)      = GVM.basicUnsafeCopy v1 v2
+  basicUnsafeGrow (MLongV v)   n               = MLongV `liftM` GVM.basicUnsafeGrow v n
+
+#if MIN_VERSION_vector(0,11,0)
+  basicInitialize (MLongV v)                   = GVM.basicInitialize v
+#endif
+
+instance GV.Vector Vector Longitude where
+  {-# INLINE basicUnsafeFreeze #-}
+  {-# INLINE basicUnsafeThaw #-}
+  {-# INLINE basicLength #-}
+  {-# INLINE basicUnsafeSlice #-}
+  {-# INLINE basicUnsafeIndexM #-}
+  {-# INLINE elemseq #-}
+  basicUnsafeFreeze (MLongV v)          = LongV  `liftM` GV.basicUnsafeFreeze v
+  basicUnsafeThaw (LongV v)             = MLongV `liftM` GV.basicUnsafeThaw v
+  basicLength (LongV v)                 = GV.basicLength v
+  basicUnsafeSlice i n (LongV v)        = LongV $ GV.basicUnsafeSlice i n v
+  basicUnsafeIndexM (LongV v) i         = Longitude   `liftM`  GV.basicUnsafeIndexM v i
+
+  basicUnsafeCopy (MLongV mv) (LongV v) = GV.basicUnsafeCopy mv v
+  elemseq _ (Longitude x)               = GV.elemseq (undefined :: Vector a) x
+
+
+----------------------------- Instance for Geo ---------------------------------------------
+
+instance GVM.MVector MVector Geo where
+  {-# INLINE basicLength          #-}
+  {-# INLINE basicUnsafeSlice     #-}
+  {-# INLINE basicOverlaps        #-}
+  {-# INLINE basicUnsafeNew       #-}
+  {-# INLINE basicUnsafeReplicate #-}
+  {-# INLINE basicUnsafeRead      #-}
+  {-# INLINE basicUnsafeWrite     #-}
+  {-# INLINE basicClear           #-}
+  {-# INLINE basicSet             #-}
+  {-# INLINE basicUnsafeCopy      #-}
+  {-# INLINE basicUnsafeGrow      #-}
+  basicLength          (MGeoV v)         = GVM.basicLength v
+  basicUnsafeSlice i n (MGeoV v)         = MGeoV $ GVM.basicUnsafeSlice i n v
+  basicOverlaps (MGeoV v1) (MGeoV v2)    = GVM.basicOverlaps v1 v2
+
+  basicUnsafeRead  (MGeoV v) i           = do (x,y) <- GVM.basicUnsafeRead v i
+                                              return $ Geo (Latitude x) $ Longitude y
+  basicUnsafeWrite (MGeoV v) i (Geo x y) = GVM.basicUnsafeWrite v i (unLat x, unLong y)
+
+  basicClear (MGeoV v)                   = GVM.basicClear v
+  basicSet   (MGeoV v)         (Geo x y) = GVM.basicSet v (unLat x, unLong y)
+
+  basicUnsafeNew n                       = MGeoV `liftM` GVM.basicUnsafeNew n
+  basicUnsafeReplicate n     (Geo x y)   = MGeoV `liftM` GVM.basicUnsafeReplicate n (unLat x, unLong y)
+  basicUnsafeCopy (MGeoV v1) (MGeoV v2)  = GVM.basicUnsafeCopy v1 v2
+  basicUnsafeGrow (MGeoV v)   n          = MGeoV `liftM` GVM.basicUnsafeGrow v n
+
+#if MIN_VERSION_vector(0,11,0)
+  basicInitialize (MGeoV v)              = GVM.basicInitialize v
+#endif
+
+instance GV.Vector Vector Geo where
+  {-# INLINE basicUnsafeFreeze #-}
+  {-# INLINE basicUnsafeThaw #-}
+  {-# INLINE basicLength #-}
+  {-# INLINE basicUnsafeSlice #-}
+  {-# INLINE basicUnsafeIndexM #-}
+  {-# INLINE elemseq #-}
+  basicUnsafeFreeze (MGeoV v)         = GeoV  `liftM` GV.basicUnsafeFreeze v
+  basicUnsafeThaw (GeoV v)            = MGeoV `liftM` GV.basicUnsafeThaw v
+  basicLength (GeoV v)                = GV.basicLength v
+  basicUnsafeSlice i n (GeoV v)       = GeoV $ GV.basicUnsafeSlice i n v
+  basicUnsafeIndexM (GeoV v) i        =do (x,y) <- GV.basicUnsafeIndexM v i
+                                          return $ Geo (Latitude x) $ Longitude y
+
+  basicUnsafeCopy (MGeoV mv) (GeoV v) = GV.basicUnsafeCopy mv v
+  elemseq _ (Geo x y)                 = GV.elemseq (undefined :: Vector a) (unLat x, unLong y)
