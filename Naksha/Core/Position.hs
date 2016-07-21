@@ -1,17 +1,44 @@
 module Naksha.Core.Position
-       ( -- * Latitude and longitudes
-         Latitude, Longitude, lat, long
+       ( -- * Latitude and longitude and geopositions.
+         -- $latandlong$
+         Latitude, Longitude, Geo(..), Location
+         lat, long, minute, second
        -- ** Some common latitude
        , equator, northPole, southPole
          -- ** Some common longitude
        , greenwich
        -- * A geographic position.
-       , Geo
+
        ) where
 
 import Data.Int
 import Data.Monoid
 import Data.Group
+
+-- $latandlong$
+--
+-- A point on the globe is specified by giving its geo coordinates
+-- captures by the type `Geo`.  It is essentially a product of the
+-- `Latitude` and `Longitude of the point. All the three types,
+-- `Latitude`, `Longitude` and `Geo` are opaque types for type safety.
+--
+-- A latitude (or longitude) can be specified as a real number using the
+-- combinator `lat` (or `long`) respectively.
+--
+-- > kanpurLatitude :: Latitude
+-- > kanpurLatitude  = lat 26.4477777
+-- > kanpurLongitude :: Longitude
+-- > kanpurLongitude = long 80.3461111
+--
+-- If one wants to express it in minutes and seconds it is a bit more
+-- involved.
+--
+-- > kanpurLatitude = lat  $ 26 + 26 * minute + 52 * second
+-- > kanpurLatitude = long $ 80 + 20 * minute + 46 * second
+--
+-- Finally there is the `Location` class which captures elements
+-- that have a valid geo location.
+--
 
 newtype Latitude = Latitude Int64 deriving Eq
 
@@ -70,6 +97,15 @@ instance Group Longitude where
 equator :: Latitude
 equator = lat 0
 
+-- | The tropic of cancer/northern tropic
+northernTropic :: Latitude
+northernTropic = lat 23.43714
+
+-- | The tropic of capricorn/southern tropic
+southernTropic :: Latitude
+southernTropic = lat 23.43714
+
+
 -- | The latitude of north pole.
 northPole :: Latitude
 northPole = lat 90
@@ -78,10 +114,17 @@ northPole = lat 90
 southPole :: Latitude
 southPole = lat (-90)
 
-
 -- | The zero longitude.
 greenwich :: Longitude
 greenwich = long 0
+
+-- | Angle in minutes.
+minute  :: Double
+minute = 1/60
+
+-- | Angle in seconds.
+second :: Double
+second = (1/3600)
 
 
 -- | The coordinates of a point on the earth's surface.
@@ -98,7 +141,7 @@ instance Eq Geo where
 --------------- Helper functions for latitude and longitudes.
 
 -- | The scale of representation of latitude and longitude. Currently
--- it is number 10^7
+-- it is number 10^7.
 geoScale :: Num a => a
 geoScale = 10000000
 
@@ -139,7 +182,7 @@ normPosLong pLong | r <= oneEighty = r
 -- | Objects that have a location on the globe. Minimum complete
 -- implementation either the two functions `longitude` and `latitude`
 -- or the single function `geoPosition`.
-class GeoLocation a where
+class Location a where
   -- | The latitude of the object.
   latitude    :: a -> Latitude
 
@@ -154,7 +197,7 @@ class GeoLocation a where
   longitude     = longitude . geoPosition
 
 
-instance GeoLocation Geo where
+instance Location Geo where
   latitude  (Geo x _) = x
   longitude (Geo _ y) = y
   geoPosition         = id
