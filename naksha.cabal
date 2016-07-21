@@ -17,6 +17,7 @@ build-type:    Simple
 cabal-version: >=1.10
 
 library
+  ghc-options: -Wall
   build-depends: base >=4.6                   && <4.7
                , groups < 5
   exposed-modules: Naksha.Core.Position
