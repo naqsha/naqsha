@@ -2,7 +2,7 @@ module Naksha.Core.Position
        ( -- * Latitude and longitude and geopositions.
          -- $latandlong$
          Latitude, Longitude, Geo(..), Location
-         lat, long, minute, second
+       , lat, long, minute, second
        -- ** Some common latitude
        , equator, northPole, southPole
          -- ** Some common longitude
@@ -96,15 +96,6 @@ instance Group Longitude where
 -- | The latitude of equator.
 equator :: Latitude
 equator = lat 0
-
--- | The tropic of cancer/northern tropic
-northernTropic :: Latitude
-northernTropic = lat 23.43714
-
--- | The tropic of capricorn/southern tropic
-southernTropic :: Latitude
-southernTropic = lat 23.43714
-
 
 -- | The latitude of north pole.
 northPole :: Latitude
