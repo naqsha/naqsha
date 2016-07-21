@@ -5,14 +5,14 @@
 module Naksha.Core.Position
        ( -- * Latitude and longitude and geopositions.
          -- $latandlong$
-         Latitude, Longitude, Geo(..), Location
+         Latitude, Longitude, Geo(..)
        , lat, long, minute, second
        -- ** Some common latitude
        , equator, northPole, southPole
          -- ** Some common longitude
        , greenwich
        -- * A geographic position.
-
+       , Location(..)
        ) where
 
 import           Control.Monad               ( liftM )
@@ -26,12 +26,12 @@ import qualified Data.Vector.Generic.Mutable as GVM
 -- $latandlong$
 --
 -- A point on the globe is specified by giving its geo coordinates
--- captures by the type `Geo`.  It is essentially a product of the
--- `Latitude` and `Longitude of the point. All the three types,
--- `Latitude`, `Longitude` and `Geo` are opaque types for type safety.
+-- captures by the type `Geo`.  It is essentially a pair of the
+-- `Latitude` and `Longitude` of the point.
 --
--- A latitude (or longitude) can be specified as a real number using the
--- combinator `lat` (or `long`) respectively.
+-- The types `Latitude` and `Longitude` are opaque types and they are
+-- constructed using the smart constructors `lat` and `long`
+-- respectively.
 --
 -- > kanpurLatitude :: Latitude
 -- > kanpurLatitude  = lat 26.4477777
