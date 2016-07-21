@@ -21,7 +21,7 @@ import           Control.Monad               ( liftM )
 import           Data.Group
 import           Data.Int
 import           Data.Monoid
-import           Data.Vector.Unboxed         ( MVector(..), Vector)
+import           Data.Vector.Unboxed         ( MVector(..), Vector, Unbox)
 import qualified Data.Vector.Generic         as GV
 import qualified Data.Vector.Generic.Mutable as GVM
 
@@ -132,9 +132,9 @@ second = (1/3600)
 data Geo = Geo {-# UNPACK #-} !Latitude
                {-# UNPACK #-} !Longitude
 
--- | An object that is elevated, i.e. that comes with an elevation.
+-- | An object with a possible elevation, i.e. that comes with an elevation.
 data Elevated a = Elevated { unElevate   :: a
-                           , altitude :: Double
+                           , altitude    :: Double
                            }
 
 -- | Attach an elevation to an object.
@@ -387,3 +387,57 @@ instance GV.Vector Vector Geo where
 
   basicUnsafeCopy (MGeoV mv) (GeoV v) = GV.basicUnsafeCopy mv v
   elemseq _ (Geo x y)                 = GV.elemseq (undefined :: Vector a) (unLat x, unLong y)
+
+
+--------------------------------- Instance for Elevated elements -------------------------------
+
+newtype instance MVector s (Elevated a) = MEV (MVector s (a, Double))
+newtype instance Vector    (Elevated a) = EV  (Vector (a,Double))
+
+instance Unbox a => GVM.MVector MVector (Elevated a) where
+  {-# INLINE basicLength          #-}
+  {-# INLINE basicUnsafeSlice     #-}
+  {-# INLINE basicOverlaps        #-}
+  {-# INLINE basicUnsafeNew       #-}
+  {-# INLINE basicUnsafeReplicate #-}
+  {-# INLINE basicUnsafeRead      #-}
+  {-# INLINE basicUnsafeWrite     #-}
+  {-# INLINE basicClear           #-}
+  {-# INLINE basicSet             #-}
+  {-# INLINE basicUnsafeCopy      #-}
+  {-# INLINE basicUnsafeGrow      #-}
+  basicLength          (MEV v)       = GVM.basicLength v
+  basicUnsafeSlice i n (MEV v)       = MEV $ GVM.basicUnsafeSlice i n v
+  basicOverlaps (MEV v1) (MEV v2)    = GVM.basicOverlaps v1 v2
+
+  basicUnsafeRead  (MEV v) i         = uncurry Elevated `liftM` GVM.basicUnsafeRead v i
+
+  basicUnsafeWrite (MEV v) i ea      = GVM.basicUnsafeWrite v i (unElevate ea, altitude ea)
+
+  basicClear (MEV v)                 = GVM.basicClear v
+  basicSet   (MEV v)         ea      = GVM.basicSet v (unElevate ea, altitude ea)
+
+  basicUnsafeNew n                   = MEV `liftM` GVM.basicUnsafeNew n
+  basicUnsafeReplicate n     ea      = MEV `liftM` GVM.basicUnsafeReplicate n (unElevate ea, altitude ea)
+  basicUnsafeCopy (MEV v1) (MEV v2)  = GVM.basicUnsafeCopy v1 v2
+  basicUnsafeGrow (MEV v)   n        = MEV `liftM` GVM.basicUnsafeGrow v n
+
+#if MIN_VERSION_vector(0,11,0)
+  basicInitialize (MEV v)              = GVM.basicInitialize v
+#endif
+
+instance Unbox a => GV.Vector Vector (Elevated a) where
+  {-# INLINE basicUnsafeFreeze #-}
+  {-# INLINE basicUnsafeThaw #-}
+  {-# INLINE basicLength #-}
+  {-# INLINE basicUnsafeSlice #-}
+  {-# INLINE basicUnsafeIndexM #-}
+  {-# INLINE elemseq #-}
+  basicUnsafeFreeze (MEV v)       = EV  `liftM` GV.basicUnsafeFreeze v
+  basicUnsafeThaw (EV v)          = MEV `liftM` GV.basicUnsafeThaw v
+  basicLength (EV v)              = GV.basicLength v
+  basicUnsafeSlice i n (EV v)     = EV $ GV.basicUnsafeSlice i n v
+  basicUnsafeIndexM (EV v) i      = uncurry Elevated `liftM` GV.basicUnsafeIndexM v i
+
+  basicUnsafeCopy (MEV mv) (EV v) = GV.basicUnsafeCopy mv v
+  elemseq _ ea                    = GV.elemseq (undefined :: Vector a) (unElevate ea, altitude ea)
