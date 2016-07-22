@@ -2,7 +2,8 @@
 {-# LANGUAGE MultiParamTypeClasses      #-}
 {-# LANGUAGE TypeFamilies               #-}
 
-module Naksha.Core.Position
+-- | This module captures position of a point on the globe.
+module Naksha.Position
        ( -- * Latitude and longitude and geopositions.
          -- $latandlong$
          Latitude, Longitude, Geo(..)
