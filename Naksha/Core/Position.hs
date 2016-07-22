@@ -12,7 +12,8 @@ module Naksha.Core.Position
          -- ** Some common longitude
        , greenwich
        -- ** Objects with elevation
-       , Elevated, elevate, altitude
+       , Elevated, elevate, altitude, Position
+       , MaybeElevated(..)
        -- * A geographic position.
        , Location(..)
        ) where
@@ -137,6 +138,9 @@ data Elevated a = Elevated { unElevate   :: a
                            , altitude    :: Double
                            }
 
+-- | A point is a Geo location together with an elevation.
+type Position = Elevated Geo
+
 -- | Attach an elevation to an object.
 elevate  :: a            -- ^ Stuff to which an elevation has to be attached.
          -> Double       -- ^ Elevation in meters from mean-sealevel
@@ -149,6 +153,9 @@ instance Location a => Location (Elevated a) where
   longitude    = longitude   . unElevate
   geoPosition  = geoPosition . unElevate
 
+class Location a => MaybeElevated a where
+  getAltitude :: a -> Maybe Double
+  getPosition :: a -> Maybe Position
 
 instance Eq Geo where
   (==) (Geo xlat xlong) (Geo ylat ylong)
