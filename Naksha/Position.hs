@@ -52,6 +52,10 @@ import qualified Data.Vector.Generic.Mutable as GVM
 -- that have a valid geo location.
 --
 
+
+----------------------------- Lattitude ----------------------------------
+
+-- | The latitude of a point.
 newtype Latitude = Latitude { unLat :: Int64 } deriving Eq
 
 -- | Convert a real number to a latitude.
@@ -75,7 +79,21 @@ instance Monoid Latitude where
 instance Group Latitude where
   invert (Latitude x) = Latitude (-x)
 
--- | Longitude of a point
+-- | The latitude of equator.
+equator :: Latitude
+equator = lat 0
+
+-- | The latitude of north pole.
+northPole :: Latitude
+northPole = lat 90
+
+-- | The latitude of south pole.
+southPole :: Latitude
+southPole = lat (-90)
+
+-------------------------- Longitude ------------------------------------------
+
+-- | The longitude of a point
 newtype Longitude = Longitude { unLong :: Int64 }
 
 -- | Convert a real number to a longitude.
@@ -104,35 +122,40 @@ instance Monoid Longitude where
 instance Group Longitude where
   invert (Longitude x) = Longitude (-x)
 
-
--- | The latitude of equator.
-equator :: Latitude
-equator = lat 0
-
--- | The latitude of north pole.
-northPole :: Latitude
-northPole = lat 90
-
--- | The latitude of south pole.
-southPole :: Latitude
-southPole = lat (-90)
-
 -- | The zero longitude.
 greenwich :: Longitude
 greenwich = long 0
-
--- | Angle in minutes.
-minute  :: Double
-minute = 1/60
-
--- | Angle in seconds.
-second :: Double
-second = (1/3600)
 
 
 -- | The coordinates of a point on the earth's surface.
 data Geo = Geo {-# UNPACK #-} !Latitude
                {-# UNPACK #-} !Longitude
+
+
+-- | Objects that have a location on the globe. Minimum complete
+-- implementation either the two functions `longitude` and `latitude`
+-- or the single function `geoPosition`.
+class Location a where
+  -- | The latitude of the object.
+  latitude    :: a -> Latitude
+
+  -- | The longitude of the object.
+  longitude   :: a -> Longitude
+
+  -- | The geo-Position of the object.
+  geoPosition :: a -> Geo
+
+  geoPosition a = Geo (latitude a) (longitude a)
+  latitude      = latitude  . geoPosition
+  longitude     = longitude . geoPosition
+
+
+instance Location Geo where
+  latitude  (Geo x _) = x
+  longitude (Geo _ y) = y
+  geoPosition         = id
+
+
 
 -- | An object with a possible elevation, i.e. that comes with an elevation.
 data Elevated a = Elevated { unElevate   :: a
@@ -167,20 +190,37 @@ instance Eq Geo where
 
 --------------- Helper functions for latitude and longitudes.
 
+
+-- | Angle of 1 minute in decimals. You can use `42 * minute` for
+-- expressing an angle of 42 minutes.
+minute  :: Double
+minute = 1/60
+
+-- | Angle of 1 second in decimals. You can use `42 * second` for
+-- expressing an angle of 42 seconds.
+second :: Double
+second = (1/3600)
+
+--------------------------- Internal helper functions ------------------------
+
 -- | The scale of representation of latitude and longitude. Currently
 -- it is number 10^7.
 geoScale :: Num a => a
 geoScale = 10000000
 
+-- | scaled 90°.
 ninety     :: Int64
 ninety     = 90  * geoScale
 
+-- | scaled 180°.
 oneEighty  :: Int64
 oneEighty  = 180 * geoScale
 
+-- | scaled 270°.
 twoSeventy :: Int64
 twoSeventy = 270 * geoScale
 
+-- | scaled 360°.
 threeSixty :: Int64
 threeSixty = 360 * geoScale
 
@@ -205,30 +245,6 @@ normPosLong :: Int64 -> Int64
 normPosLong pLong | r <= oneEighty = r
                   | otherwise      = r - threeSixty
   where r   = pLong `rem` threeSixty
-
--- | Objects that have a location on the globe. Minimum complete
--- implementation either the two functions `longitude` and `latitude`
--- or the single function `geoPosition`.
-class Location a where
-  -- | The latitude of the object.
-  latitude    :: a -> Latitude
-
-  -- | The longitude of the object.
-  longitude   :: a -> Longitude
-
-  -- | The geo-Position of the object.
-  geoPosition :: a -> Geo
-
-  geoPosition a = Geo (latitude a) (longitude a)
-  latitude      = latitude  . geoPosition
-  longitude     = longitude . geoPosition
-
-
-instance Location Geo where
-  latitude  (Geo x _) = x
-  longitude (Geo _ y) = y
-  geoPosition         = id
-
 
 
 ------------------- Making stuff suitable for unboxed vector. --------------------------
