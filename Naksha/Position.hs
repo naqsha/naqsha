@@ -7,7 +7,7 @@ module Naksha.Position
        ( -- * Latitude and longitude and geopositions.
          -- $latandlong$
          Latitude, Longitude, Geo(..)
-       , lat, long, minute, second
+       , lat, long, minute, second,
        -- ** Some common latitude
        , equator, northPole, southPole
          -- ** Some common longitude
@@ -17,6 +17,9 @@ module Naksha.Position
        , MaybeElevated(..)
        -- * A geographic position.
        , Location(..)
+
+       -- * Distance calculation.
+       , dHvS, dHvS'
        ) where
 
 import           Control.Monad               ( liftM )
@@ -56,28 +59,18 @@ import qualified Data.Vector.Generic.Mutable as GVM
 ----------------------------- Lattitude ----------------------------------
 
 -- | The latitude of a point.
-newtype Latitude = Latitude { unLat :: Int64 } deriving Eq
+newtype Latitude = Latitude { unLat :: Double } deriving Show
 
--- | Convert a real number to a latitude.
+-- | Create a latitude from double.
 lat :: Double -> Latitude
-lat = Latitude . normLat . floor . (*geoScale)
+lat  = Latitude
 
-instance Show Latitude where
-  show (Latitude x) = show int ++ "." ++ show frac
-    where (int,frac) = x `quotRem` geoScale
+-- | Normalise latitude in the range (-90,90)
+normaliseLat :: Latitude -> Latitude
+normaliseLat = lat . normLat . unLat
 
-instance Monoid Latitude where
-  {-# INLINE mempty #-}
-  mempty  = Latitude 0
-
-  {-# INLINE mappend #-}
-  mappend (Latitude x) (Latitude y) = Latitude $ normLat $ x + y
-
-  {-# INLINE mconcat #-}
-  mconcat = foldr mappend mempty
-
-instance Group Latitude where
-  invert (Latitude x) = Latitude (-x)
+instance Eq Latitude where
+  (==) l1 l2 = unLat (normaliseLat l1) == unLat (normaliseLat l2)
 
 -- | The latitude of equator.
 equator :: Latitude
@@ -94,33 +87,18 @@ southPole = lat (-90)
 -------------------------- Longitude ------------------------------------------
 
 -- | The longitude of a point
-newtype Longitude = Longitude { unLong :: Int64 }
+newtype Longitude = Longitude { unLong :: Double } deriving Show
 
--- | Convert a real number to a longitude.
+-- | Create longitude from a double.
 long :: Double -> Longitude
-long = Longitude . normLong . floor . (*geoScale)
+long = Longitude
 
-instance Eq Longitude where
-  (==) (Longitude x) (Longitude y)
-    | abs x == oneEighty = abs y == oneEighty -- 180° E = 180 = -180 = 180° W.
-    | otherwise          = x == y
+-- | Normalise longitude to the range (-180, 180).
+normaliseLong :: Longitude -> Longitude
+normaliseLong = long . normLong . unLong
 
-instance Show Longitude where
-  show (Longitude x) = show int ++ "." ++ show frac
-    where (int,frac) = x `quotRem` geoScale
-
-instance Monoid Longitude where
-  {-# INLINE mempty #-}
-  mempty  = Longitude 0
-
-  {-# INLINE mappend #-}
-  mappend (Longitude x) (Longitude y) = Longitude $ normLong $ x + y
-
-  {-# INLINE mconcat #-}
-  mconcat = foldr mappend mempty
-
-instance Group Longitude where
-  invert (Longitude x) = Longitude (-x)
+instance Eq Longitude  where
+  (==) l1 l2 = unLong (normaliseLong l1) == unLong (normaliseLong l2)
 
 -- | The zero longitude.
 greenwich :: Longitude
@@ -187,6 +165,34 @@ instance Eq Geo where
     | xlat == southPole = ylat == southPole  -- longitude irrelevant for south pole
     | otherwise         = xlat == ylat && xlong == ylong
 
+--------------------- Distance calculation -------------------------------------
+
+-- | Mean earth radius in meters.
+rMean  :: Double
+rMean = 637100.88
+
+
+-- | This combinator computes the distance between two geo-locations
+-- using the haversine distance between two points.
+dHvS :: Geo -> Geo -> Double
+dHvS = dHvS' rMean
+
+-- | A generalisation of dHaverSine that takes the radius as argument.
+dHvS' :: Double -> Geo -> Geo -> Double
+dHvS' r g1 g2 = r * c
+  where p1    = rad $ unLat  $ latitude  g1
+        l1    = rad $ unLong $ longitude g1
+        p2    = rad $ unLat  $ latitude  g2
+        l2    = rad $ unLong $ longitude g2
+        dp    = p2 - p1
+        dl    = l2 - l1
+        a     = (sin $ dp/2.0)^(2 :: Int) + cos p1 * cos p2 * ((sin $ dl/2)^(2 :: Int))
+        c     = 2 * atan2 (sqrt a) (sqrt (1 - a))
+
+
+-- | Convert to radians
+rad  :: Double -> Double
+rad x = (pi * x) /180
 
 --------------- Helper functions for latitude and longitudes.
 
@@ -203,62 +209,44 @@ second = (1/3600)
 
 --------------------------- Internal helper functions ------------------------
 
--- | The scale of representation of latitude and longitude. Currently
--- it is number 10^7.
-geoScale :: Num a => a
-geoScale = 10000000
-
--- | scaled 90°.
-ninety     :: Int64
-ninety     = 90  * geoScale
-
--- | scaled 180°.
-oneEighty  :: Int64
-oneEighty  = 180 * geoScale
-
--- | scaled 270°.
-twoSeventy :: Int64
-twoSeventy = 270 * geoScale
-
--- | scaled 360°.
-threeSixty :: Int64
-threeSixty = 360 * geoScale
 
 -- | Function to normalise latitudes. It essentially is a saw-tooth
 -- function of period 360 with max values 90.
-normLat :: Int64 -> Int64
+normLat :: Double -> Double
 normLat y = signum y * normPosLat (abs y)
 
 -- | Normalise a positive latitude.
-normPosLat :: Int64 -> Int64
-normPosLat pLat | r <= ninety     = r
-                | r <= twoSeventy = oneEighty - r
-                | otherwise       = r - threeSixty
-  where r = pLat `rem` threeSixty
+normPosLat :: Double -> Double
+normPosLat pLat | r <= 90    = r
+                | r <= 270   = 180 - r
+                | otherwise  = r -  360
+  where f = snd (properFraction $ pLat / 360 :: (Int, Double))
+        r  = f * 360
 
 -- | Function to normalise longitude.
-normLong :: Int64 -> Int64
+normLong :: Double -> Double
 normLong y = signum y * normPosLong (abs y)
 
 -- | Normalise a positive longitude.
-normPosLong :: Int64 -> Int64
-normPosLong pLong | r <= oneEighty = r
-                  | otherwise      = r - threeSixty
-  where r   = pLong `rem` threeSixty
+normPosLong :: Double -> Double
+normPosLong pLong | r <= 180  = r
+                  | otherwise = r - 360
+  where f  = snd (properFraction $ pLong / 360 :: (Int, Double))
+        r  = f * 360
 
 
 ------------------- Making stuff suitable for unboxed vector. --------------------------
 
-newtype instance MVector s Latitude = MLatV (MVector s Int64)
-newtype instance Vector    Latitude = LatV  (Vector Int64)
+newtype instance MVector s Latitude = MLatV (MVector s Double)
+newtype instance Vector    Latitude = LatV  (Vector Double)
 
 
-newtype instance MVector s Longitude = MLongV (MVector s Int64)
-newtype instance Vector    Longitude = LongV  (Vector Int64)
+newtype instance MVector s Longitude = MLongV (MVector s Double)
+newtype instance Vector    Longitude = LongV  (Vector Double)
 
 
-newtype instance MVector s Geo = MGeoV (MVector s (Int64,Int64))
-newtype instance Vector    Geo = GeoV  (Vector    (Int64,Int64))
+newtype instance MVector s Geo = MGeoV (MVector s (Double,Double))
+newtype instance Vector    Geo = GeoV  (Vector    (Double,Double))
 
 
 -------------------- Instance for latitude --------------------------------------------
