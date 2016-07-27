@@ -19,7 +19,13 @@ cabal-version: >=1.10
 library
   ghc-options: -Wall
   build-depends: base            >= 4.6  && <4.7
+               , containers
                , groups                     < 5
+               , text
                , vector
+
   exposed-modules: Naksha.Position
+                 , Naksha.Feature
+                 , Naksha.Feature.Name
+  other-modules: Naksha.Feature.Internal
   default-language: Haskell2010
