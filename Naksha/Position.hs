@@ -6,8 +6,9 @@
 module Naksha.Position
        ( -- * Latitude and longitude and geopositions.
          -- $latandlong$
-         Latitude, Longitude, Geo(..)
-       , lat, long, minute, second,
+         Latitude, Longitude, Geo
+       , Angular(..)
+
        -- ** Some common latitude
        , equator, northPole, southPole
          -- ** Some common longitude
@@ -19,13 +20,12 @@ module Naksha.Position
        , Location(..)
 
        -- * Distance calculation.
-       , dHvS, dHvS'
+       , dHvS, dHvS', rMean
        ) where
 
 import           Control.Monad               ( liftM )
-import           Data.Group
-import           Data.Int
 import           Data.Monoid
+import           Data.Group
 import           Data.Vector.Unboxed         ( MVector(..), Vector, Unbox)
 import qualified Data.Vector.Generic         as GV
 import qualified Data.Vector.Generic.Mutable as GVM
@@ -36,79 +36,112 @@ import qualified Data.Vector.Generic.Mutable as GVM
 -- captures by the type `Geo`.  It is essentially a pair of the
 -- `Latitude` and `Longitude` of the point.
 --
--- The types `Latitude` and `Longitude` are opaque types and they are
--- constructed using the smart constructors `lat` and `long`
+-- Latitude and Longitude are instances of the class `Angular`. So the
+-- can be expressed in either degrees or radians using `deg` or `rad`
 -- respectively.
 --
 -- > kanpurLatitude :: Latitude
--- > kanpurLatitude  = lat 26.4477777
+-- > kanpurLatitude  = deg 26.4477777
 -- > kanpurLongitude :: Longitude
--- > kanpurLongitude = long 80.3461111
+-- > kanpurLongitude = deg 80.3461111
 --
--- If one wants to express it in minutes and seconds it is a bit more
--- involved.
+-- Latitudes and longitudes are instances of `Monoid` where the monoid
+-- instance adds up the angle. They are also instances of `Group`
+-- where `invert` is the angle in the opposite direction, i.e for
+-- latitudes, `invert` converts from North to South and vice-versa and
+-- for longitudes `invert` converts from East to West.
 --
--- > kanpurLatitude = lat  $ 26 + 26 * minute + 52 * second
--- > kanpurLatitude = long $ 80 + 20 * minute + 46 * second
+-- One can exploit these instances to express latitudes and longitudes
+-- in degrees, minutes and seconds as follows
 --
--- Finally there is the `Location` class which captures elements
--- that have a valid geo location.
+-- > kanpurLatitude = deg 26 <> minute 26 <> second 52
+-- > kanpurLongitude = deg 80 <> minute 20 <> second 46
 --
+-- Be careful with negative quantities though. To express a latitude
+-- of -1° 2′ 3″ one should use
+--
+-- > someNegLatitude :: Latitude
+-- > someNegLatitude = invert $ deg 1 <> minute 2 <> second 3  -- correct
+--
+-- and not
+--
+-- > someNegLatitude = deg (-1) <> minute 2 <> second 3  -- wrong
+--
+-- Finally, we have the type `Geo` which captures positions on the globe.
+--
+
+
 
 
 ----------------------------- Lattitude ----------------------------------
 
--- | The latitude of a point.
+-- | The latitude of a point. Positive denotes North of Equator where as negative
+-- South.
+
 newtype Latitude = Latitude { unLat :: Double } deriving Show
 
--- | Create a latitude from double.
-lat :: Double -> Latitude
-lat  = Latitude
 
--- | Normalise latitude in the range (-90,90)
-normaliseLat :: Latitude -> Latitude
-normaliseLat = lat . normLat . unLat
+
+
+instance Angular Latitude where
+
+  deg   = Latitude
+  toDeg = unLat
+  normalise = Latitude .  normLat . unLat
 
 instance Eq Latitude where
-  (==) l1 l2 = unLat (normaliseLat l1) == unLat (normaliseLat l2)
+  (==) l1 l2 = unLat (normalise l1) == unLat (normalise l2)
+
+instance Monoid Latitude where
+  mempty  = Latitude 0
+  mappend x y = Latitude $ unLat (normalise x)  + unLat (normalise y)
+
+instance Group Latitude where
+  invert  = Latitude . negate . unLat . normalise
 
 -- | The latitude of equator.
 equator :: Latitude
-equator = lat 0
+equator = Latitude 0
 
 -- | The latitude of north pole.
 northPole :: Latitude
-northPole = lat 90
+northPole = Latitude 90
 
 -- | The latitude of south pole.
 southPole :: Latitude
-southPole = lat (-90)
+southPole = Latitude (-90)
+
+
 
 -------------------------- Longitude ------------------------------------------
 
--- | The longitude of a point
+-- | The longitude of a point. Positive denotes East of the Greenwich meridian
+-- where as negative denotes West.
 newtype Longitude = Longitude { unLong :: Double } deriving Show
 
--- | Create longitude from a double.
-long :: Double -> Longitude
-long = Longitude
-
--- | Normalise longitude to the range (-180, 180).
-normaliseLong :: Longitude -> Longitude
-normaliseLong = long . normLong . unLong
+instance Angular Longitude where
+  deg       = Longitude
+  toDeg     = unLong
+  normalise = Longitude .  normLong . unLong
 
 instance Eq Longitude  where
-  (==) l1 l2 = unLong (normaliseLong l1) == unLong (normaliseLong l2)
+  (==) l1 l2 = unLong (normalise l1) == unLong (normalise l2)
+
+instance Monoid Longitude where
+  mempty  = Longitude 0
+  mappend x y = Longitude $ unLong (normalise x)  + unLong (normalise y)
+
+
+instance Group Longitude where
+  invert  = Longitude . negate . unLong . normalise
 
 -- | The zero longitude.
 greenwich :: Longitude
-greenwich = long 0
-
+greenwich = Longitude 0
 
 -- | The coordinates of a point on the earth's surface.
 data Geo = Geo {-# UNPACK #-} !Latitude
                {-# UNPACK #-} !Longitude
-
 
 -- | Objects that have a location on the globe. Minimum complete
 -- implementation either the two functions `longitude` and `latitude`
@@ -126,6 +159,44 @@ class Location a where
   geoPosition a = Geo (latitude a) (longitude a)
   latitude      = latitude  . geoPosition
   longitude     = longitude . geoPosition
+
+-- | Measurements that are angular. Minimal complete implemenation
+-- give one of `deg` or `rad`, one of `toDeg` or `toRad`.
+class Angular a where
+
+  -- | Express angular quantity in degrees.
+  deg   :: Double -> a
+
+  -- | Express angular quantity in minutes.
+  minute :: Double -> a
+
+  -- | Express angular quantity in seconds.
+  second :: Double -> a
+
+  -- | Express angular quantity in radians
+  rad  :: Double -> a
+
+  -- | Get the angle in degree
+  toDeg :: a  -> Double
+
+  -- | Get the angle in radians.
+  toRad :: a -> Double
+
+  -- | Normalise the quantity
+  normalise  :: a -> a
+
+
+  rad    = deg . (/180) . (pi*)
+  deg    = rad . (/pi)  . (180*)
+
+  toDeg  = (/pi)  . (180*) . toRad
+  toRad  = (/180) . (pi*)  . toDeg
+
+  minute = deg . (/60)
+  second = deg . (/3600)
+
+
+
 
 
 instance Location Geo where
@@ -167,45 +238,39 @@ instance Eq Geo where
 
 --------------------- Distance calculation -------------------------------------
 
--- | Mean earth radius in meters.
+-- | Mean earth radius in meters. This is the radius used in the
+-- haversine formula of `dHvs`.
 rMean  :: Double
 rMean = 637100.88
 
 
--- | This combinator computes the distance between two geo-locations
+-- | This combinator computes the distance (in meters) between two geo-locations
 -- using the haversine distance between two points.
-dHvS :: Geo -> Geo -> Double
+dHvS :: Geo    -- ^ Point 1
+     -> Geo    -- ^ Point 2
+     -> Double -- ^ Distance in meters.
 dHvS = dHvS' rMean
 
--- | A generalisation of dHaverSine that takes the radius as argument.
-dHvS' :: Double -> Geo -> Geo -> Double
+-- | A generalisation of `dHvS` that takes the radius as
+-- argument. Will work on Mars for example once we set up a latitude
+-- longitude system there. For this function units does not matter ---
+-- the computed distance is in the same unit as the input radius. We have
+--
+-- > dHvS = dHvS' rMean
+--
+dHvS' :: Double  -- ^ Radius (in whatever unit)
+      -> Geo     -- ^ Point 1
+      -> Geo     -- ^ Point 2
+      -> Double
 dHvS' r g1 g2 = r * c
-  where p1    = rad $ unLat  $ latitude  g1
-        l1    = rad $ unLong $ longitude g1
-        p2    = rad $ unLat  $ latitude  g2
-        l2    = rad $ unLong $ longitude g2
+  where p1    = toRad $ latitude  g1
+        l1    = toRad $ longitude g1
+        p2    = toRad $ latitude  g2
+        l2    = toRad $ longitude g2
         dp    = p2 - p1
         dl    = l2 - l1
         a     = (sin $ dp/2.0)^(2 :: Int) + cos p1 * cos p2 * ((sin $ dl/2)^(2 :: Int))
         c     = 2 * atan2 (sqrt a) (sqrt (1 - a))
-
-
--- | Convert to radians
-rad  :: Double -> Double
-rad x = (pi * x) /180
-
---------------- Helper functions for latitude and longitudes.
-
-
--- | Angle of 1 minute in decimals. You can use `42 * minute` for
--- expressing an angle of 42 minutes.
-minute  :: Double
-minute = 1/60
-
--- | Angle of 1 second in decimals. You can use `42 * second` for
--- expressing an angle of 42 seconds.
-second :: Double
-second = (1/3600)
 
 --------------------------- Internal helper functions ------------------------
 
