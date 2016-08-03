@@ -88,9 +88,9 @@ instance Show Latitude where
   show = show . unLat
 
 instance Angular Latitude where
-  deg         = Latitude . deg
-  toDeg       = toDeg    . unLat
-  normalise   = Latitude . Angle . normLat . unAngle . unLat
+  deg         = normalise . Latitude . deg
+  toDeg       = toDeg     . unLat
+  normalise   = Latitude  . Angle . normLat . unAngle . unLat
 
 instance Eq Latitude where
   (==) l1 l2 = unAngle (unLat $ normalise l1) == unAngle (unLat $ normalise l2)
@@ -118,27 +118,31 @@ southPole = Latitude $ Angle (-90)
 
 -- | The longitude of a point. Positive denotes East of the Greenwich meridian
 -- where as negative denotes West.
-newtype Longitude = Longitude { unLong :: Double } deriving Show
+newtype Longitude = Longitude { unLong :: Angle }
+
+
+instance Show Longitude where
+  show = show . unLong
 
 instance Angular Longitude where
-  deg       = Longitude
-  toDeg     = unLong
-  normalise = Longitude .  normLong . unLong
+  deg       = normalise . Longitude . deg
+  toDeg     = toDeg     . unLong
+  normalise = Longitude . Angle .  normLong . unAngle . unLong
 
 instance Eq Longitude  where
-  (==) l1 l2 = unLong (normalise l1) == unLong (normalise l2)
+  (==) l1 l2 = unAngle (unLong $ normalise l1) == unAngle (unLong $ normalise l2)
 
 instance Monoid Longitude where
-  mempty  = Longitude 0
-  mappend x y = Longitude $ unLong (normalise x)  + unLong (normalise y)
+  mempty      = greenwich
+  mappend x y = normalise $ Longitude $ Angle $ unAngle (unLong x)  + unAngle (unLong y)
 
 
 instance Group Longitude where
-  invert  = Longitude . negate . unLong . normalise
+  invert  = Longitude . Angle . negate . unAngle . unLong . normalise
 
 -- | The zero longitude.
 greenwich :: Longitude
-greenwich = Longitude 0
+greenwich = Longitude $ Angle 0
 
 -- | The coordinates of a point on the earth's surface.
 data Geo = Geo {-# UNPACK #-} !Latitude
@@ -332,23 +336,22 @@ normLat y = signum y * normPosLat (abs y)
 
 -- | Normalise a positive latitude.
 normPosLat :: Int64 -> Int64
-normPosLat x | pa <= ninety     =  pa
-             | pa <= twoSeventy =  oneEighty - pa
-             | otherwise        =  pa  - threeSixty
-    where pa  = x `rem` threeSixty
+normPosLat x | r <= ninety     =  r
+             | r <= twoSeventy =  oneEighty - r
+             | otherwise       =  r  - threeSixty
+    where r  = x `rem` threeSixty
 
 
 
 -- | Function to normalise longitude.
-normLong :: Double -> Double
+normLong :: Int64 -> Int64
 normLong y = signum y * normPosLong (abs y)
 
 -- | Normalise a positive longitude.
-normPosLong :: Double -> Double
-normPosLong pLong | r <= 180  = r
-                  | otherwise = r - 360
-  where f  = snd (properFraction $ pLong / 360 :: (Int, Double))
-        r  = f * 360
+normPosLong :: Int64 -> Int64
+normPosLong x | r <= oneEighty  = r
+              | otherwise       = r - threeSixty
+  where r   = x `rem` threeSixty
 
 
 ------------------- Making stuff suitable for unboxed vector. --------------------------
@@ -360,12 +363,12 @@ newtype instance MVector s Latitude = MLatV (MVector s Angle)
 newtype instance Vector    Latitude = LatV  (Vector Angle)
 
 
-newtype instance MVector s Longitude = MLongV (MVector s Double)
-newtype instance Vector    Longitude = LongV  (Vector Double)
+newtype instance MVector s Longitude = MLongV (MVector s Angle)
+newtype instance Vector    Longitude = LongV  (Vector Angle)
 
 
-newtype instance MVector s Geo = MGeoV (MVector s (Angle,Double))
-newtype instance Vector    Geo = GeoV  (Vector    (Angle,Double))
+newtype instance MVector s Geo = MGeoV (MVector s (Angle,Angle))
+newtype instance Vector    Geo = GeoV  (Vector    (Angle,Angle))
 
 
 -------------------- Instance for Angle --------------------------------------------
