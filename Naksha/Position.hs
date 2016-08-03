@@ -1,7 +1,7 @@
 {-# LANGUAGE CPP                        #-}
 {-# LANGUAGE MultiParamTypeClasses      #-}
 {-# LANGUAGE TypeFamilies               #-}
-
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
 -- | This module captures position of a point on the globe.
 module Naksha.Position
        ( -- * Latitude and longitude and geopositions.
@@ -82,40 +82,37 @@ import qualified Data.Vector.Generic.Mutable as GVM
 -- | The latitude of a point. Positive denotes North of Equator where as negative
 -- South.
 
-newtype Latitude = Latitude { unLat :: Double } deriving Show
+newtype Latitude = Latitude { unLat :: Angle }
 
-
-
+instance Show Latitude where
+  show = show . unLat
 
 instance Angular Latitude where
-
-  deg   = Latitude
-  toDeg = unLat
-  normalise = Latitude .  normLat . unLat
+  deg         = Latitude . deg
+  toDeg       = toDeg    . unLat
+  normalise   = Latitude . Angle . normLat . unAngle . unLat
 
 instance Eq Latitude where
-  (==) l1 l2 = unLat (normalise l1) == unLat (normalise l2)
+  (==) l1 l2 = unAngle (unLat $ normalise l1) == unAngle (unLat $ normalise l2)
 
 instance Monoid Latitude where
-  mempty  = Latitude 0
-  mappend x y = Latitude $ unLat (normalise x)  + unLat (normalise y)
+  mempty      = equator
+  mappend x y = normalise $ Latitude $ Angle $ unAngle (unLat x)  + unAngle (unLat y)
 
 instance Group Latitude where
-  invert  = Latitude . negate . unLat . normalise
+  invert  = Latitude . Angle . negate . unAngle . unLat . normalise
 
 -- | The latitude of equator.
 equator :: Latitude
-equator = Latitude 0
+equator = Latitude $ Angle 0
 
 -- | The latitude of north pole.
 northPole :: Latitude
-northPole = Latitude 90
+northPole = Latitude $ Angle 90
 
 -- | The latitude of south pole.
 southPole :: Latitude
-southPole = Latitude (-90)
-
-
+southPole = Latitude $ Angle (-90)
 
 -------------------------- Longitude ------------------------------------------
 
@@ -167,11 +164,25 @@ class Location a where
 ----------------------------- Angles and Angular quantities -----------------------
 
 -- | An abstract angle measured in degrees up to some precision (system dependent).
-newtype Angle = Angle {unAngle ::  Int64}
+newtype Angle = Angle {unAngle ::  Int64} deriving Unbox
 
 -- | The scaling used to represent angles.
 scale :: Int64
 scale = 10000000
+
+threeSixty :: Int64
+threeSixty = 360 * scale
+
+ninety     :: Int64
+ninety     = 90 * scale
+
+twoSeventy :: Int64
+twoSeventy = 270 * scale
+
+oneEighty  :: Int64
+oneEighty  = 180 * scale
+
+
 
 scaleDouble :: Double
 scaleDouble = fromIntegral scale
@@ -179,8 +190,9 @@ scaleDouble = fromIntegral scale
 instance Angular Angle where
   deg       = Angle . truncate . (*scaleDouble)
   toDeg     = (/scaleDouble) . fromIntegral .  unAngle
-  normalise = Angle . flip rem threeSixty . unAngle
-    where threeSixty = 360 * scale
+  normalise = id
+  {-# INLINE normalise #-}
+
 
 instance Enum Angle where
   toEnum    = Angle . (*scale) . toEnum
@@ -315,16 +327,17 @@ dHvS' r g1 g2 = r * c
 
 -- | Function to normalise latitudes. It essentially is a saw-tooth
 -- function of period 360 with max values 90.
-normLat :: Double -> Double
+normLat :: Int64 -> Int64
 normLat y = signum y * normPosLat (abs y)
 
 -- | Normalise a positive latitude.
-normPosLat :: Double -> Double
-normPosLat pLat | r <= 90    = r
-                | r <= 270   = 180 - r
-                | otherwise  = r -  360
-  where f = snd (properFraction $ pLat / 360 :: (Int, Double))
-        r  = f * 360
+normPosLat :: Int64 -> Int64
+normPosLat x | pa <= ninety     =  pa
+             | pa <= twoSeventy =  oneEighty - pa
+             | otherwise        =  pa  - threeSixty
+    where pa  = x `rem` threeSixty
+
+
 
 -- | Function to normalise longitude.
 normLong :: Double -> Double
@@ -343,16 +356,16 @@ normPosLong pLong | r <= 180  = r
 newtype instance MVector s Angle = MAngV  (MVector s Int64)
 newtype instance Vector    Angle = AngV   (Vector Int64)
 
-newtype instance MVector s Latitude = MLatV (MVector s Double)
-newtype instance Vector    Latitude = LatV  (Vector Double)
+newtype instance MVector s Latitude = MLatV (MVector s Angle)
+newtype instance Vector    Latitude = LatV  (Vector Angle)
 
 
 newtype instance MVector s Longitude = MLongV (MVector s Double)
 newtype instance Vector    Longitude = LongV  (Vector Double)
 
 
-newtype instance MVector s Geo = MGeoV (MVector s (Double,Double))
-newtype instance Vector    Geo = GeoV  (Vector    (Double,Double))
+newtype instance MVector s Geo = MGeoV (MVector s (Angle,Double))
+newtype instance Vector    Geo = GeoV  (Vector    (Angle,Double))
 
 
 -------------------- Instance for Angle --------------------------------------------
