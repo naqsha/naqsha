@@ -7,23 +7,25 @@ module Naksha.Position
        ( -- * Latitude and longitude and geopositions.
          -- $latandlong$
          Latitude, Longitude, Geo
-       , Angular(..)
-
-       -- ** Some common latitude
+         -- * Angles and angular quantities.
+       , Angle, Angular(..)
+         -- ** Some common latitude
        , equator, northPole, southPole
          -- ** Some common longitude
        , greenwich
-       -- ** Objects with elevation
+         -- ** Objects with elevation
        , Elevated, elevate, altitude, Position
        , MaybeElevated(..)
-       -- * A geographic position.
+          -- * A geographic position.
        , Location(..)
-
-       -- * Distance calculation.
+         -- * Distance calculation.
        , dHvS, dHvS', rMean
+
        ) where
 
 import           Control.Monad               ( liftM )
+import           Data.Int
+import           Data.List                   ( unfoldr )
 import           Data.Monoid
 import           Data.Group
 import           Data.Vector.Unboxed         ( MVector(..), Vector, Unbox)
@@ -68,6 +70,8 @@ import qualified Data.Vector.Generic.Mutable as GVM
 -- > someNegLatitude = deg (-1) <> minute 2 <> second 3  -- wrong
 --
 -- Finally, we have the type `Geo` which captures positions on the globe.
+--
+-- Both Latitude and Longitude are `Angular` quantities
 --
 
 
@@ -159,6 +163,40 @@ class Location a where
   geoPosition a = Geo (latitude a) (longitude a)
   latitude      = latitude  . geoPosition
   longitude     = longitude . geoPosition
+
+----------------------------- Angles and Angular quantities -----------------------
+
+-- | An abstract angle measured in degrees up to some precision (system dependent).
+newtype Angle = Angle {unAngle ::  Int64}
+
+-- | The scaling used to represent angles.
+scale :: Int64
+scale = 10000000
+
+scaleDouble :: Double
+scaleDouble = fromIntegral scale
+
+instance Angular Angle where
+  deg       = Angle . truncate . (*scaleDouble)
+  toDeg     = (/scaleDouble) . fromIntegral .  unAngle
+  normalise = Angle . flip rem threeSixty . unAngle
+    where threeSixty = 360 * scale
+
+instance Enum Angle where
+  toEnum    = Angle . (*scale) . toEnum
+  fromEnum  = fromEnum . flip quot scale . unAngle
+
+
+instance Show Angle where
+  show x | r == 0    = show q
+         | otherwise = show q ++ "." ++ concatMap show (unfoldr unfoldDigits (abs r, scale `quot` 10))
+    where (q,r) = unAngle x `quotRem` scale
+          unfoldDigits (v, p)
+            | v ==  0   = Nothing
+            | p >= 1    = Just (v',(r', p `quot` 10))
+            | otherwise = Nothing
+            where (v',r') = v `quotRem` p
+
 
 -- | Measurements that are angular. Minimal complete implemenation
 -- give one of `deg` or `rad`, one of `toDeg` or `toRad`.
