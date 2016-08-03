@@ -340,6 +340,9 @@ normPosLong pLong | r <= 180  = r
 
 ------------------- Making stuff suitable for unboxed vector. --------------------------
 
+newtype instance MVector s Angle = MAngV  (MVector s Int64)
+newtype instance Vector    Angle = AngV   (Vector Int64)
+
 newtype instance MVector s Latitude = MLatV (MVector s Double)
 newtype instance Vector    Latitude = LatV  (Vector Double)
 
@@ -350,6 +353,56 @@ newtype instance Vector    Longitude = LongV  (Vector Double)
 
 newtype instance MVector s Geo = MGeoV (MVector s (Double,Double))
 newtype instance Vector    Geo = GeoV  (Vector    (Double,Double))
+
+
+-------------------- Instance for Angle --------------------------------------------
+
+instance GVM.MVector MVector Angle where
+  {-# INLINE basicLength #-}
+  {-# INLINE basicUnsafeSlice #-}
+  {-# INLINE basicOverlaps #-}
+  {-# INLINE basicUnsafeNew #-}
+  {-# INLINE basicUnsafeReplicate #-}
+  {-# INLINE basicUnsafeRead #-}
+  {-# INLINE basicUnsafeWrite #-}
+  {-# INLINE basicClear #-}
+  {-# INLINE basicSet #-}
+  {-# INLINE basicUnsafeCopy #-}
+  {-# INLINE basicUnsafeGrow #-}
+  basicLength          (MAngV v)          = GVM.basicLength v
+  basicUnsafeSlice i n (MAngV v)          = MAngV $ GVM.basicUnsafeSlice i n v
+  basicOverlaps (MAngV v1) (MAngV v2)     = GVM.basicOverlaps v1 v2
+
+  basicUnsafeRead  (MAngV v) i            = Angle `liftM` GVM.basicUnsafeRead v i
+  basicUnsafeWrite (MAngV v) i (Angle x)  = GVM.basicUnsafeWrite v i x
+
+  basicClear (MAngV v)                    = GVM.basicClear v
+  basicSet   (MAngV v)         (Angle x)  = GVM.basicSet v x
+
+  basicUnsafeNew n                        = MAngV `liftM` GVM.basicUnsafeNew n
+  basicUnsafeReplicate n     (Angle x)    = MAngV `liftM` GVM.basicUnsafeReplicate n x
+  basicUnsafeCopy (MAngV v1) (MAngV v2)   = GVM.basicUnsafeCopy v1 v2
+  basicUnsafeGrow (MAngV v)   n           = MAngV `liftM` GVM.basicUnsafeGrow v n
+
+#if MIN_VERSION_vector(0,11,0)
+  basicInitialize (MAngV v)               = GVM.basicInitialize v
+#endif
+
+instance GV.Vector Vector Angle where
+  {-# INLINE basicUnsafeFreeze #-}
+  {-# INLINE basicUnsafeThaw #-}
+  {-# INLINE basicLength #-}
+  {-# INLINE basicUnsafeSlice #-}
+  {-# INLINE basicUnsafeIndexM #-}
+  {-# INLINE elemseq #-}
+  basicUnsafeFreeze (MAngV v)         = AngV  `liftM` GV.basicUnsafeFreeze v
+  basicUnsafeThaw (AngV v)            = MAngV `liftM` GV.basicUnsafeThaw v
+  basicLength (AngV v)                = GV.basicLength v
+  basicUnsafeSlice i n (AngV v)       = AngV $ GV.basicUnsafeSlice i n v
+  basicUnsafeIndexM (AngV v) i        = Angle   `liftM`  GV.basicUnsafeIndexM v i
+
+  basicUnsafeCopy (MAngV mv) (AngV v) = GV.basicUnsafeCopy mv v
+  elemseq _ (Angle x)                 = GV.elemseq (undefined :: Vector a) x
 
 
 -------------------- Instance for latitude --------------------------------------------
