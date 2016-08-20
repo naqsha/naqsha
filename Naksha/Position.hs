@@ -299,11 +299,17 @@ rMean = 637100.88
 
 
 -- | This combinator computes the distance (in meters) between two geo-locations
--- using the haversine distance between two points.
-dHvS :: Geo    -- ^ Point 1
-     -> Geo    -- ^ Point 2
-     -> Double -- ^ Distance in meters.
+-- using the haversine distance between two points. For `Position` which have an
+dHvS :: ( Location geo1
+        , Location geo2
+        )
+      => geo1   -- ^ Point 1
+      -> geo2   -- ^ Point 2
+      -> Double -- ^ Distance in meters.
 dHvS = dHvS' rMean
+
+{-# SPECIALISE dHvS :: Geo      -> Geo      -> Double #-}
+{-# SPECIALISE dHvS :: Position -> Position -> Double #-}
 
 -- | A generalisation of `dHvS` that takes the radius as
 -- argument. Will work on Mars for example once we set up a latitude
@@ -312,10 +318,15 @@ dHvS = dHvS' rMean
 --
 -- > dHvS = dHvS' rMean
 --
-dHvS' :: Double  -- ^ Radius (in whatever unit)
-      -> Geo     -- ^ Point 1
-      -> Geo     -- ^ Point 2
+dHvS' :: ( Location geo1
+         , Location geo2
+         )
+      => Double  -- ^ Radius (in whatever unit)
+      -> geo1     -- ^ Point 1
+      -> geo2     -- ^ Point 2
       -> Double
+{-# SPECIALISE dHvS' :: Double -> Geo      -> Geo      -> Double #-}
+{-# SPECIALISE dHvS' :: Double -> Position -> Position -> Double #-}
 dHvS' r g1 g2 = r * c
   where p1    = toRad $ latitude  g1
         l1    = toRad $ longitude g1
