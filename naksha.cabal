@@ -1,6 +1,6 @@
 name:      naksha
 version:   0.1.0.0
-synopsis:  A library for working with OpenStreetMap and related maaping formats.
+synopsis:  A library for working with map and various maping formats.
 
 homepage:    http://bitbucket.org/piyush-kurur/naksha.git
 
