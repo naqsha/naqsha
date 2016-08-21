@@ -29,3 +29,19 @@ library
                  , Naksha.Feature.Name
   other-modules: Naksha.Feature.Internal
   default-language: Haskell2010
+
+test-Suite test
+  default-language: Haskell2010
+  type: exitcode-stdio-1.0
+  hs-source-dirs: tests
+  main-is: Main.hs
+  ghc-options: -Wall
+  other-modules: Naksha.PositionSpec
+  build-depends: base
+               , bytestring
+               , HUnit                          >= 1.2
+               , QuickCheck                     >= 2.4
+               , hspec
+               , transformers
+               , naksha
+               , vector
