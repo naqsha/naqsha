@@ -4,13 +4,27 @@
 
 -- | Internal module for features.
 module Naksha.Feature.Internal
-       ( Feature(..)
+       (
+         -- * Features and FeatureSet
+         -- $featureset$
+         Feature(..)
        , FeatureSet, fromList, toList, extract
        ) where
 
 import qualified Data.Map       as Map
 import           Data.Monoid
 import           Data.Typeable
+
+-- $featureset$
+--
+-- An actual map is essentially a set of attributes assigned to
+-- objects like geo-locations, trails etc. Th type `Feature` captures
+-- these attributes and can have pretty generic any (any instance of
+-- `Typeable` is allowed). However, depending on the actual mapping
+-- format, some features are meaningless.
+--
+-- The type `FeatureSet` captures a set of features. It allows for
+-- extraction of individual features if it exists.
 
 -- | A feature is nothing but an existentially quantified `Typeable` value.
 data  Feature = forall t . Typeable t => Feature t
