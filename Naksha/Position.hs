@@ -4,23 +4,21 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 -- | This module captures position of a point on the globe.
 module Naksha.Position
-       ( -- * Latitude and longitude and geopositions.
+       ( -- * Latitude, longitude and geopositions.
          -- $latandlong$
          Latitude, Longitude, Geo
-         -- * Angles and angular quantities.
-       , Angle, Angular(..)
+       , Location(..)
          -- ** Some common latitude
        , equator, northPole, southPole
          -- ** Some common longitude
        , greenwich
-         -- ** Objects with elevation
+         -- * Angles and angular quantities.
+       , Angle, Angular(..)
+         -- ** Distance calculation.
+       , dHvS, dHvS', rMean
+         -- * Objects with elevation
        , Elevated, elevate, altitude, Position
        , MaybeElevated(..)
-          -- * A geographic position.
-       , Location(..)
-         -- * Distance calculation.
-       , dHvS, dHvS', rMean
-
        ) where
 
 import           Control.Monad               ( liftM )
@@ -42,25 +40,23 @@ import qualified Data.Vector.Generic.Mutable as GVM
 -- can be expressed in either degrees or radians using `deg` or `rad`
 -- respectively.
 --
--- > kanpurLatitude :: Latitude
+-- > kanpurLatitude  :: Latitude
 -- > kanpurLatitude  = deg 26.4477777
 -- > kanpurLongitude :: Longitude
 -- > kanpurLongitude = deg 80.3461111
 --
 -- Latitudes and longitudes are instances of `Monoid` where the monoid
--- instance adds up the angle. They are also instances of `Group`
--- where `invert` is the angle in the opposite direction, i.e for
--- latitudes, `invert` converts from North to South and vice-versa and
--- for longitudes `invert` converts from East to West.
+-- instance adds up the angle. One can use this `Monoid` instance to
+-- express in degrees, minutes and seconds as follows
 --
--- One can exploit these instances to express latitudes and longitudes
--- in degrees, minutes and seconds as follows
---
--- > kanpurLatitude = deg 26 <> minute 26 <> second 52
+-- > kanpurLatitude  = deg 26 <> minute 26 <> second 52
 -- > kanpurLongitude = deg 80 <> minute 20 <> second 46
 --
--- Be careful with negative quantities though. To express a latitude
--- of -1° 2′ 3″ one should use
+-- They are also instances of `Group` where `invert` is the angle in
+-- the opposite direction, i.e for latitudes, `invert` converts from
+-- North to South and vice-versa and for longitudes `invert` converts
+-- from East to West. Be careful with negative quantities though. To
+-- express a latitude of -1° 2′ 3″ one should use
 --
 -- > someNegLatitude :: Latitude
 -- > someNegLatitude = invert $ deg 1 <> minute 2 <> second 3  -- correct
@@ -69,13 +65,9 @@ import qualified Data.Vector.Generic.Mutable as GVM
 --
 -- > someNegLatitude = deg (-1) <> minute 2 <> second 3  -- wrong
 --
--- Finally, we have the type `Geo` which captures positions on the globe.
---
--- Both Latitude and Longitude are `Angular` quantities
---
-
-
-
+-- We would like to attach additional information with geographic
+-- locations. The type class `Location` captures all types that have
+-- an associated geographical coordinates.
 
 ----------------------------- Lattitude ----------------------------------
 
@@ -149,7 +141,7 @@ data Geo = Geo {-# UNPACK #-} !Latitude
                {-# UNPACK #-} !Longitude
 
 -- | Objects that have a location on the globe. Minimum complete
--- implementation either the two functions `longitude` and `latitude`
+-- implementation: either the two functions `longitude` and `latitude`
 -- or the single function `geoPosition`.
 class Location a where
   -- | The latitude of the object.
