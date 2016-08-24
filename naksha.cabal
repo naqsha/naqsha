@@ -43,5 +43,5 @@ test-Suite test
                , QuickCheck                     >= 2.4
                , hspec
                , transformers
-               , naksha
+               , naksha                         == 0.1.0.0
                , vector
