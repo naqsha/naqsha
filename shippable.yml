@@ -1,5 +1,7 @@
 language: none
 
+env:
+  - STACKVER=lts GHCVER=7.10.3 CABALVER=1.22
 build:
 
   pre_ci_boot:
@@ -9,4 +11,28 @@ build:
     options: "-e HOME=/root"
 
   ci:
+    # Install the apropriate versions of ghc.
+    - sudo apt-get install ghc-"$GHC_VER" cabal-instal-"$CABALVER"
+    # Setup the path for the rest of the commands.
+    - export PATH=/opt/ghc/$GHCVER/bin:/opt/cabal/$CABALVER/bin:$PATH
+    # Pull in the STACK cabal config file if required
+    - if [ "$STACKVER" != "" ]; then
+         echo getting the stackage cabal.config;
+         wget "https://www.stackage.org/$STACKVER/cabal.config";
+      fi
+
+    # Print some information
+    - cabal --version
+    - echo "$(ghc --version) [$(ghc --print-project-git-commit-id 2> /dev/null || echo '?')]"
+
+    # Start by installing the dependencies.
+    - cabal install --only-dependencies --enable-tests --enable-benchmarks
+
+    # Now comes the real action
+    - cabal configure --enable-tests --enable-benchmarks -v2
+    - cabal build
+    - cabal test
+    - cabal check
+    - cabal sdist   # tests that a source-distribution can be generated
+    - cabal install --force-reinstalls dist/*-*.tar.gz
     - echo "All is well"
