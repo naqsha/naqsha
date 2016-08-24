@@ -1,6 +1,8 @@
-name:      naksha
-version:   0.1.0.0
-synopsis:  A library for working with map and various maping formats.
+name:        naksha
+version:     0.1.0.0
+synopsis:    A library for working with map and various maping formats.
+
+description: Naksha is a library to work with geographic data, mapping formats etc.
 
 homepage:    http://bitbucket.org/piyush-kurur/naksha.git
 
