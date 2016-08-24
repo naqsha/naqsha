@@ -24,7 +24,7 @@ build:
       fi
     - if [ "$HVR_COLLECTION" != "" ]; then
          echo geting cabal.config from the collection of hvr;
-         wget https://raw.githubusercontent.com/hvr/multi-ghc-travis/master/collections/cabal.project."$HVR_COLLECTION";
+         wget https://raw.githubusercontent.com/hvr/multi-ghc-travis/master/collections/cabal.project."$HVR_COLLECTION" -o cabal.config;
       fi
     # Print some information
     - cabal --version
