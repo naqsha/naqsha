@@ -1,6 +1,8 @@
-name:      naksha
-version:   0.1.0.0
-synopsis:  A library for working with map and various maping formats.
+name:        naksha
+version:     0.1.0.0
+synopsis:    A library for working with map and various maping formats.
+
+description: Naksha is a library to work with geographic data, mapping formats etc.
 
 homepage:    http://bitbucket.org/piyush-kurur/naksha.git
 
@@ -12,17 +14,23 @@ maintainer: ppk@cse.iitk.ac.in
 
 category:  Geospatial
 
-
 build-type:    Simple
 cabal-version: >=1.10
 
+
+bug-reports: https://bitbucket.org/piyush-kurur/naksha/issues
+
+source-repository head
+  type: git
+  location: https://bitbucket.org/piyush-kurur/naksha
+
 library
   ghc-options: -Wall
-  build-depends: base            >= 4.6  && < 4.9
+  build-depends: base            >= 4.6  && < 4.10
                , containers
                , groups                     < 5
                , text
-               , vector
+               , vector         >= 0.7.1 && < 0.12
 
   exposed-modules: Naksha.Position
                  , Naksha.Feature
@@ -43,5 +51,5 @@ test-Suite test
                , QuickCheck                     >= 2.4
                , hspec
                , transformers
-               , naksha
+               , naksha                         == 0.1.0.0
                , vector

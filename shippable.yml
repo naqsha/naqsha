@@ -1,0 +1,46 @@
+language: none
+
+env:
+  - HVR_COLLECTION=debian-8 GHCVER=7.6.3 CABALVER=1.20
+  - STACKVER=lts GHCVER=7.10.3 CABALVER=1.22
+  - STACKVER=nightly GHCVER=8.0.1 CABALVER=1.24
+build:
+
+  pre_ci_boot:
+    image_name: raazcrypto/docker-haskell-ci
+    image_tag: latest
+    pull: true
+    options: "-e HOME=/root"
+
+  ci:
+    # Install the apropriate versions of ghc.
+    - sudo apt-get install ghc-"$GHCVER" cabal-install-"$CABALVER" -y
+    # Setup the path for the rest of the commands.
+    - export PATH=/opt/ghc/$GHCVER/bin:/opt/cabal/$CABALVER/bin:$PATH
+    - cabal update
+
+    # Pull in the STACK cabal config file if required
+
+    - if [ "$STACKVER" != "" ]; then
+         echo getting the stackage cabal.config;
+         wget "https://www.stackage.org/$STACKVER/cabal.config";
+      fi
+    - if [ "$HVR_COLLECTION" != "" ]; then
+         echo geting cabal.config from the collection of hvr;
+         wget https://raw.githubusercontent.com/hvr/multi-ghc-travis/master/collections/cabal.project."$HVR_COLLECTION" -O cabal.config ;
+      fi
+    # Print some information
+    - cabal --version
+    - echo "$(ghc --version) [$(ghc --print-project-git-commit-id 2> /dev/null || echo '?')]"
+
+    # Start by installing the dependencies.
+    - cabal install --only-dependencies --enable-tests --enable-benchmarks
+
+    # Now comes the real action
+    - cabal configure --enable-tests --enable-benchmarks -v2
+    - cabal build
+    - cabal test
+    - cabal check
+    - cabal sdist   # tests that a source-distribution can be generated
+    - cabal install --force-reinstalls dist/*-*.tar.gz
+    - echo "All is well"
