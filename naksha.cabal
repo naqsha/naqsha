@@ -26,11 +26,11 @@ source-repository head
 
 library
   ghc-options: -Wall
-  build-depends: base            >= 4.6  && < 4.9
+  build-depends: base            >= 4.6  && < 4.10
                , containers
                , groups                     < 5
                , text
-               , vector
+               , vector         >= 0.7.1 && < 0.12
 
   exposed-modules: Naksha.Position
                  , Naksha.Feature
