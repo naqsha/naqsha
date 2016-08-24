@@ -1,7 +1,9 @@
 language: none
 
 env:
+  - HVR_COLLECTION=debian-8 GHCVER=7.6.3 CABALVER=1.20
   - STACKVER=lts GHCVER=7.10.3 CABALVER=1.22
+  - STACKVER=nightly GHCVER=8.0.1 CABALVER=1.24
 build:
 
   pre_ci_boot:
@@ -20,7 +22,10 @@ build:
          echo getting the stackage cabal.config;
          wget "https://www.stackage.org/$STACKVER/cabal.config";
       fi
-
+    - if [ "$HVR_COLLECTION" != ""]; then
+         echo geting cabal.config from the collection of hvr;
+         wget https://raw.githubusercontent.com/hvr/multi-ghc-travis/master/collections/cabal.project."$HVR_COLLECTION";
+      fi
     # Print some information
     - cabal --version
     - echo "$(ghc --version) [$(ghc --print-project-git-commit-id 2> /dev/null || echo '?')]"
