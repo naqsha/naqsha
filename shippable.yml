@@ -12,7 +12,7 @@ build:
 
   ci:
     # Install the apropriate versions of ghc.
-    - sudo apt-get install ghc-"$GHC_VER" cabal-install-"$CABALVER" -y
+    - sudo apt-get install ghc-"$GHCVER" cabal-install-"$CABALVER" -y
     # Setup the path for the rest of the commands.
     - export PATH=/opt/ghc/$GHCVER/bin:/opt/cabal/$CABALVER/bin:$PATH
     # Pull in the STACK cabal config file if required
