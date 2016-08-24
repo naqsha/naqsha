@@ -14,9 +14,15 @@ maintainer: ppk@cse.iitk.ac.in
 
 category:  Geospatial
 
-
 build-type:    Simple
 cabal-version: >=1.10
+
+
+bug-reports: https://bitbucket.org/piyush-kurur/naksha/issues
+
+source-repository head
+  type: git
+  location: https://bitbucket.org/piyush-kurur/naksha
 
 library
   ghc-options: -Wall
