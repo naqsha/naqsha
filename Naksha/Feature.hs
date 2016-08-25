@@ -34,3 +34,12 @@ name  = flip names []
 -- in different languages.
 names  :: Text -> [(Language, Text)] -> Feature
 names t = Feature . Name t
+
+----------------------- Elevation from sea level ------------------------------------
+
+
+-- | Elevation form mean sea level in metres.
+newtype Elevation = Elevation Double deriving Typeable
+
+-- | The constructor for the elevation feature.
+elevation = Feature . Elevation

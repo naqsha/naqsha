@@ -16,9 +16,6 @@ module Naksha.Position
        , Angle, Angular(..)
          -- ** Distance calculation.
        , dHvS, dHvS', rMean
-         -- * Objects with elevation
-       , Elevated, elevate, altitude, Position
-       , MaybeElevated(..)
        ) where
 
 import           Control.Monad               ( liftM )
@@ -250,32 +247,6 @@ instance Location Geo where
   longitude (Geo _ y) = y
   geoPosition         = id
 
-
-
--- | An object with a possible elevation, i.e. that comes with an elevation.
-data Elevated a = Elevated { unElevate   :: a
-                           , altitude    :: Double
-                           }
-
--- | A point is a Geo location together with an elevation.
-type Position = Elevated Geo
-
--- | Attach an elevation to an object.
-elevate  :: a            -- ^ Stuff to which an elevation has to be attached.
-         -> Double       -- ^ Elevation in meters from mean-sealevel
-         -> Elevated a
-elevate  = Elevated
-
-
-instance Location a => Location (Elevated a) where
-  latitude     = latitude    . unElevate
-  longitude    = longitude   . unElevate
-  geoPosition  = geoPosition . unElevate
-
-class Location a => MaybeElevated a where
-  getAltitude :: a -> Maybe Double
-  getPosition :: a -> Maybe Position
-
 instance Eq Geo where
   (==) (Geo xlat xlong) (Geo ylat ylong)
     | xlat == northPole = ylat == northPole  -- longitude irrelevant for north pole
@@ -301,7 +272,6 @@ dHvS :: ( Location geo1
 dHvS = dHvS' rMean
 
 {-# SPECIALISE dHvS :: Geo      -> Geo      -> Double #-}
-{-# SPECIALISE dHvS :: Position -> Position -> Double #-}
 
 -- | A generalisation of `dHvS` that takes the radius as
 -- argument. Will work on Mars for example once we set up a latitude
@@ -318,7 +288,6 @@ dHvS' :: ( Location geo1
       -> geo2     -- ^ Point 2
       -> Double
 {-# SPECIALISE dHvS' :: Double -> Geo      -> Geo      -> Double #-}
-{-# SPECIALISE dHvS' :: Double -> Position -> Position -> Double #-}
 dHvS' r g1 g2 = r * c
   where p1    = toRad $ latitude  g1
         l1    = toRad $ longitude g1
@@ -574,57 +543,3 @@ instance GV.Vector Vector Geo where
 
   basicUnsafeCopy (MGeoV mv) (GeoV v) = GV.basicUnsafeCopy mv v
   elemseq _ (Geo x y)                 = GV.elemseq (undefined :: Vector a) (unLat x, unLong y)
-
-
---------------------------------- Instance for Elevated elements -------------------------------
-
-newtype instance MVector s (Elevated a) = MEV (MVector s (a, Double))
-newtype instance Vector    (Elevated a) = EV  (Vector (a,Double))
-
-instance Unbox a => GVM.MVector MVector (Elevated a) where
-  {-# INLINE basicLength          #-}
-  {-# INLINE basicUnsafeSlice     #-}
-  {-# INLINE basicOverlaps        #-}
-  {-# INLINE basicUnsafeNew       #-}
-  {-# INLINE basicUnsafeReplicate #-}
-  {-# INLINE basicUnsafeRead      #-}
-  {-# INLINE basicUnsafeWrite     #-}
-  {-# INLINE basicClear           #-}
-  {-# INLINE basicSet             #-}
-  {-# INLINE basicUnsafeCopy      #-}
-  {-# INLINE basicUnsafeGrow      #-}
-  basicLength          (MEV v)       = GVM.basicLength v
-  basicUnsafeSlice i n (MEV v)       = MEV $ GVM.basicUnsafeSlice i n v
-  basicOverlaps (MEV v1) (MEV v2)    = GVM.basicOverlaps v1 v2
-
-  basicUnsafeRead  (MEV v) i         = uncurry Elevated `liftM` GVM.basicUnsafeRead v i
-
-  basicUnsafeWrite (MEV v) i ea      = GVM.basicUnsafeWrite v i (unElevate ea, altitude ea)
-
-  basicClear (MEV v)                 = GVM.basicClear v
-  basicSet   (MEV v)         ea      = GVM.basicSet v (unElevate ea, altitude ea)
-
-  basicUnsafeNew n                   = MEV `liftM` GVM.basicUnsafeNew n
-  basicUnsafeReplicate n     ea      = MEV `liftM` GVM.basicUnsafeReplicate n (unElevate ea, altitude ea)
-  basicUnsafeCopy (MEV v1) (MEV v2)  = GVM.basicUnsafeCopy v1 v2
-  basicUnsafeGrow (MEV v)   n        = MEV `liftM` GVM.basicUnsafeGrow v n
-
-#if MIN_VERSION_vector(0,11,0)
-  basicInitialize (MEV v)              = GVM.basicInitialize v
-#endif
-
-instance Unbox a => GV.Vector Vector (Elevated a) where
-  {-# INLINE basicUnsafeFreeze #-}
-  {-# INLINE basicUnsafeThaw #-}
-  {-# INLINE basicLength #-}
-  {-# INLINE basicUnsafeSlice #-}
-  {-# INLINE basicUnsafeIndexM #-}
-  {-# INLINE elemseq #-}
-  basicUnsafeFreeze (MEV v)       = EV  `liftM` GV.basicUnsafeFreeze v
-  basicUnsafeThaw (EV v)          = MEV `liftM` GV.basicUnsafeThaw v
-  basicLength (EV v)              = GV.basicLength v
-  basicUnsafeSlice i n (EV v)     = EV $ GV.basicUnsafeSlice i n v
-  basicUnsafeIndexM (EV v) i      = uncurry Elevated `liftM` GV.basicUnsafeIndexM v i
-
-  basicUnsafeCopy (MEV mv) (EV v) = GV.basicUnsafeCopy mv v
-  elemseq _ ea                    = GV.elemseq (undefined :: Vector a) (unElevate ea, altitude ea)
