@@ -34,7 +34,6 @@ library
 
   exposed-modules: Naksha.Position
                  , Naksha.Feature
-                 , Naksha.Feature.Name
   other-modules: Naksha.Feature.Internal
   default-language: Haskell2010
 
