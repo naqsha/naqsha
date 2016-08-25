@@ -12,8 +12,10 @@ module Naksha.Feature.Internal
        ) where
 
 import qualified Data.Map       as Map
-import           Data.Monoid
+import           Data.Monoid    hiding ((<>))
+import           Data.Semigroup
 import           Data.Typeable
+
 
 -- $featureset$
 --
@@ -27,20 +29,30 @@ import           Data.Typeable
 -- extraction of individual features if it exists.
 
 -- | A feature is nothing but an existentially quantified `Typeable` value.
-data  Feature = forall t . Typeable t => Feature t
+data  Feature = forall t . (Semigroup t, Typeable t, Show t) => Feature t
+
+instance Semigroup Feature where
+  (<>) (Feature t1) (Feature t2) = Feature $ maybe t1 comb mt2
+    where mt2  = cast t2 `asTypeOf` Just t1
+          comb = (t1<>)
+
+instance Show Feature where
+  show (Feature t) = show t
 
 -- | A set of features. Extracting features from this list is fast. Feature sets
 -- are monoids where the monoid operations is a right biased union.
 newtype FeatureSet = FeatureSet (Map.Map TypeRep Feature)
 
+instance Show FeatureSet where
+  show = (++) "fromList " . show . toList
+
 instance Monoid FeatureSet where
   mempty  = FeatureSet Map.empty
-  mappend (FeatureSet f1) (FeatureSet f2) = FeatureSet $ Map.unionWith sel2nd f1 f2
-    where sel2nd = flip const
+  mappend (FeatureSet f1) (FeatureSet f2) = FeatureSet $ Map.unionWith (<>) f1 f2
 
 -- | Construct a feature set out of a set of features.
 fromList :: [Feature] -> FeatureSet
-fromList   = FeatureSet . Map.fromList . map mkEntry
+fromList   = FeatureSet . Map.fromListWith (<>) . map mkEntry
   where mkEntry f@(Feature t) = (typeOf t, f)
 
 -- | Convert the feature set to a list.

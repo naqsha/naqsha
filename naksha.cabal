@@ -29,6 +29,7 @@ library
   build-depends: base            >= 4.6  && < 4.10
                , containers
                , groups                     < 5
+               , semigroups
                , text
                , vector         >= 0.7.1 && < 0.12
 
