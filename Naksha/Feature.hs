@@ -1,61 +1,82 @@
-{-# LANGUAGE DeriveDataTypeable        #-}
-{-# LANGUAGE OverloadedStrings         #-}
+{-# LANGUAGE DeriveDataTypeable         #-}
+{-# LANGUAGE OverloadedStrings          #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
 -- | This module captures features of objects.
 module Naksha.Feature
-       (
-         module Naksha.Feature.Internal
-         -- ** Supported Features
-       , Name(..)
+       ( Name(..), I8NNames, nameIn, nameInLanguage
+       , Description(..), Comment(..)
        , Elevation(..)
-         -- ** Feature constructor.
-       , name, nameIn
-       , elevation
+       , LinkSet(..), link
        ) where
-
 
 import qualified Data.Map                   as M
 import           Data.Semigroup
-import           Data.Text     as T
+import           Data.String
+import           Data.Text                  as T
 import           Data.Typeable         ( Typeable )
 
 
-import Naksha.Feature.Internal
+import           Naksha.Language
+import           Naksha.Annotate
 
 ---------  Names of object -------------------------------------------
 
--- | The language code use to distinguish names in different languages.
-type Language = Text
+newtype Name = Name {name :: Text} deriving (Typeable, Show)
 
--- | A name of an object. Objects often have multiple names in different languages. In such case,
--- there is a canonical name as well its names in various languages.
-data Name = Name { canonicalName :: Text                 -- ^ The canonical name of the object
-                 , otherNames    :: M.Map Language Text  -- ^ other (multi-lingual) names.
-                 } deriving (Typeable, Show)
 
--- | Construct the feature of type `Name`.
-name  :: Text -> Feature
-name  = Feature . flip Name M.empty
+instance Semigroup Name where
+  (<>) _ n = n
+
+-- | The set of multi-lingual names.
+newtype I8NNames = I8NNames { i8nNames :: M.Map Language Text } deriving (Typeable, Show)
 
 -- | Construct the feature of type `Name` having possibly many names
 -- in different languages.
-nameIn       :: Text -> Text -> Feature
-nameIn lang  =  Feature . Name "" . M.singleton lang
+nameIn       :: Language
+             -> Text
+             -> I8NNames
+nameIn lang  =  I8NNames . M.singleton lang
 
-instance Semigroup Name where
-  (<>) n1 n2
-    | T.null $ canonicalName n2 = n1 { otherNames = otherNames n1 `M.union` otherNames n2 }
-    | otherwise               = n2 { otherNames = otherNames n1 `M.union` otherNames n2 }
+nameInLanguage :: Language -> Annotated a -> Maybe Text
+nameInLanguage lang a = (a .> i8nNames) >>= M.lookup lang
+
+instance Semigroup I8NNames where
+  (<>) n1 n2 = I8NNames $ i8nNames n1 `M.union` i8nNames n2
+
 
 ----------------------- Elevation from sea level ------------------------------------
 
 
 -- | Elevation form mean sea level in metres.
-newtype Elevation = Elevation Double deriving (Typeable, Show)
-
--- | The constructor for the elevation feature.
-elevation :: Double -> Feature
-elevation = Feature . Elevation
-
+newtype Elevation = Elevation { elevation :: Double } deriving (Typeable, Show)
 
 instance Semigroup Elevation where
+  (<>) _ e = e
+
+-------------------------- Links -------------------------------------------------------
+
+-- | A set of links.
+newtype LinkSet = LinkSet { linkSet :: [Text] } deriving (Typeable, Show, Semigroup)
+
+instance IsString LinkSet where
+  fromString = LinkSet . (:[]) . fromString
+
+-- | A single link.
+link :: Text -> LinkSet
+link  = LinkSet . (:[])
+
+------------------------- Description and --------- -------------------------------------
+
+-- | The description of an element.
+newtype Description = Description { description :: Text } deriving (Typeable, Show, IsString)
+
+instance Semigroup Description where
+  (<>) _ e = e
+
+-------------------------- Comment -------------------------------------------------------
+
+-- | The description of an element.
+newtype Comment = Comment { comment :: Text } deriving (Typeable, Show, IsString)
+
+instance Semigroup Comment where
   (<>) _ e = e
