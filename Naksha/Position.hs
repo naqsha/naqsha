@@ -6,7 +6,7 @@
 module Naksha.Position
        ( -- * Latitude, longitude and geopositions.
          -- $latandlong$
-         Latitude, Longitude, Geo
+         Latitude, Longitude, Geo(..)
        , Location(..)
          -- ** Some common latitude
        , equator, northPole, southPole
