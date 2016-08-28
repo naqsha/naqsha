@@ -27,6 +27,8 @@ import           Data.Vector.Unboxed         ( MVector(..), Vector, Unbox)
 import qualified Data.Vector.Generic         as GV
 import qualified Data.Vector.Generic.Mutable as GVM
 
+import           Prelude         -- To avoid redundunt import warnings.
+
 -- $latandlong$
 --
 -- A point on the globe is specified by giving its geo coordinates

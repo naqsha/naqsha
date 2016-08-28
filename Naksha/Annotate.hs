@@ -24,6 +24,8 @@ import           Data.Semigroup
 import           Data.Typeable
 
 
+import           Prelude  -- To avoid redundunt import warnings.
+
 
 -- $annotate$
 --
