@@ -28,10 +28,12 @@ library
   ghc-options: -Wall
   build-depends: base            >= 4.6  && < 4.10
                , containers
+               , data-default
                , groups                     < 5
-               , semigroups
                , text
                , vector         >= 0.7.1 && < 0.12
+               , lens
+
 
   exposed-modules: Naksha.Position
                  , Naksha.Annotate
