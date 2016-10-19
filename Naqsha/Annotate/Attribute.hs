@@ -5,7 +5,7 @@ module Naqsha.Annotate.Attribute where
 
 import           Control.Lens
 import           Data.Map                  as Map
-import           Data.Text                  as T
+import           Data.Text                 as T
 import           Naqsha.Language
 
 import qualified Naqsha.Annotate.Feature  as F
