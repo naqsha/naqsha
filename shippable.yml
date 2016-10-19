@@ -6,7 +6,12 @@ env:
   - STACK="yes"  RESOLVER="--resolver=lts"
   - STACK="yes"  RESOLVER="--resolver=nightly"
 build:
-
+  cache: true
+  cache_dir_list:
+    - $SHIPPABLE_BUILD_DIR/.stack-work
+    - $HOME/.cabsnap
+    - $HOME/.cabal/packages
+    - $HOME/.stack
   pre_ci_boot:
     image_name: raazcrypto/docker-haskell-ci
     image_tag: latest
