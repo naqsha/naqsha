@@ -60,7 +60,7 @@ matrix:
 
 before_install:
  - if [ "$HLINT" == "yes" ]; then
-      hlint "--ignore=Parse error" Raaz;
+      hlint "--ignore=Parse error" Naqsha;
       exit $?;
    fi
 
