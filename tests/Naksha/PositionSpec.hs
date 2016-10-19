@@ -1,6 +1,5 @@
 module Naksha.PositionSpec where
 
-import Data.Monoid
 import Test.Hspec
 
 import Naksha.Position
