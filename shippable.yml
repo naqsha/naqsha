@@ -1,10 +1,11 @@
 language: none
 
 env:
-  - HVR_COLLECTION=debian-8 GHCVER=7.6.3 CABALVER=1.20
-  - STACK="yes"
-  - STACK="yes"  RESOLVER="--resolver=lts"
-  - STACK="yes"  RESOLVER="--resolver=nightly"
+  - HVR_COLLECTION=debian-8 GHCVER=7.6.3 CABALVER=1.20 # Test against debian-8
+  - STACK="yes"                                        # Test against the stack in .stack.yaml
+  - STACK="yes"  RESOLVER="--resolver=lts"             # Test against the current stack lts
+  - STACK="yes"  RESOLVER="--resolver=nightly"         # Test against the current stack nightly
+
 build:
   cache: true
   cache_dir_list:
