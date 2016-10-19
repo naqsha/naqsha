@@ -37,8 +37,11 @@ library
 
   exposed-modules: Naksha.Position
                  , Naksha.Annotate
-                 , Naksha.Feature
+                 , Naksha.Annotate.Feature
+                 , Naksha.Annotate.Attribute
                  , Naksha.Language
+  other-modules: Naksha.Annotate.Internal
+
   default-language: Haskell2010
 
 test-Suite test

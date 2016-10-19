@@ -4,8 +4,8 @@
 {-# LANGUAGE TemplateHaskell            #-}
 {-# LANGUAGE Rank2Types                 #-}
 
--- | This module captures features of objects.
-module Naksha.Feature where
+-- | This module captures exposes some common features supported by us.
+module Naksha.Annotate.Feature where
 
 
 import           Control.Lens
@@ -14,35 +14,33 @@ import           Data.String
 import           Data.Semigroup
 import           Data.Text                  as T
 import           Data.Typeable         ( Typeable )
-
 import           Naksha.Language
-
 
 
 ----------------------- Elevation from sea level ------------------------------------
 
+-- | The name feature.
 newtype Name = Name { _name :: Text }  deriving (Typeable, Show, IsString)
-
 makeLenses ''Name
 
-
--- | Multi-lingual name.
+-- | Multi-lingual names.
 newtype MultiName = MultiName { _multiNames :: Map Language Text } deriving (Typeable, Show, Monoid)
 
-
---
 makeLenses ''MultiName
+
 
 -- | Elevation form mean sea level in metres.
 newtype Elevation = Elevation { _elevation :: Double } deriving (Typeable, Show, Num, Fractional)
-
 makeLenses ''Elevation
+
 
 
 -------------------------- Links -------------------------------------------------------
 
 -- | A set of links.
-newtype LinkSet = LinkSet { linkSet :: [Text] } deriving (Typeable, Show, Semigroup)
+newtype LinkSet = LinkSet { _linkSet :: [Text] } deriving (Typeable, Show, Semigroup)
+
+makeLenses ''LinkSet
 
 instance IsString LinkSet where
   fromString = LinkSet . (:[]) . fromString
@@ -50,9 +48,11 @@ instance IsString LinkSet where
 ------------------------- Description and --------- -------------------------------------
 
 -- | The description of an element.
-newtype Description = Description Text deriving (Typeable, Show, IsString)
+newtype Description = Description { _description :: Text} deriving (Typeable, Show, IsString)
+makeLenses ''Description
 
 -------------------------- Comment -------------------------------------------------------
 
 -- | The description of an element.
-newtype Comment = Comment Text deriving (Typeable, Show, IsString)
+newtype Comment = Comment { _comment :: Text } deriving (Typeable, Show, IsString)
+makeLenses ''Comment
