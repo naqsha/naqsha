@@ -1,10 +1,10 @@
-name:        naksha
+name:        naqsha
 version:     0.1.0.0
 synopsis:    A library for working with map and various maping formats.
 
-description: Naksha is a library to work with geographic data, mapping formats etc.
+description: Naqsha is a library to work with geographic data, mapping formats etc.
 
-homepage:    http://bitbucket.org/piyush-kurur/naksha.git
+homepage:    http://github.com/naqsha/naqsha.git
 
 license:      BSD3
 license-file: LICENSE
@@ -18,11 +18,11 @@ build-type:    Simple
 cabal-version: >=1.10
 
 
-bug-reports: https://bitbucket.org/piyush-kurur/naksha/issues
+bug-reports: https://github.com/naqsha/naqsha/issues
 
 source-repository head
   type: git
-  location: https://bitbucket.org/piyush-kurur/naksha
+  location:  https://github.com/naqsha/naqsha.git
 
 library
   ghc-options: -Wall
@@ -33,12 +33,12 @@ library
                , vector          >= 0.7.1 && < 0.12
                , lens
 
-  exposed-modules: Naksha.Position
-                 , Naksha.Annotate
-                 , Naksha.Annotate.Feature
-                 , Naksha.Annotate.Attribute
-                 , Naksha.Language
-  other-modules: Naksha.Annotate.Internal
+  exposed-modules: Naqsha.Position
+                 , Naqsha.Annotate
+                 , Naqsha.Annotate.Feature
+                 , Naqsha.Annotate.Attribute
+                 , Naqsha.Language
+  other-modules: Naqsha.Annotate.Internal
 
   default-language: Haskell2010
 
@@ -48,12 +48,12 @@ test-Suite test
   hs-source-dirs: tests
   main-is: Main.hs
   ghc-options: -Wall
-  other-modules: Naksha.PositionSpec
+  other-modules: Naqsha.PositionSpec
   build-depends: base
                , bytestring
                , HUnit                          >= 1.2
                , QuickCheck                     >= 2.4
                , hspec
                , transformers
-               , naksha                         == 0.1.0.0
+               , naqsha                         == 0.1.0.0
                , vector

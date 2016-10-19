@@ -1,6 +1,6 @@
 -- | This module captures
 
-module Naksha.Annotate
+module Naqsha.Annotate
        ( -- * Annotated values.
          -- $annotate$
          Annotated, value, feature
@@ -11,12 +11,12 @@ module Naksha.Annotate
 
        -- * Attribute
        , Attribute, erase, setAttribute
-       , module Naksha.Annotate.Attribute
+       , module Naqsha.Annotate.Attribute
        ) where
 
-import Naksha.Annotate.Internal
-import Naksha.Annotate.Feature
-import Naksha.Annotate.Attribute
+import Naqsha.Annotate.Internal
+import Naqsha.Annotate.Feature
+import Naqsha.Annotate.Attribute
 
 -- $annotate$
 --

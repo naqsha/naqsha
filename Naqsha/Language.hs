@@ -1,5 +1,5 @@
 {-# LANGUAGE OverloadedStrings #-}
-module Naksha.Language
+module Naqsha.Language
        ( Language
        , english, french, hindi, malayalam
        ) where

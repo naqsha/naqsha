@@ -5,7 +5,7 @@
 {-# LANGUAGE Rank2Types                 #-}
 
 -- | This module captures exposes some common features supported by us.
-module Naksha.Annotate.Feature where
+module Naqsha.Annotate.Feature where
 
 
 import           Control.Lens
@@ -14,7 +14,7 @@ import           Data.String
 import           Data.Semigroup
 import           Data.Text                  as T
 import           Data.Typeable         ( Typeable )
-import           Naksha.Language
+import           Naqsha.Language
 
 
 ----------------------- Elevation from sea level ------------------------------------

@@ -1,8 +1,8 @@
-module Naksha.PositionSpec where
+module Naqsha.PositionSpec where
 
 import Test.Hspec
 
-import Naksha.Position
+import Naqsha.Position
 
 
 spec :: Spec
