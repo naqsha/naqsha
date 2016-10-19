@@ -6,7 +6,7 @@
 {-# LANGUAGE TemplateHaskell           #-}
 
 -- | Module to annotate objects with semantic features.
-module Naksha.Annotate.Internal
+module Naqsha.Annotate.Internal
        ( -- * Annotated objects.
          -- $annotate$
 

@@ -1,19 +1,15 @@
-{-# LANGUAGE DeriveDataTypeable         #-}
-{-# LANGUAGE OverloadedStrings          #-}
-{-# LANGUAGE GeneralizedNewtypeDeriving #-}
-{-# LANGUAGE TemplateHaskell            #-}
 {-# LANGUAGE Rank2Types                 #-}
 
 -- | This module exposes the annotation attributes.
-module Naksha.Annotate.Attribute where
+module Naqsha.Annotate.Attribute where
 
 import           Control.Lens
 import           Data.Map                  as Map
-import           Data.Text                  as T
-import           Naksha.Language
+import           Data.Text                 as T
+import           Naqsha.Language
 
-import qualified Naksha.Annotate.Feature  as F
-import           Naksha.Annotate.Internal
+import qualified Naqsha.Annotate.Feature  as F
+import           Naqsha.Annotate.Internal
 
 -- | The name attribute.
 name :: Attribute a Text

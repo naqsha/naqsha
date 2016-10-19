@@ -3,7 +3,7 @@
 {-# LANGUAGE TypeFamilies               #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 -- | This module captures position of a point on the globe.
-module Naksha.Position
+module Naqsha.Position
        ( -- * Latitude, longitude and geopositions.
          -- $latandlong$
          Latitude, Longitude, Geo(..)
@@ -297,7 +297,7 @@ dHvS' r g1 g2 = r * c
         l2    = toRad $ longitude g2
         dp    = p2 - p1
         dl    = l2 - l1
-        a     = (sin $ dp/2.0)^(2 :: Int) + cos p1 * cos p2 * ((sin $ dl/2)^(2 :: Int))
+        a     = sin (dp/2.0) ^ (2 :: Int) + cos p1 * cos p2 * (sin (dl/2) ^ (2 :: Int))
         c     = 2 * atan2 (sqrt a) (sqrt (1 - a))
 
 --------------------------- Internal helper functions ------------------------
