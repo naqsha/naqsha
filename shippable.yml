@@ -23,10 +23,12 @@ build:
          sudo apt-get install ghc-"$GHCVER" cabal-install-"$CABALVER" -y ;
          export PATH=/opt/ghc/$GHCVER/bin:/opt/cabal/$CABALVER/bin:$PATH;
          export BUILDCMD="cabal";
+         cabal update;
       fi
     # Pull in the cabal constraints file for building.
     - if [ "$HVR_COLLECTION" != "" ]; then
          wget https://raw.githubusercontent.com/hvr/multi-ghc-travis/master/collections/cabal.project."$HVR_COLLECTION" -O cabal.config ;
+         cabal install --only-dependencies --enable-tests --enable-benchmarks;
       fi
 
     # Print build version
