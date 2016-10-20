@@ -139,6 +139,13 @@ greenwich = Longitude $ Angle 0
 data Geo = Geo {-# UNPACK #-} !Latitude
                {-# UNPACK #-} !Longitude
 
+instance Monoid Geo where
+  mempty      = Geo mempty mempty
+  mappend (Geo xlat xlong) (Geo ylat  ylong) = Geo (xlat `mappend` ylat) (xlong `mappend` ylong)
+
+instance Group Geo where
+  invert (Geo lt lg) = Geo (invert lt) $ invert lg
+
 -- | Objects that have a location on the globe. Minimum complete
 -- implementation: either the two functions `longitude` and `latitude`
 -- or the single function `geoPosition`.
