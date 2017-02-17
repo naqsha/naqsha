@@ -19,6 +19,7 @@ module Naqsha.Position
        ) where
 
 import           Control.Monad               ( liftM )
+import           Data.Default
 import           Data.Int
 import           Data.List                   ( unfoldr )
 import           Data.Monoid
@@ -93,6 +94,9 @@ instance Monoid Latitude where
 instance Group Latitude where
   invert  = Latitude . Angle . negate . unAngle . unLat . normalise
 
+instance Default Latitude where
+  def = Latitude $ Angle 0
+
 -- | The latitude of equator.
 equator :: Latitude
 equator = Latitude $ Angle 0
@@ -111,6 +115,9 @@ southPole = Latitude $ Angle (-90)
 -- where as negative denotes West.
 newtype Longitude = Longitude { unLong :: Angle }
 
+
+instance Default Longitude where
+  def = Longitude $ Angle 0
 
 instance Show Longitude where
   show = show . unLong
@@ -145,6 +152,9 @@ instance Monoid Geo where
 
 instance Group Geo where
   invert (Geo lt lg) = Geo (invert lt) $ invert lg
+
+instance Default Geo where
+  def = Geo def def
 
 -- | Objects that have a location on the globe. Minimum complete
 -- implementation: either the two functions `longitude` and `latitude`
