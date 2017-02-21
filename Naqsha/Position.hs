@@ -6,7 +6,7 @@
 module Naqsha.Position
        ( -- * Latitude, longitude and geopositions.
          -- $latandlong$
-         Latitude, Longitude, Geo(..)
+         Latitude, Longitude, Geo(..), GeoBounds(..)
        , Location(..)
          -- ** Some common latitude
        , equator, northPole, southPole
@@ -145,6 +145,20 @@ greenwich = Longitude $ Angle 0
 -- | The coordinates of a point on the earth's surface.
 data Geo = Geo {-# UNPACK #-} !Latitude
                {-# UNPACK #-} !Longitude
+
+-- | A boundary on earth given by the range of latitude and
+-- longitude. We represent this as a pair of Geo coordinates. The
+-- `minGeo` given the minimum latitude and longitude, whereas `maxGeo`
+-- gives the maximum latitude and longitude. If we visualise it as a
+-- rectangle (which is not really accurate because we are on a globe),
+-- `minGeo` gives the left bottom corner and `maxGeo` gives the right
+-- upper corner.
+data GeoBounds = GeoBounds { minGeo  :: Geo -- The minimum bound for latitude and longitude
+                           , maxGeo  :: Geo -- The maximum bound for latitude and longitude
+                           }
+
+instance Default GeoBounds where
+  def = GeoBounds def def
 
 instance Monoid Geo where
   mempty      = Geo mempty mempty
