@@ -31,6 +31,8 @@ library
                , data-default
                , groups
                , text
+               , time
+               , unordered-containers
                , vector          >= 0.7.1 && < 0.12
                , lens
 
@@ -40,7 +42,7 @@ library
                  , Naqsha.Annotate.Attribute
                  , Naqsha.Language
   other-modules: Naqsha.Annotate.Internal
-
+               , Naqsha.OpenStreetMap.Element
   default-language: Haskell2010
 
 test-Suite test
