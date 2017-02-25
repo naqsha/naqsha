@@ -43,6 +43,8 @@ library
                  , Naqsha.Language
   other-modules: Naqsha.Annotate.Internal
                , Naqsha.OpenStreetMap.Element
+               , Paths_naqsha
+               , Naqsha.Common
   default-language: Haskell2010
 
 test-Suite test
