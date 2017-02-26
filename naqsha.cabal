@@ -36,6 +36,7 @@ library
                , time
                , unordered-containers
                , vector          >= 0.7.1 && < 0.12
+               , xml-types
                , lens
 
   exposed-modules: Naqsha.Position
@@ -44,6 +45,7 @@ library
                  , Naqsha.Annotate.Attribute
                  , Naqsha.Language
                  , Naqsha.OpenStreetMap
+                 , Naqsha.OpenStreetMap.XML
   other-modules: Naqsha.Annotate.Internal
                , Naqsha.OpenStreetMap.Element
                , Paths_naqsha
