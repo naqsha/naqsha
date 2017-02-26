@@ -43,6 +43,7 @@ library
                  , Naqsha.Annotate.Feature
                  , Naqsha.Annotate.Attribute
                  , Naqsha.Language
+                 , Naqsha.OpenStreetMap
   other-modules: Naqsha.Annotate.Internal
                , Naqsha.OpenStreetMap.Element
                , Paths_naqsha
