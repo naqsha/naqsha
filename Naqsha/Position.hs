@@ -2,11 +2,13 @@
 {-# LANGUAGE MultiParamTypeClasses      #-}
 {-# LANGUAGE TypeFamilies               #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE Rank2Types                 #-}
+{-# LANGUAGE TemplateHaskell            #-}
 -- | This module captures position of a point on the globe.
 module Naqsha.Position
        ( -- * Latitude, longitude and geopositions.
          -- $latandlong$
-         Latitude, Longitude, Geo(..), GeoBounds(..)
+         Latitude, Longitude, Geo(..), GeoBounds(..), maxLatitude, maxLongitude, minLatitude, minLongitude
        , Location(..)
          -- ** Some common latitude
        , equator, northPole, southPole
@@ -18,6 +20,7 @@ module Naqsha.Position
        , dHvS, dHvS', rMean
        ) where
 
+import           Control.Lens
 import           Control.Monad               ( liftM )
 import           Data.Default
 import           Data.Int
@@ -146,19 +149,6 @@ greenwich = Longitude $ Angle 0
 data Geo = Geo {-# UNPACK #-} !Latitude
                {-# UNPACK #-} !Longitude
 
--- | A boundary on earth given by the range of latitude and
--- longitude. We represent this as a pair of Geo coordinates. The
--- `minGeo` given the minimum latitude and longitude, whereas `maxGeo`
--- gives the maximum latitude and longitude. If we visualise it as a
--- rectangle (which is not really accurate because we are on a globe),
--- `minGeo` gives the left bottom corner and `maxGeo` gives the right
--- upper corner.
-data GeoBounds = GeoBounds { minGeo  :: Geo -- The minimum bound for latitude and longitude
-                           , maxGeo  :: Geo -- The maximum bound for latitude and longitude
-                           }
-
-instance Default GeoBounds where
-  def = GeoBounds def def
 
 instance Monoid Geo where
   mempty      = Geo mempty mempty
@@ -175,17 +165,17 @@ instance Default Geo where
 -- or the single function `geoPosition`.
 class Location a where
   -- | The latitude of the object.
-  latitude    :: a -> Latitude
+  latitude    :: Lens' a Latitude
 
   -- | The longitude of the object.
-  longitude   :: a -> Longitude
+  longitude   :: Lens' a Longitude
 
   -- | The geo-Position of the object.
-  geoPosition :: a -> Geo
+  geoPosition :: Lens' a Geo
 
-  geoPosition a = Geo (latitude a) (longitude a)
-  latitude      = latitude  . geoPosition
-  longitude     = longitude . geoPosition
+  latitude = geoPosition . latitude
+
+  longitude = geoPosition . longitude
 
 ----------------------------- Angles and Angular quantities -----------------------
 
@@ -276,9 +266,13 @@ class Angular a where
 
 
 instance Location Geo where
-  latitude  (Geo x _) = x
-  longitude (Geo _ y) = y
-  geoPosition         = id
+  latitude  = lens getter setter
+    where setter (Geo _ lo) la = Geo la lo
+          getter (Geo la _)    = la
+
+  longitude = lens (\ (Geo _ lo) -> lo) (\ (Geo la _) lo -> Geo la lo)
+  geoPosition  = lens id (\ _ x -> x)
+
 
 instance Eq Geo where
   (==) (Geo xlat xlong) (Geo ylat ylong)
@@ -322,10 +316,10 @@ dHvS' :: ( Location geo1
       -> Double
 {-# SPECIALISE dHvS' :: Double -> Geo      -> Geo      -> Double #-}
 dHvS' r g1 g2 = r * c
-  where p1    = toRad $ latitude  g1
-        l1    = toRad $ longitude g1
-        p2    = toRad $ latitude  g2
-        l2    = toRad $ longitude g2
+  where p1    = toRad $ g1 ^. latitude
+        l1    = toRad $ g1 ^. longitude
+        p2    = toRad $ g2 ^. latitude
+        l2    = toRad $ g2 ^. longitude
         dp    = p2 - p1
         dl    = l2 - l1
         a     = sin (dp/2.0) ^ (2 :: Int) + cos p1 * cos p2 * (sin (dl/2) ^ (2 :: Int))
@@ -576,3 +570,41 @@ instance GV.Vector Vector Geo where
 
   basicUnsafeCopy (MGeoV mv) (GeoV v) = GV.basicUnsafeCopy mv v
   elemseq _ (Geo x y)                 = GV.elemseq (undefined :: Vector a) (unLat x, unLong y)
+
+
+
+
+-- | A boundary on earth given by the range of latitude and
+-- longitude. We represent this as a pair of Geo coordinates. The
+-- `minGeo` given the minimum latitude and longitude, whereas `maxGeo`
+-- gives the maximum latitude and longitude. If we visualise it as a
+-- rectangle (which is not really accurate because we are on a globe),
+-- `minGeo` gives the left bottom corner and `maxGeo` gives the right
+-- upper corner.
+data GeoBounds = GeoBounds { __maxLatitude  :: Latitude
+                           , __minLatitude  :: Latitude
+                           , __maxLongitude :: Longitude
+                           , __minLongitude :: Longitude
+                           }
+
+makeLenses ''GeoBounds
+
+-- | The upperbound on latitude
+maxLatitude :: Lens' GeoBounds Latitude
+maxLatitude = _maxLatitude
+
+-- | The lowerbound on latitude
+minLatitude :: Lens' GeoBounds Latitude
+minLatitude = _minLatitude
+
+-- | The upperbound on longitude
+maxLongitude :: Lens' GeoBounds Longitude
+maxLongitude = _maxLongitude
+
+-- | The lowerbound on longitude
+minLongitude :: Lens' GeoBounds Longitude
+minLongitude = _minLongitude
+
+
+instance Default GeoBounds where
+  def = GeoBounds def def def def
