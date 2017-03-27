@@ -162,9 +162,9 @@ instance Default e => Default (Tagged e) where
   def = Tagged def HM.empty
 
 instance Location e => Location (Tagged e) where
-  latitude    tged = latitude    $ tged ^. _element
-  longitude   tged = longitude   $ tged ^. _element
-  geoPosition tged = geoPosition $ tged ^. _element
+  latitude    = _element . latitude
+  longitude   = _element . longitude
+  geoPosition = _element . geoPosition
 
 
 -- | Family of types that have Open street map tags.
@@ -229,9 +229,9 @@ instance OsmTagged (Osm e) where
   untagged = _osmTaggedElement . _element
 
 instance Location e => Location (Osm e) where
-  latitude    oe = latitude    $ oe ^. untagged
-  longitude   oe = longitude   $ oe ^. untagged
-  geoPosition oe = geoPosition $ oe ^. untagged
+  latitude    = untagged . latitude
+  longitude   = untagged . longitude
+  geoPosition = untagged . geoPosition
 
 -- | Class that captures elements that behave like a fully for some e
 class OsmTagged a => OsmElement a where
