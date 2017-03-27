@@ -59,10 +59,10 @@ nodeRefE nid = [begin "nd" [attrS "ref" nid], end "nd"]
 
 boundE :: GeoBounds -> [Event]
 boundE = noBody "bounds" . attrsOfGB
-  where attrsOfGB gb = [ attrS "minlat" $ latitude  $ minGeo gb
-                       , attrS "maxlat" $ latitude  $ maxGeo gb
-                       , attrS "minlon" $ longitude $ minGeo gb
-                       , attrS "maxlon" $ longitude $ maxGeo gb
+  where attrsOfGB gb = [ attrLens "minlat" minLatitude  gb
+                       , attrLens "maxlat" maxLatitude  gb
+                       , attrLens "minlon" minLongitude gb
+                       , attrLens "maxlon" maxLongitude gb
                        ]
 
 memberE :: Member -> [Event]
@@ -102,11 +102,13 @@ attr n v = (n, [ContentText v])
 attrS :: Show a => Name -> a -> Attr
 attrS n = attr n . showT
 
+attrLens :: Show a => Name -> Lens' s a -> s -> Attr
+attrLens n lenz s = attrS n $ s ^. lenz
 
 -- | Begin for a node.
 nodeAttr      :: Node -> OsmMeta Node -> [Attr]
-nodeAttr n om = [ attrS "lat" $ latitude n
-                , attrS "lon" $ longitude n
+nodeAttr n om = [ attrLens "lat" latitude n
+                , attrLens "lon" longitude n
                 ]
                 ++ metaAttrs om
 
