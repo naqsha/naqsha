@@ -15,7 +15,7 @@ module Naqsha.Position
          -- ** Some common longitude
        , greenwich
          -- * Angles and angular quantities.
-       , Angle, Angular(..)
+       , Angle, Angular(..), readAngular
          -- ** Distance calculation.
        , dHvS, dHvS', rMean
        ) where
@@ -27,11 +27,14 @@ import           Data.Int
 import           Data.List                   ( unfoldr )
 import           Data.Monoid
 import           Data.Group
+import           Data.Text                   ( Text    )
 import           Data.Vector.Unboxed         ( MVector(..), Vector, Unbox)
 import qualified Data.Vector.Generic         as GV
 import qualified Data.Vector.Generic.Mutable as GVM
 
 import           Prelude         -- To avoid redundunt import warnings.
+
+import Naqsha.Common
 
 -- $latandlong$
 --
@@ -263,6 +266,9 @@ class Angular a where
 
 
 
+-- | Read an angular data.
+readAngular :: Angular a => Text -> Maybe a
+readAngular = fmap deg . readMaybeT
 
 
 instance Location Geo where
