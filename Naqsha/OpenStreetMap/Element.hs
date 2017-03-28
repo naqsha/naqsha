@@ -16,7 +16,7 @@ module Naqsha.OpenStreetMap.Element
        -- ** Sematic elements.
        , Tagged, OsmTags, OsmTagged(..)
        , Osm, OsmElement(..), unMeta
-       , OsmMeta, OsmID(..), unsafeToOsmID
+       , OsmMeta, OsmID(..), unsafeToOsmID, readOsmID
        , NodeID, WayID, RelationID
        -- ** Useful Lenses.
        , tagAt, wayNodes, relationMembers
@@ -41,6 +41,7 @@ import           Data.Vector.Unboxed            (Vector, MVector, Unbox)
 import           Data.Word
 
 import Naqsha.Position
+import Naqsha.Common
 
 
 
@@ -88,6 +89,11 @@ newtype OsmID element  = OsmID Word64 deriving (Eq, Ord)
 -- modules not to be exported outside.
 unsafeToOsmID :: Word64 -> OsmID e
 unsafeToOsmID = OsmID
+
+-- | Read the OSM id from text.
+readOsmID :: Text -> Maybe (OsmID a)
+readOsmID = fmap OsmID . readMaybeT
+
 
 instance Show (OsmID element) where
   show (OsmID x) = show x
