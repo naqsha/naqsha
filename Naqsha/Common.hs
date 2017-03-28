@@ -2,14 +2,15 @@
 
 {-# LANGUAGE OverloadedStrings #-}
 module Naqsha.Common
-       ( showT, readT, showVersionT, naqshaVersionT
+       ( showT, readMaybeT, showVersionT, naqshaVersionT
        , showTime, timeParser, osmXmlVersion
        ) where
 
 import Data.Time
 import Data.Monoid
-import Data.Text       ( Text, pack, unpack   )
+import Data.Text       ( Text, pack, unpack       )
 import Data.Version    ( Version(..), showVersion )
+import Text.Read       ( readMaybe                )
 import Paths_naqsha as NP
 
 
@@ -35,8 +36,8 @@ showT :: Show a => a -> Text
 showT = pack . show
 
 -- | Text variant of read.
-readT :: Read a => Text -> a
-readT = read . unpack
+readMaybeT :: Read a => Text -> Maybe a
+readMaybeT = readMaybe . unpack
 
 
 -- | Text variant of show version
