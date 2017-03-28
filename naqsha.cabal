@@ -26,16 +26,18 @@ source-repository head
 
 library
   ghc-options: -Wall
-  build-depends: base            >= 4.6  && < 4.10
+  build-depends: base                        >= 4.6   && < 4.10
                , conduit
                , conduit-combinators
                , containers
                , data-default
                , groups
+               , mtl
                , text
                , time
                , unordered-containers
-               , vector          >= 0.7.1 && < 0.12
+               , vector                      >= 0.7.1 && < 0.12
+               , xml-conduit                 >= 1.4   && <  1.5
                , xml-types
                , lens
 
