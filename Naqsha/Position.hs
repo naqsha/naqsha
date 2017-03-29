@@ -83,7 +83,7 @@ import Naqsha.Common
 newtype Latitude = Latitude { unLat :: Angle }
 
 instance Show Latitude where
-  show = show . unLat
+  show = show . normalise . unLat
 
 instance Angular Latitude where
   deg         = normalise . Latitude . deg
@@ -91,7 +91,7 @@ instance Angular Latitude where
   normalise   = Latitude  . Angle . normLat . unAngle . unLat
 
 instance Eq Latitude where
-  (==) l1 l2 = unAngle (unLat $ normalise l1) == unAngle (unLat $ normalise l2)
+  (==) l1 l2 = unLat (normalise l1) == unLat (normalise l2)
 
 instance Monoid Latitude where
   mempty      = equator
@@ -126,7 +126,7 @@ instance Default Longitude where
   def = Longitude $ Angle 0
 
 instance Show Longitude where
-  show = show . unLong
+  show = show . normalise . unLong
 
 instance Angular Longitude where
   deg       = normalise . Longitude . deg
@@ -134,7 +134,7 @@ instance Angular Longitude where
   normalise = Longitude . Angle .  normLong . unAngle . unLong
 
 instance Eq Longitude  where
-  (==) l1 l2 = unAngle (unLong $ normalise l1) == unAngle (unLong $ normalise l2)
+  (==) l1 l2 = unLong (normalise l1) == unLong (normalise l2)
 
 instance Monoid Longitude where
   mempty      = greenwich
@@ -183,7 +183,7 @@ class Location a where
 ----------------------------- Angles and Angular quantities -----------------------
 
 -- | An abstract angle measured in degrees up to some precision (system dependent).
-newtype Angle = Angle {unAngle ::  Int64} deriving Unbox
+newtype Angle = Angle {unAngle ::  Int64} deriving (Unbox, Eq)
 
 -- | The scaling used to represent angles.
 scale :: Int64
@@ -200,8 +200,6 @@ twoSeventy = 270 * scale
 
 oneEighty  :: Int64
 oneEighty  = 180 * scale
-
-
 
 scaleDouble :: Double
 scaleDouble = fromIntegral scale
