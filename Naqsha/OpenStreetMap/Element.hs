@@ -37,7 +37,7 @@ import qualified Data.Vector                 as V
 import qualified Data.Vector.Generic         as GV
 import qualified Data.Vector.Generic.Mutable as GVM
 import           Data.Vector.Unboxed            (Vector, MVector, Unbox)
-
+import qualified Data.Vector.Unboxed         as VU
 import           Data.Word
 
 import Naqsha.Position
@@ -307,6 +307,8 @@ type    RelationID = OsmID Relation
 -- | The primitive way type.
 newtype Way  = Way       { __wayNodes        :: Vector NodeID }
 
+instance Default Way where
+  def = Way VU.empty
 -- | A member of a relation.
 
 data Member = NodeM     Text NodeID
@@ -315,6 +317,9 @@ data Member = NodeM     Text NodeID
 
 -- | The primitive relation type.
 newtype Relation = Relation { __relationMembers :: V.Vector Member }
+
+instance Default Relation where
+  def = Relation V.empty
 
 makeLenses ''Way
 makeLenses ''Relation
