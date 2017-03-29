@@ -1,28 +1,55 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE Rank2Types        #-}
+{-# LANGUAGE TemplateHaskell   #-}
 module Naqsha.OpenStreetMap.XML
-       ( -- * Compiling to XML
-         translate, translateDoc, compile, compileDoc
+       (
+         -- * File format
+         OsmFile
+         -- * Streaming interface.
+       , translate, translateDoc, compile, compileDoc
        ) where
 
-import            Control.Lens
-import            Control.Monad
-import            Control.Monad.Catch         ( MonadThrow                      )
-import            Control.Monad.State
-import            Data.Conduit                ( Conduit, ConduitM, yield, await )
-import            Data.Conduit.List           ( concatMap                       )
-import            Data.Default                ( def                             )
-import  qualified Data.Map        as M
-import            Data.Maybe                  ( catMaybes, fromMaybe            )
-import            Data.Text                   ( Text, unpack                    )
-import            Data.XML.Types              ( Event(..), Name, Content(..)    )
-import            Prelude         hiding      ( concatMap                       )
-import            Text.XML.Stream.Parse
+import           Control.Lens
+import           Control.Monad
+import           Control.Monad.Catch         ( MonadThrow                      )
+import           Control.Monad.State
+import           Data.Conduit                ( Conduit, ConduitM, yield, await )
+import           Data.Conduit.List           ( concatMap                       )
+import           Data.Default                ( def                             )
+import qualified Data.Map        as M
+import           Data.Maybe                  ( catMaybes, fromMaybe            )
+import           Data.Text                   ( Text, unpack                    )
+import qualified Data.Vector     as V
+import           Data.XML.Types              ( Event(..), Name, Content(..)    )
+import           Prelude         hiding      ( concatMap                       )
+import           Text.XML.Stream.Parse
 
 import Naqsha.Common
 import Naqsha.Position
 import Naqsha.OpenStreetMap.Element
 import Naqsha.OpenStreetMap.Stream
+
+
+
+-- | An osmFile. Use this data type only for small files. Typical osm
+-- files are large and hence one should always strive to build a
+-- streaming interface.
+data OsmFile = OsmFile { _osmBounds    :: GeoBounds
+                       , _nodeList     :: V.Vector (Osm Node)
+                       , _wayList      :: V.Vector (Osm Way)
+                       , _relationList :: V.Vector (Osm Relation)
+                       }
+
+makeLenses ''OsmFile
+
+instance OsmEventElement OsmFile where
+  toSource osmFile = betweenC EventBeginOsm EventEndOsm $ do
+    toSource $ osmFile ^. osmBounds
+    V.mapM_ toSource $ osmFile ^. nodeList
+    V.mapM_ toSource $ osmFile ^. wayList
+    V.mapM_ toSource $ osmFile ^. relationList
+
+------------------------------------- Streaming Stuff ----------------------
 
 -- | Conduit that converts OsmEvents to xml events.
 type Compile   m = Conduit  OsmEvent m Event
