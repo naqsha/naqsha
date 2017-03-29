@@ -5,6 +5,10 @@ module Naqsha.OpenStreetMap.XML
        (
          -- * File format
          OsmFile
+       , osmFileBounds
+       , osmFileNodes
+       , osmFileWays
+       , osmFileRelations
          -- * Streaming interface.
        , translate, translateDoc, compile, compileDoc
        ) where
@@ -15,7 +19,7 @@ import           Control.Monad.Catch         ( MonadThrow                      )
 import           Control.Monad.State
 import           Data.Conduit                ( Conduit, ConduitM, yield, await )
 import           Data.Conduit.List           ( concatMap                       )
-import           Data.Default                ( def                             )
+import           Data.Default
 import qualified Data.Map        as M
 import           Data.Maybe                  ( catMaybes, fromMaybe            )
 import           Data.Text                   ( Text, unpack                    )
@@ -34,20 +38,39 @@ import Naqsha.OpenStreetMap.Stream
 -- | An osmFile. Use this data type only for small files. Typical osm
 -- files are large and hence one should always strive to build a
 -- streaming interface.
-data OsmFile = OsmFile { _osmBounds    :: GeoBounds
-                       , _nodeList     :: V.Vector (Osm Node)
-                       , _wayList      :: V.Vector (Osm Way)
-                       , _relationList :: V.Vector (Osm Relation)
+data OsmFile = OsmFile { __osmFileBounds    :: GeoBounds
+                       , __osmFileNodes     :: V.Vector (Osm Node)
+                       , __osmFileWays      :: V.Vector (Osm Way)
+                       , __osmFileRelations :: V.Vector (Osm Relation)
                        }
 
 makeLenses ''OsmFile
 
+-- | Lens that focuses on the bounding region for the OSM file.
+osmFileBounds :: Lens' OsmFile GeoBounds
+osmFileBounds = _osmFileBounds
+
+-- | Lens that focuses on the nodes in the OSM file.
+osmFileNodes :: Lens' OsmFile (V.Vector (Osm Node))
+osmFileNodes = _osmFileNodes
+
+-- | Lens that focuses on the ways in the osm file.
+osmFileWays :: Lens' OsmFile (V.Vector (Osm Way))
+osmFileWays = _osmFileWays
+
+-- | Lens that focuses on the relations in the osm file.
+osmFileRelations :: Lens' OsmFile (V.Vector (Osm Relation))
+osmFileRelations = _osmFileRelations
+
+instance Default OsmFile where
+  def = OsmFile def V.empty V.empty V.empty
+
 instance OsmEventElement OsmFile where
   toSource osmFile = betweenC EventBeginOsm EventEndOsm $ do
-    toSource $ osmFile ^. osmBounds
-    V.mapM_ toSource $ osmFile ^. nodeList
-    V.mapM_ toSource $ osmFile ^. wayList
-    V.mapM_ toSource $ osmFile ^. relationList
+    toSource $ osmFile ^. osmFileBounds
+    V.mapM_ toSource $ osmFile ^. osmFileNodes
+    V.mapM_ toSource $ osmFile ^. osmFileWays
+    V.mapM_ toSource $ osmFile ^. osmFileRelations
 
 ------------------------------------- Streaming Stuff ----------------------
 
