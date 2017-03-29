@@ -105,15 +105,15 @@ instance Default Latitude where
 
 -- | The latitude of equator.
 equator :: Latitude
-equator = Latitude $ Angle 0
+equator = deg 0
 
 -- | The latitude of north pole.
 northPole :: Latitude
-northPole = Latitude $ Angle 90
+northPole = deg 90
 
 -- | The latitude of south pole.
 southPole :: Latitude
-southPole = Latitude $ Angle (-90)
+southPole = deg (-90)
 
 -------------------------- Longitude ------------------------------------------
 
