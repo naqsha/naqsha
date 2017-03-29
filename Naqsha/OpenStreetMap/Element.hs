@@ -209,7 +209,7 @@ data OsmMeta a = OsmMeta { __osmID          :: Maybe (OsmID a)
                          , __version        :: Maybe Integer
                          , __timeStamp      :: Maybe UTCTime
                          , __changeSet      :: Maybe Integer
-                         }
+                         } deriving (Show, Eq)
 
 makeLenses ''OsmMeta
 makeLenses ''Osm
@@ -311,7 +311,7 @@ newtype Way  = Way       { __wayNodes        :: Vector NodeID }
 
 data Member = NodeM     Text NodeID
             | WayM      Text WayID
-            | RelationM Text RelationID
+            | RelationM Text RelationID deriving (Show, Eq)
 
 -- | The primitive relation type.
 newtype Relation = Relation { __relationMembers :: V.Vector Member }

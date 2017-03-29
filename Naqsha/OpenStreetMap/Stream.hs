@@ -36,7 +36,7 @@ data OsmEvent = EventGeoBounds GeoBounds
               | EventWayBegin      (OsmMeta Way)
               | EventWayEnd
               | EventRelationBegin (OsmMeta Relation)
-              | EventRelationEnd
+              | EventRelationEnd deriving (Show, Eq)
 
 
 -------------- Some combinators for building sources ---------------

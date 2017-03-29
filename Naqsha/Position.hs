@@ -151,7 +151,7 @@ greenwich = Longitude $ Angle 0
 -- | The coordinates of a point on the earth's surface.
 data Geo = Geo {-# UNPACK #-} !Latitude
                {-# UNPACK #-} !Longitude
-
+         deriving Show
 
 instance Monoid Geo where
   mempty      = Geo mempty mempty
@@ -591,7 +591,7 @@ data GeoBounds = GeoBounds { __maxLatitude  :: Latitude
                            , __minLatitude  :: Latitude
                            , __maxLongitude :: Longitude
                            , __minLongitude :: Longitude
-                           }
+                           } deriving (Show, Eq)
 
 makeLenses ''GeoBounds
 
