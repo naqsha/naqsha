@@ -9,52 +9,53 @@ import Naqsha.Position
 import Naqsha.Arbitrary ()
 
 inRange :: Testable prop
-        => (Int, Int)    -- ^ Range
-        -> String        -- ^ description
-        -> ((Int,Int) -> prop)
+        => (Angle, Angle) -- ^ Range
+        -> String         -- ^ description
+        -> ((Angle,Angle) -> prop)
         -> Spec
-inRange rng descr prop = it label $ forAll pair prop
-  where pair = (,) <$> choose rng <*> choose rng
-        label = "in range " ++ show rng ++ ": " ++ descr
+inRange rng@(mi,mx) descr prop_test = it msg $ forAll pair prop_test
+  where pair  = (,) <$> gen <*> gen
+        msg   = "in range " ++ show rng ++ ": " ++ descr
+        gen   =  toEnum <$> choose (fromEnum mi, fromEnum mx)
+
+isIncreasing :: Ord a => (Angle -> a) -> (Angle, Angle) -> Bool
+isIncreasing conv (x , y)
+  | x == y    = xA == yA
+  | x <  y    = xA <  yA
+  | otherwise = xA >  yA
+  where xA = conv x
+        yA = conv y
 
 
-isIncreasing :: Angular a => a -> (Int, Int) ->  Bool
-isIncreasing a (x , y) | x == y = toDeg xA == toDeg yA
-                       | x <  y = toDeg xA <  toDeg yA
-                       | x >  y = toDeg xA >  toDeg yA
-  where xA = intToAngular x
-        yA = intToAngular y
-        intToAngular = flip asTypeOf a . deg . toEnum
+isDecreasing :: Ord a => (Angle -> a) -> (Angle, Angle) -> Bool
+isDecreasing conv (x, y)
+  | x == y    = xA == yA
+  | x >  y    = xA <  yA
+  | otherwise = xA >  yA
+  where xA  = conv x
+        yA  = conv y
 
-isDecreasing :: Angular a => a -> (Int, Int) -> Bool
-isDecreasing a (x, y) | x == y = toDeg xA == toDeg yA
-                      | x >  y = toDeg xA <  toDeg yA
-                      | x <  y = toDeg xA >  toDeg yA
-  where xA = intToAngular x
-        yA = intToAngular y
-        intToAngular = flip asTypeOf a . deg . toEnum
 
 
 spec :: Spec
 spec = do
   describe "latitudes" $ do
-    prop "show have a period of 360 deg" $ \ (x :: Latitude) ->
-      x <> deg 360 == x
+    prop "show have a period of 360 deg" $
+      \ (x :: Latitude) -> x <> lat 360 `shouldBe` x
 
-    prop "normalised latitude lie in -90 to 90" $ \ (x :: Latitude) ->
-      let xDeg = toDeg (normalise x)
-          in xDeg >= -90 && xDeg <= 90
+    prop "should lie in [-90,90]" $
+      \ (x :: Latitude) -> x >= lat (-90) && x <= lat 90
 
-    inRange (-90,90) "latitude increases" $ isIncreasing (undefined :: Latitude)
-    inRange (90, 270) "latitude decreases" $ isDecreasing (undefined :: Latitude)
+    inRange (-90,90) "increases monotonically"  $ isIncreasing lat
+    inRange (90, 270) "decreases monotonically" $ isDecreasing lat
 
 
   describe "longitudes" $ do
-    prop "should have a period of 360 deg" $ \ (x :: Longitude) ->
-      x <> deg 360 == x
 
-    prop "normalised longitude lie in -180 to 180" $ \ (x :: Longitude) ->
-      let xDeg = toDeg (normalise x)
-          in xDeg >= -180 && xDeg <= 180
+    prop "should have a period of 360 deg" $
+      \ (x :: Longitude) -> x <> lon 360 `shouldBe` x
 
-    inRange (-180, 180) "longitude increases" $ isIncreasing (undefined :: Longitude)
+    prop "should lie in [-180,180]" $
+      \ (x :: Longitude) -> x >= lon (-180) && x <= lon 180
+
+    inRange (-180, 180) "increases monotonically" $ isIncreasing lon
