@@ -159,7 +159,7 @@ type OsmTags = HM.HashMap Text Text
 -- | A tagged element.
 data Tagged e = Tagged { __element :: e
                        , __tags    :: OsmTags
-                       }
+                       } deriving Show
 
 makeLenses ''Tagged
 
@@ -198,7 +198,7 @@ instance OsmTagged (Tagged e) where
 -- the meta data for the object in the Open street map database.
 data Osm e = Osm { __osmTaggedElement :: Tagged e
                  , __osmMeta          :: OsmMeta e
-                 }
+                 } deriving Show
 
 -- | The open street map metadata that is associated with each
 -- element.
@@ -305,7 +305,7 @@ type    RelationID = OsmID Relation
 
 
 -- | The primitive way type.
-newtype Way  = Way       { __wayNodes        :: Vector NodeID }
+newtype Way  = Way       { __wayNodes        :: Vector NodeID } deriving (Show, Eq)
 
 instance Default Way where
   def = Way VU.empty
@@ -316,7 +316,7 @@ data Member = NodeM     Text NodeID
             | RelationM Text RelationID deriving (Show, Eq)
 
 -- | The primitive relation type.
-newtype Relation = Relation { __relationMembers :: V.Vector Member }
+newtype Relation = Relation { __relationMembers :: V.Vector Member } deriving (Show, Eq)
 
 instance Default Relation where
   def = Relation V.empty
