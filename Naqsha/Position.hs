@@ -8,33 +8,34 @@
 module Naqsha.Position
        ( -- * Latitude, longitude and geopositions.
          -- $latandlong$
-         Latitude, Longitude, Geo(..), GeoBounds(..), maxLatitude, maxLongitude, minLatitude, minLongitude
+         Latitude, Longitude, lat, lon, Geo(..)
        , Location(..)
          -- ** Some common latitude
        , equator, northPole, southPole
          -- ** Some common longitude
        , greenwich
          -- * Angles and angular quantities.
-       , Angle, Angular(..), readAngular
-         -- ** Distance calculation.
+       , Angle, Angular(..)
+         -- * A geographic bound.
+       , GeoBounds(..), maxLatitude, maxLongitude, minLatitude, minLongitude
+       -- ** Distance calculation.
        , dHvS, dHvS', rMean
        ) where
 
 import           Control.Lens
 import           Control.Monad               ( liftM )
 import           Data.Default
+import           Data.Fixed
 import           Data.Int
-import           Data.List                   ( unfoldr )
 import           Data.Monoid
 import           Data.Group
-import           Data.Text                   ( Text    )
 import           Data.Vector.Unboxed         ( MVector(..), Vector, Unbox)
 import qualified Data.Vector.Generic         as GV
 import qualified Data.Vector.Generic.Mutable as GVM
+import           Text.Read
 
 import           Prelude         -- To avoid redundunt import warnings.
 
-import Naqsha.Common
 
 -- $latandlong$
 --
@@ -42,21 +43,20 @@ import Naqsha.Common
 -- captures by the type `Geo`.  It is essentially a pair of the
 -- `Latitude` and `Longitude` of the point.
 --
--- Latitude and Longitude are instances of the class `Angular`. So the
--- can be expressed in either degrees or radians using `deg` or `rad`
--- respectively.
+-- The default representation of Latitude and Longitudes are in
+-- degrees.
 --
 -- > kanpurLatitude  :: Latitude
--- > kanpurLatitude  = deg 26.4477777
+-- > kanpurLatitude  = 26.4477777
 -- > kanpurLongitude :: Longitude
--- > kanpurLongitude = deg 80.3461111
+-- > kanpurLongitude = 80.3461111
 --
 -- Latitudes and longitudes are instances of `Monoid` where the monoid
 -- instance adds up the angle. One can use this `Monoid` instance to
 -- express in degrees, minutes and seconds as follows
 --
--- > kanpurLatitude  = deg 26 <> minute 26 <> second 52
--- > kanpurLongitude = deg 80 <> minute 20 <> second 46
+-- > kanpurLatitude  = lat 26 <> minute 26 <> second 52
+-- > kanpurLongitude = long 80 <> minute 20 <> second 46
 --
 -- They are also instances of `Group` where `invert` is the angle in
 -- the opposite direction, i.e for latitudes, `invert` converts from
@@ -82,38 +82,51 @@ import Naqsha.Common
 
 newtype Latitude = Latitude { unLat :: Angle }
 
+lat :: Angle -> Latitude
+lat = normalise . Latitude
+
 instance Show Latitude where
-  show = show . normalise . unLat
+  show = show . unLat . normalise
+
+instance Read Latitude where
+  readsPrec n = map conv . readsPrec n
+    where conv (ang,s) = (normalise $ Latitude ang, s)
+
 
 instance Angular Latitude where
-  deg         = normalise . Latitude . deg
-  toDeg       = toDeg     . unLat
-  normalise   = Latitude  . Angle . normLat . unAngle . unLat
+  normalise = normLat   . unLat
+  minutes   = lat . minutes
+  seconds   = lat . seconds
+  rad       = lat . rad
+  toRad     = toRad . unLat . normalise
 
 instance Eq Latitude where
   (==) l1 l2 = unLat (normalise l1) == unLat (normalise l2)
 
+instance Ord Latitude where
+  compare x y = unLat (normalise x) `compare` unLat (normalise y)
+
 instance Monoid Latitude where
   mempty      = equator
-  mappend x y = normalise $ Latitude $ Angle $ unAngle (unLat x)  + unAngle (unLat y)
+  mappend x y = lat $ unLat x + unLat y
 
 instance Group Latitude where
-  invert  = Latitude . Angle . negate . unAngle . unLat . normalise
+  invert  = lat . negate . unLat
 
 instance Default Latitude where
-  def = Latitude $ Angle 0
+  def = mempty
 
 -- | The latitude of equator.
 equator :: Latitude
-equator = deg 0
+equator = lat 0
 
 -- | The latitude of north pole.
 northPole :: Latitude
-northPole = deg 90
+northPole = lat 90
 
 -- | The latitude of south pole.
 southPole :: Latitude
-southPole = deg (-90)
+southPole = lat 90
 
 -------------------------- Longitude ------------------------------------------
 
@@ -121,28 +134,41 @@ southPole = deg (-90)
 -- where as negative denotes West.
 newtype Longitude = Longitude { unLong :: Angle }
 
+lon :: Angle-> Longitude
+lon = normalise . Longitude
+
 
 instance Default Longitude where
   def = Longitude $ Angle 0
 
 instance Show Longitude where
-  show = show . normalise . unLong
+  show = show . unLong . normalise
+
+
+instance Read Longitude where
+  readsPrec n = map conv . readsPrec n
+    where conv (ang,s) = (normalise $ Longitude ang, s)
 
 instance Angular Longitude where
-  deg       = normalise . Longitude . deg
-  toDeg     = toDeg     . unLong
-  normalise = Longitude . Angle .  normLong . unAngle . unLong
+  normalise = normLong  . unLong
+  minutes   = lon . minutes
+  seconds   = lon . seconds
+  rad       = lon . rad
+  toRad     = toRad . unLong . normalise
 
 instance Eq Longitude  where
   (==) l1 l2 = unLong (normalise l1) == unLong (normalise l2)
 
+instance Ord Longitude where
+  compare x y = unLong (normalise x) `compare` unLong (normalise y)
+
 instance Monoid Longitude where
   mempty      = greenwich
-  mappend x y = normalise $ Longitude $ Angle $ unAngle (unLong x)  + unAngle (unLong y)
+  mappend x y = Longitude $ unLong x + unLong  y
 
 
 instance Group Longitude where
-  invert  = Longitude . Angle . negate . unAngle . unLong . normalise
+  invert  = lon . negate . unLong
 
 -- | The zero longitude.
 greenwich :: Longitude
@@ -182,92 +208,86 @@ class Location a where
 
 ----------------------------- Angles and Angular quantities -----------------------
 
--- | An abstract angle measured in degrees up to some precision (system dependent).
-newtype Angle = Angle {unAngle ::  Int64} deriving (Unbox, Eq)
-
--- | The scaling used to represent angles.
-scale :: Int64
-scale = 10000000
-
-threeSixty :: Int64
-threeSixty = 360 * scale
-
-ninety     :: Int64
-ninety     = 90 * scale
-
-twoSeventy :: Int64
-twoSeventy = 270 * scale
-
-oneEighty  :: Int64
-oneEighty  = 180 * scale
-
-scaleDouble :: Double
-scaleDouble = fromIntegral scale
-
-instance Angular Angle where
-  deg       = Angle . truncate . (*scaleDouble)
-  toDeg     = (/scaleDouble) . fromIntegral .  unAngle
-  normalise = id
-  {-# INLINE normalise #-}
-
+-- | An abstract angle measured in degrees up to some precision
+-- (system dependent).
+newtype Angle = Angle {unAngle ::  Int64} deriving Unbox
 
 instance Enum Angle where
-  toEnum    = Angle . (*scale) . toEnum
-  fromEnum  = fromEnum . flip quot scale . unAngle
+   toEnum   = fromAngEnc . toEnum
+   fromEnum = fromEnum   . toAngEnc . normalise
 
+instance Angular Angle where
+  normalise = Angle . flip rem threeSixty . unAngle
+    where threeSixty =  360 * scale
+
+  minutes   = fromAngEnc . (/60) . fromIntegral
+  seconds   = fromDouble . (/3600)
+  rad       = fromDouble . (/pi) . (*180)
+  toRad     = (*pi) . (/180) . toDouble
+  {-# INLINE normalise #-}
+
+instance Num Angle where
+  x + y         = normalise $ Angle $ unAngle x + unAngle y
+  x - y         = normalise $ Angle $ unAngle x - unAngle y
+  x * y         = normalise $ Angle $ unAngle x * unAngle y
+  negate        = Angle . negate . unAngle
+  abs           = Angle . abs    . unAngle
+  signum        = fromIntegral   . signum . unAngle  -- Angle . abs . unAngle will result in 1 * 10^9
+  fromInteger   = fromAngEnc     . fromInteger
 
 instance Show Angle where
-  show x | r == 0    = show q
-         | otherwise = show q ++ "." ++ concatMap show (unfoldr unfoldDigits (abs r, scale `quot` 10))
-    where (q,r) = unAngle x `quotRem` scale
-          unfoldDigits (v, p)
-            | v ==  0   = Nothing
-            | p >= 1    = Just (v',(r', p `quot` 10))
-            | otherwise = Nothing
-            where (v',r') = v `quotRem` p
+  show = show . toAngEnc
+
+instance Read Angle where
+  readsPrec n = map conv . readsPrec n
+    where conv (x,s) = (fromAngEnc x, s)
+
+instance Eq Angle where
+  (==) x y = unAngle (normalise x) == unAngle (normalise y)
+
+instance Ord Angle where
+  compare x y = unAngle (normalise x) `compare` unAngle (normalise y)
 
 
--- | Measurements that are angular. Minimal complete implemenation
--- give one of `deg` or `rad`, one of `toDeg` or `toRad`.
+----------------- Encoding Angles ---------------------------------------------------
+
+-- | Angles are encoded in nano-degrees.
+type AngEnc = Nano
+
+toAngEnc :: Angle -> AngEnc
+toAngEnc = MkFixed . toInteger . unAngle
+
+fromAngEnc :: AngEnc  -> Angle
+fromAngEnc a@(MkFixed x) =  Angle $ fromIntegral $ x `rem` (360 * resolution a)
+
+scale :: Num a => a
+scale = fromIntegral $ resolution (1 :: AngEnc)
+
+fromDouble :: Double -> Angle
+fromDouble = fromAngEnc . fromInteger . round . (*scale)
+
+toDouble :: Angle -> Double
+toDouble = (/scale) . fromIntegral . unAngle
+
+------------------------------ The angular class ------------------------
+
+
+-- | Angular quantities.
 class Angular a where
-
-  -- | Express angular quantity in degrees.
-  deg   :: Double -> a
-
   -- | Express angular quantity in minutes.
-  minute :: Double -> a
+  minutes :: Int -> a
 
   -- | Express angular quantity in seconds.
-  second :: Double -> a
+  seconds :: Double -> a
 
   -- | Express angular quantity in radians
   rad  :: Double -> a
-
-  -- | Get the angle in degree
-  toDeg :: a  -> Double
 
   -- | Get the angle in radians.
   toRad :: a -> Double
 
   -- | Normalise the quantity
   normalise  :: a -> a
-
-
-  rad    = deg . (/180) . (pi*)
-  deg    = rad . (/pi)  . (180*)
-
-  toDeg  = (/pi)  . (180*) . toRad
-  toRad  = (/180) . (pi*)  . toDeg
-
-  minute = deg . (/60)
-  second = deg . (/3600)
-
-
-
--- | Read an angular data.
-readAngular :: Angular a => Text -> Maybe a
-readAngular = fmap deg . readMaybeT
-
 
 instance Location Geo where
   latitude  = lens getter setter
@@ -334,27 +354,26 @@ dHvS' r g1 g2 = r * c
 
 -- | Function to normalise latitudes. It essentially is a saw-tooth
 -- function of period 360 with max values 90.
-normLat :: Int64 -> Int64
-normLat y = signum y * normPosLat (abs y)
+normLat :: Angle -> Latitude
+normLat ang = Latitude $ fromAngEnc $ signum y * normPosLat (abs y)
+  where y = toAngEnc ang
 
 -- | Normalise a positive latitude.
-normPosLat :: Int64 -> Int64
-normPosLat x | r <= ninety     =  r
-             | r <= twoSeventy =  oneEighty - r
-             | otherwise       =  r  - threeSixty
-    where r  = x `rem` threeSixty
-
+normPosLat :: AngEnc -> AngEnc
+normPosLat x | x <= 90   = x
+             | x <= 270  = 180 - x
+             | otherwise = x  - 360
 
 
 -- | Function to normalise longitude.
-normLong :: Int64 -> Int64
-normLong y = signum y * normPosLong (abs y)
+normLong :: Angle -> Longitude
+normLong ang = Longitude $ fromAngEnc $ signum y * normPosLong (abs y)
+  where y = toAngEnc ang
 
 -- | Normalise a positive longitude.
-normPosLong :: Int64 -> Int64
-normPosLong x | r <= oneEighty  = r
-              | otherwise       = r - threeSixty
-  where r   = x `rem` threeSixty
+normPosLong :: AngEnc -> AngEnc
+normPosLong x | x <= 180  = x
+              | otherwise = x - 360
 
 
 ------------------- Making stuff suitable for unboxed vector. --------------------------
