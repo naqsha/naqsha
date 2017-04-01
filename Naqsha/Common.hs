@@ -15,8 +15,13 @@ import Paths_naqsha as NP
 
 
 -- | Time format used by osm.
-osmTimeFmt :: String
-osmTimeFmt = "%Y-%m-%dT%T%Q%z"
+osmDisplayFmt :: String
+osmDisplayFmt = "%Y-%m-%dT%H:%m:%Q%z"
+
+-- | Time parse format (more liberal than display format).
+osmParseFmt :: String
+osmParseFmt = "%Y-%m-%dT%H:%m:%Q%Z"
+
 
 -- | The xml version of osm.
 osmXmlVersion   :: Version
@@ -24,11 +29,11 @@ osmXmlVersion   = Version [0,6] []
 
 -- | show the time as text
 showTime :: FormatTime t => t -> Text
-showTime = pack . formatTime defaultTimeLocale osmTimeFmt
+showTime = pack . formatTime defaultTimeLocale osmDisplayFmt
 
 -- | read teh time as text
 timeParser :: (Monad m, ParseTime t) => Text -> m t
-timeParser = parseTimeM True defaultTimeLocale osmTimeFmt . unpack
+timeParser = parseTimeM True defaultTimeLocale osmParseFmt . unpack
 
 
 -- | Text variants of show
