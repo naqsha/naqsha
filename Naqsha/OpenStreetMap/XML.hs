@@ -200,7 +200,7 @@ metaAttrs :: OsmMeta e
 metaAttrs mt = catMaybes [ maybeAttr mt _osmID          $ mkAttrS "id"
                          , maybeAttr mt _modifiedUser   $ mkAttr "user"
                          , maybeAttr mt _modifiedUserID $ mkAttrS "uid"
-                         , maybeAttr mt _timeStamp      $ mkAttr"timestamp" . showTime
+                         , maybeAttr mt _timeStamp      $ mkAttr "timestamp" . showTime
                          , maybeAttr mt _version        $ mkAttrS "version"
                          , maybeAttr mt _changeSet      $ mkAttrS "changeset"
                          , maybeAttr mt _isVisible      $ visibleFunc
@@ -307,10 +307,10 @@ betweenC b e pr = yield b >> pr >> yield e
 
 -- | Attribute parser to parse an angular quantity like latitude,
 -- longitude etc.
-angularAttrP :: Angular a
+angularAttrP :: (Angular a, Read a)
              => Name
              -> AttrParser a
-angularAttrP nm = force err $ readAngular <$> requireAttr nm
+angularAttrP nm = force err $ readMaybeT <$> requireAttr nm
   where err = "bad " ++ show nm
 
 
