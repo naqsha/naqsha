@@ -66,6 +66,8 @@ test-Suite test
                , Naqsha.Arbitrary
   build-depends: base
                , bytestring
+               , conduit
+               , conduit-combinators
                , data-default
                , HUnit                          >= 1.2
                , QuickCheck                     >= 2.4

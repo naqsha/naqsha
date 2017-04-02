@@ -35,27 +35,40 @@ isDecreasing conv (x, y)
   where xA  = conv x
         yA  = conv y
 
+shouldBeBounded :: (Arbitrary a, Ord a, Show a, Bounded a) => a -> Spec
+shouldBeBounded a = prop msg $ \ x -> x >= mi && x <= mx
+  where msg = unwords [ "should lie between"
+                      , show mi
+                      , "and"
+                      , show mx
+                      ]
+        mi   = minBound `asTypeOf` a
+        mx   = maxBound `asTypeOf` a
 
 
 spec :: Spec
 spec = do
+
   describe "latitudes" $ do
+    prop "read . show = id" $
+      \ (x :: Latitude) -> x `shouldBe` read (show x)
+
     prop "show have a period of 360 deg" $
       \ (x :: Latitude) -> x <> lat 360 `shouldBe` x
 
-    prop "should lie in [-90,90]" $
-      \ (x :: Latitude) -> x >= lat (-90) && x <= lat 90
+    shouldBeBounded (undefined ::Latitude)
 
-    inRange (-90,90) "increases monotonically"  $ isIncreasing lat
-    inRange (90, 270) "decreases monotonically" $ isDecreasing lat
-
-
+    inRange (-90,90)        "increases monotonically" $ isIncreasing lat
+    inRange (90,maxBound)   "decreases monotonically" $ isDecreasing lat
+    inRange (minBound, -90) "decreases monotonically" $ isDecreasing lat
   describe "longitudes" $ do
+
+    prop "read . show = id" $
+      \ (x :: Latitude) -> x `shouldBe` read (show x)
 
     prop "should have a period of 360 deg" $
       \ (x :: Longitude) -> x <> lon 360 `shouldBe` x
 
-    prop "should lie in [-180,180]" $
-      \ (x :: Longitude) -> x >= lon (-180) && x <= lon 180
+    shouldBeBounded (undefined ::Longitude)
 
-    inRange (-180, 180) "increases monotonically" $ isIncreasing lon
+    inRange (succ (-180), 180) "increases monotonically" $ isIncreasing lon

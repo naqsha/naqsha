@@ -9,7 +9,10 @@ module Naqsha.Arbitrary where
 
 import           Control.Lens
 import           Control.Monad.State
+import           Data.Conduit                as Conduit
+import           Data.Conduit.Combinators    as Conduit
 import           Data.Default
+
 import qualified Data.HashMap.Lazy           as HM
 import           Data.Text                      (Text, pack)
 import           Data.Time
@@ -20,17 +23,16 @@ import           Test.QuickCheck
 
 import Naqsha.Position
 import Naqsha.OpenStreetMap
+import Naqsha.OpenStreetMap.XML
 
 instance Arbitrary Angle where
   arbitrary = toEnum <$> arbitrary
 
-
 instance Arbitrary Latitude where
-  arbitrary = deg <$> arbitrary
-
+  arbitrary = lat <$> arbitrary
 
 instance Arbitrary Longitude where
-  arbitrary = deg <$> arbitrary
+  arbitrary = lon <$> arbitrary
 
 
 instance Arbitrary Geo where
@@ -43,9 +45,23 @@ instance Arbitrary (OsmID a) where
   arbitrary = OsmID <$> arbitrary
 
 
+genOsmEvents :: Gen [OsmEvent]
+genOsmEvents = oneof [nodeGen, relationGen, wayGen, boundsGen]
+    where nodeGen     = eventsFor (undefined :: Osm Node)
+          relationGen = eventsFor (undefined :: Osm Relation)
+          wayGen      = eventsFor (undefined :: Osm Way)
+          boundsGen   = eventsFor (undefined :: GeoBounds)
+
+          singleElement :: Arbitrary a => a -> Conduit.Producer Gen a
+          singleElement _ = Conduit.replicateM 1 arbitrary
+
+          eventsFor :: (Arbitrary a, OsmEventElement a) => a -> Gen [OsmEvent]
+          eventsFor a = sourceToList $ singleElement a =$= Conduit.awaitForever (toProducer . toSource)
+
+
 instance Arbitrary (OsmMeta a) where
   arbitrary = toGen def $ do setArbitrary       _osmID
-                             genAndSet genUser _modifiedUser
+                             genAndSet genUser  _modifiedUser
                              setArbitrary       _modifiedUserID
                              setArbitrary       _timeStamp
                              setArbitrary       _isVisible
@@ -75,10 +91,18 @@ instance Arbitrary Day where
   arbitrary = ModifiedJulianDay <$> arbitrary
 
 instance Arbitrary DiffTime where
-  arbitrary = picosecondsToDiffTime <$> arbitrary
+  arbitrary = picosecondsToDiffTime <$> choose(0, pSecsPerDay)
+    where pSecsPerDay = (24 * 3600 - 1) * 10 ^ (12 :: Int)
 
 instance Arbitrary UTCTime where
   arbitrary = UTCTime <$> arbitrary <*> arbitrary
+
+
+instance Arbitrary OsmFile where
+  arbitrary = toGen def $ do setArbitrary osmFileBounds
+                             genAndSet (V.fromList <$> listOf arbitrary) osmFileNodes
+                             genAndSet (V.fromList <$> listOf arbitrary) osmFileWays
+                             genAndSet (V.fromList <$> listOf arbitrary) osmFileRelations
 
 
 --------------------- Helper functions ------------------------------------
