@@ -12,10 +12,11 @@ module Naqsha.OpenStreetMap.Element
        (
 
        -- * Open Street Map elements.
+       -- $osm$
          Node, Way, Relation, Member(..)
-       -- ** Sematic elements.
-       , Tagged, OsmTags, OsmTagged(..)
-       , Osm, OsmElement(..), unMeta
+       , Tagged, Osm
+       , OsmTags, OsmTagged(..)
+       , OsmElement(..), unMeta
        , OsmMeta, OsmID(..), unsafeToOsmID, readOsmID
        , NodeID, WayID, RelationID
        -- ** Useful Lenses.
@@ -51,22 +52,20 @@ import Naqsha.Common
 -- elements given by the types `Node`, `Way` and `Relation`
 -- respectively. Intuitively, an element of type `Node` captures a
 -- location, a `Way` captures a path and a `Relation` captures a
--- combination of other elements, each in a specific _role_.
+-- combination of other elements.
 --
--- = Sematics of Elements.
+-- === Sematics of Elements.
 --
--- While the basic nature of an osm element is given by its type,
--- there are additional semantics that needs to be given to make it
--- possible to represent an element on the map. For example, a node
--- could be just an intermediate point in a path or might have a more
--- significant semantic like being a bus stop on a bus route. A way
--- might be a road, a boundary for a region or a river. Open streetmap
--- associates such semantics to an element through a set of tags
--- captured by the type `OsmTags`. The type @`Tagged` e@ captures
--- elements of type @e@ glued with a set of tags which fully describe
--- the semantics of the object.
+-- `Node`s, `Way`s, and `Relation`s have complex semantics in Open
+-- Street Map.  For example, a `Node` could be just an intermediate
+-- point in a path or might have a more significant semantic like
+-- being a bus stop. A `Way` might be a road or a boundary for a
+-- region or a river. Such complex semantics is associated to elements
+-- through a set of tags captured by the type `OsmTags`. The type
+-- @`Tagged` e@ captures elements of type @e@ together with a set of
+-- tags which fully describe the semantics of the object.
 --
--- = Database meta information
+-- === Database meta information.
 --
 -- The Open street map infrastructure also keeps track of some meta
 -- information that helps managing the elements in the database.  One
