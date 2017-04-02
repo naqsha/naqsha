@@ -23,7 +23,6 @@ import           Test.QuickCheck
 
 import Naqsha.Position
 import Naqsha.OpenStreetMap
-import Naqsha.OpenStreetMap.XML
 
 instance Arbitrary Angle where
   arbitrary = toEnum <$> arbitrary
@@ -96,14 +95,6 @@ instance Arbitrary DiffTime where
 
 instance Arbitrary UTCTime where
   arbitrary = UTCTime <$> arbitrary <*> arbitrary
-
-
-instance Arbitrary OsmFile where
-  arbitrary = toGen def $ do setArbitrary osmFileBounds
-                             genAndSet (V.fromList <$> listOf arbitrary) osmFileNodes
-                             genAndSet (V.fromList <$> listOf arbitrary) osmFileWays
-                             genAndSet (V.fromList <$> listOf arbitrary) osmFileRelations
-
 
 --------------------- Helper functions ------------------------------------
 

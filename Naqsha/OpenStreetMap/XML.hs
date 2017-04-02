@@ -2,15 +2,9 @@
 {-# LANGUAGE Rank2Types        #-}
 {-# LANGUAGE TemplateHaskell   #-}
 module Naqsha.OpenStreetMap.XML
-       (
-         -- * File format
-         OsmFile
-       , osmFileBounds
-       , osmFileNodes
-       , osmFileWays
-       , osmFileRelations
-         -- * Streaming interface.
-       , translate, osmDoc, osm, compile, compileDoc
+       ( -- * XML stream functions
+         osmDoc, osm, compile, compileDoc
+       , translate
        ) where
 
 import           Control.Lens
@@ -31,49 +25,6 @@ import Naqsha.Common
 import Naqsha.Position
 import Naqsha.OpenStreetMap.Element
 import Naqsha.OpenStreetMap.Stream
-
-
-
--- | An osmFile. Use this data type only for small files. Typical osm
--- files are large and hence one should always strive to build a
--- streaming interface.
-data OsmFile = OsmFile { __osmFileBounds    :: GeoBounds
-                       , __osmFileNodes     :: V.Vector (Osm Node)
-                       , __osmFileWays      :: V.Vector (Osm Way)
-                       , __osmFileRelations :: V.Vector (Osm Relation)
-                       } deriving Show
-
-makeLenses ''OsmFile
-
--- | Lens that focuses on the bounding region for the OSM file.
-osmFileBounds :: Lens' OsmFile GeoBounds
-osmFileBounds = _osmFileBounds
-
--- | Lens that focuses on the nodes in the OSM file.
-osmFileNodes :: Lens' OsmFile (V.Vector (Osm Node))
-osmFileNodes = _osmFileNodes
-
--- | Lens that focuses on the ways in the osm file.
-osmFileWays :: Lens' OsmFile (V.Vector (Osm Way))
-osmFileWays = _osmFileWays
-
--- | Lens that focuses on the relations in the osm file.
-osmFileRelations :: Lens' OsmFile (V.Vector (Osm Relation))
-osmFileRelations = _osmFileRelations
-
-
-
-instance Default OsmFile where
-  def = OsmFile def V.empty V.empty V.empty
-
-instance OsmEventElement OsmFile where
-  toSource osmFile = betweenC EventBeginOsm EventEndOsm $ do
-    toSource $ osmFile ^. osmFileBounds
-    V.mapM_ toSource $ osmFile ^. osmFileNodes
-    V.mapM_ toSource $ osmFile ^. osmFileWays
-    V.mapM_ toSource $ osmFile ^. osmFileRelations
-
-------------------------------------- Streaming Stuff ----------------------
 
 -- | Conduit that converts OsmEvents to xml events.
 type Compile   m = Conduit  OsmEvent m Event
