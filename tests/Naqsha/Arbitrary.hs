@@ -38,7 +38,10 @@ instance Arbitrary Geo where
   arbitrary = Geo <$> arbitrary <*> arbitrary
 
 instance Arbitrary GeoBounds where
-  arbitrary = GeoBounds <$> arbitrary <*> arbitrary <*> arbitrary <*> arbitrary
+  arbitrary = toGen def $ do setArbitrary maxLatitude
+                             setArbitrary maxLongitude
+                             setArbitrary minLatitude
+                             setArbitrary minLongitude
 
 instance Arbitrary (OsmID a) where
   arbitrary = OsmID <$> arbitrary

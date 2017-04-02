@@ -17,7 +17,7 @@ module Naqsha.Position
          -- * Angles and angular quantities.
        , Angle, Angular(..)
          -- * A geographic bound.
-       , GeoBounds(..), maxLatitude, maxLongitude, minLatitude, minLongitude
+       , GeoBounds, maxLatitude, maxLongitude, minLatitude, minLongitude
        -- ** Distance calculation.
        , dHvS, dHvS', rMean
        ) where
