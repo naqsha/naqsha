@@ -47,16 +47,16 @@ import           Prelude         -- To avoid redundunt import warnings.
 -- degrees.
 --
 -- > kanpurLatitude  :: Latitude
--- > kanpurLatitude  = 26.4477777
+-- > kanpurLatitude  = lat 26.4477777
 -- > kanpurLongitude :: Longitude
--- > kanpurLongitude = 80.3461111
+-- > kanpurLongitude = lon 80.3461111
 --
 -- Latitudes and longitudes are instances of `Monoid` where the monoid
 -- instance adds up the angle. One can use this `Monoid` instance to
 -- express in degrees, minutes and seconds as follows
 --
 -- > kanpurLatitude  = lat 26 <> minute 26 <> second 52
--- > kanpurLongitude = long 80 <> minute 20 <> second 46
+-- > kanpurLongitude = lon 80 <> minute 20 <> second 46
 --
 -- They are also instances of `Group` where `invert` is the angle in
 -- the opposite direction, i.e for latitudes, `invert` converts from
@@ -77,28 +77,28 @@ import           Prelude         -- To avoid redundunt import warnings.
 
 ----------------------------- Lattitude ----------------------------------
 
--- | The latitude of a point. Positive denotes North of Equator where as negative
--- South.
+-- | The latitude of a point. Positive denotes North of Equator where
+-- as negative South.
 
 newtype Latitude = Latitude { unLat :: Angle }
 
 lat :: Angle -> Latitude
-lat = normalise . Latitude
+lat = Latitude
 
 instance Show Latitude where
   show = show . unLat . normalise
 
 instance Read Latitude where
   readsPrec n = map conv . readsPrec n
-    where conv (ang,s) = (normalise $ Latitude ang, s)
+    where conv (ang,s) = (Latitude ang, s)
 
 
 instance Angular Latitude where
-  normalise = normLat   . unLat
-  minutes   = lat . minutes
-  seconds   = lat . seconds
-  rad       = lat . rad
-  toRad     = toRad . unLat . normalise
+  normalise = normLat  . unLat
+  minutes   = Latitude . minutes
+  seconds   = Latitude . seconds
+  rad       = Latitude . rad
+  toRad     = toRad . normLat . unLat
 
 instance Eq Latitude where
   (==) l1 l2 = unLat (normalise l1) == unLat (normalise l2)
@@ -108,13 +108,13 @@ instance Ord Latitude where
 
 instance Monoid Latitude where
   mempty      = equator
-  mappend x y = lat $ unLat x + unLat y
+  mappend x y = Latitude $ unLat x + unLat y
 
 instance Group Latitude where
-  invert  = lat . negate . unLat
+  invert  = Latitude . negate . unLat
 
 instance Default Latitude where
-  def = mempty
+  def = equator
 
 -- | The latitude of equator.
 equator :: Latitude
@@ -126,53 +126,35 @@ northPole = lat 90
 
 -- | The latitude of south pole.
 southPole :: Latitude
-southPole = lat 90
+southPole = lat (-90)
+
+instance Bounded Latitude where
+  maxBound = northPole
+  minBound = southPole
+
 
 -------------------------- Longitude ------------------------------------------
 
--- | The longitude of a point. Positive denotes East of the Greenwich meridian
--- where as negative denotes West.
+-- | The longitude of a point. Positive denotes East of the Greenwich
+-- meridian where as negative denotes West.
 newtype Longitude = Longitude { unLong :: Angle }
-
-lon :: Angle-> Longitude
-lon = normalise . Longitude
-
-
-instance Default Longitude where
-  def = Longitude $ Angle 0
+  deriving (Eq,Bounded, Default, Angular, Ord, Monoid, Group)
 
 instance Show Longitude where
-  show = show . unLong . normalise
-
+  show = show . unLong
 
 instance Read Longitude where
   readsPrec n = map conv . readsPrec n
-    where conv (ang,s) = (normalise $ Longitude ang, s)
+    where conv (ang, s) = (lon ang, s)
 
-instance Angular Longitude where
-  normalise = normLong  . unLong
-  minutes   = lon . minutes
-  seconds   = lon . seconds
-  rad       = lon . rad
-  toRad     = toRad . unLong . normalise
+-- | Convert angles to longitude.
+lon :: Angle-> Longitude
+lon = Longitude
 
-instance Eq Longitude  where
-  (==) l1 l2 = unLong (normalise l1) == unLong (normalise l2)
-
-instance Ord Longitude where
-  compare x y = unLong (normalise x) `compare` unLong (normalise y)
-
-instance Monoid Longitude where
-  mempty      = greenwich
-  mappend x y = Longitude $ unLong x + unLong  y
-
-
-instance Group Longitude where
-  invert  = lon . negate . unLong
 
 -- | The zero longitude.
 greenwich :: Longitude
-greenwich = Longitude $ Angle 0
+greenwich = lon 0
 
 -- | The coordinates of a point on the earth's surface.
 data Geo = Geo {-# UNPACK #-} !Latitude
@@ -216,9 +198,15 @@ instance Enum Angle where
    toEnum   = fromAngEnc . toEnum
    fromEnum = fromEnum   . toAngEnc . normalise
 
+instance Default Angle where
+  def = 0
+
 instance Angular Angle where
-  normalise = Angle . flip rem threeSixty . unAngle
-    where threeSixty =  360 * scale
+  normalise ang | r > oneEighty = Angle $ r - threeSixty
+                | otherwise     = Angle r
+    where r = unAngle ang `rem` threeSixty
+          threeSixty =  360 * scale
+          oneEighty  =  180 * scale
 
   minutes   = fromAngEnc . (/60) . fromIntegral
   seconds   = fromDouble . (/3600)
@@ -248,6 +236,16 @@ instance Eq Angle where
 instance Ord Angle where
   compare x y = unAngle (normalise x) `compare` unAngle (normalise y)
 
+instance Monoid Angle where
+  mempty      = 0
+  mappend     = (+)
+
+instance Group Angle where
+  invert = negate
+
+instance Bounded Angle where
+  maxBound = fromAngEnc 180
+  minBound = fromAngEnc $ succ (-180)
 
 ----------------- Encoding Angles ---------------------------------------------------
 
@@ -363,18 +361,6 @@ normPosLat :: AngEnc -> AngEnc
 normPosLat x | x <= 90   = x
              | x <= 270  = 180 - x
              | otherwise = x  - 360
-
-
--- | Function to normalise longitude.
-normLong :: Angle -> Longitude
-normLong ang = Longitude $ fromAngEnc $ signum y * normPosLong (abs y)
-  where y = toAngEnc ang
-
--- | Normalise a positive longitude.
-normPosLong :: AngEnc -> AngEnc
-normPosLong x | x <= 180  = x
-              | otherwise = x - 360
-
 
 ------------------- Making stuff suitable for unboxed vector. --------------------------
 
