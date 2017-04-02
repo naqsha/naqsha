@@ -10,7 +10,7 @@ module Naqsha.OpenStreetMap.XML
        , osmFileWays
        , osmFileRelations
          -- * Streaming interface.
-       , translate, translateDoc, compile, compileDoc
+       , translate, osmDoc, osm, compile, compileDoc
        ) where
 
 import           Control.Lens
@@ -20,7 +20,6 @@ import           Control.Monad.State
 import           Data.Conduit                ( Conduit, ConduitM, yield, await )
 import           Data.Conduit.List           ( concatMap                       )
 import           Data.Default
-import qualified Data.Map        as M
 import           Data.Maybe                  ( catMaybes, fromMaybe            )
 import           Data.Text                   ( Text, unpack                    )
 import qualified Data.Vector     as V
@@ -42,7 +41,7 @@ data OsmFile = OsmFile { __osmFileBounds    :: GeoBounds
                        , __osmFileNodes     :: V.Vector (Osm Node)
                        , __osmFileWays      :: V.Vector (Osm Way)
                        , __osmFileRelations :: V.Vector (Osm Relation)
-                       }
+                       } deriving Show
 
 makeLenses ''OsmFile
 
@@ -61,6 +60,8 @@ osmFileWays = _osmFileWays
 -- | Lens that focuses on the relations in the osm file.
 osmFileRelations :: Lens' OsmFile (V.Vector (Osm Relation))
 osmFileRelations = _osmFileRelations
+
+
 
 instance Default OsmFile where
   def = OsmFile def V.empty V.empty V.empty
@@ -88,17 +89,22 @@ type ElemTrans m = ConduitM Event    OsmEvent m (Maybe ())
 xmlNameSpace :: Text
 xmlNameSpace = "http://openstreetmap.org/osm/0.6"
 
--- | Conduit to convert Osm Events to xml.
+
+-- | Translate the top level osm element
+osm  :: MonadThrow m => ElemTrans m
+osm  = tagName "osm" ignoreAttrs (const osmBody)
+  where osmBody = betweenC EventBeginOsm EventEndOsm translate
+
+-- | Translate bounds, nodes, ways, and relations.
 translate :: MonadThrow m => Trans m
-translate = do x <- osmT
-               maybe (fail "osm element translation failed") return x
+translate = transBody [boundsT, nodeT, wayT, relationT]
 
 -- | Conduit to convert an XML document into the corresponding OSM
 -- events.
-translateDoc :: MonadThrow m => Trans m
-translateDoc = do void $ await >>= check errBegin
-                  translate
-                  void $ await >>= check errEnd
+osmDoc :: MonadThrow m => Trans m
+osmDoc = do void $ await >>= check errBegin
+            osm
+            void $ await >>= check errEnd
   where errBegin  = fail "xml preamble missing"
         errEnd    = fail "xml document is not completely parsed"
         check err = fromMaybe err . fmap return
@@ -215,13 +221,6 @@ metaAttrs mt = catMaybes [ maybeAttr mt _osmID          $ mkAttrS "id"
 
 ---------------   Translating XML events to Osm Events ------------------------------------------
 
-
--- | Translate the top level osm element
-osmT  :: MonadThrow m => ElemTrans m
-osmT  = tagName "osm" ignoreAttrs (const osmBody)
-  where osmBody = betweenC EventBeginOsm EventEndOsm $ transBody [boundsT, nodeT, wayT, relationT]
-
-
 -- | Translate a bounds element.
 boundsT :: MonadThrow m => ElemTrans m
 boundsT = tagName "bounds" bAttr $ yield . EventGeoBounds
@@ -237,7 +236,7 @@ nodeT = tagName "node" nAttr nBody
   where nBody (g,mt) = betweenC (EventNodeBegin g mt) EventNodeEnd $ transElements osmTagT
         geoAttr = toAttrParser def $ do
           toAttrSetParser latitude  $ angularAttrP "lat"
-          toAttrSetParser longitude $ angularAttrP "long"
+          toAttrSetParser longitude $ angularAttrP "lon"
         nAttr = (,) <$> geoAttr <*> metaAttrP
 
 -- | Translate a way element
