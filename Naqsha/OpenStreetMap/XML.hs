@@ -5,13 +5,20 @@ module Naqsha.OpenStreetMap.XML
        ( -- * Convertion between XML and OSM events.
          osmDoc, osm, translate
        , compile, compileDoc
+       -- ** Generate xml
+       , xml, pretty
        ) where
 
 import           Control.Lens
 import           Control.Monad
 import           Control.Monad.Catch         ( MonadThrow                      )
+import           Control.Monad.Primitive     ( PrimMonad                       )
+import           Control.Monad.Base          ( MonadBase                       )
 import           Control.Monad.State
-import           Data.Conduit                ( Conduit, ConduitM, yield, await )
+import           Data.ByteString             ( ByteString                      )
+import           Data.Conduit                ( Conduit, ConduitM, yield, await
+                                             , Source, (=$=)
+                                             )
 import           Data.Conduit.List           ( concatMap                       )
 import           Data.Default
 import           Data.Maybe                  ( catMaybes, fromMaybe            )
@@ -19,6 +26,9 @@ import           Data.Text                   ( Text, unpack                    )
 import qualified Data.Vector     as V
 import           Data.XML.Types              ( Event(..), Name, Content(..)    )
 import           Prelude         hiding      ( concatMap                       )
+import           Text.XML.Stream.Render      ( renderBytes, rsNamespaces
+                                             , rsPretty
+                                             )
 import           Text.XML.Stream.Parse
 
 import Naqsha.Common
@@ -87,6 +97,29 @@ compiler evnt = case evnt of
   EventWayEnd           -> [ EventEndElement   "way"                       ]
   EventRelationBegin mt -> [ EventBeginElement "relation" $ metaAttrs mt   ]
   EventRelationEnd      -> [ EventEndElement   "relation"                  ]
+
+
+
+-- | Convert osm events to an xml file. It is the responsibility of
+-- the input conduit to ensure that it gives a well formed set of Osm
+-- events.
+xml :: (PrimMonad base, MonadBase base m)
+    => OsmSource m             -- ^ The event source to render as xml
+    -> Source m ByteString
+xml src = src =$= compileDoc =$= renderBytes settings
+  where settings = def { rsNamespaces = [ ("osm", "http://openstreetmap.org/osm/0.6") ] }
+
+
+-- | Convert osm events to a pretty printed xml file. It is the
+-- responsibility of the input conduit to ensure that it gives a well
+-- formed set of Osm events.
+pretty :: (PrimMonad base, MonadBase base m)
+       => OsmSource m
+       -> Source m ByteString
+pretty src = src =$= compileDoc =$= renderBytes settings
+  where settings = def { rsNamespaces = [ ("osm", "http://openstreetmap.org/osm/0.6") ]
+                       , rsPretty     = True
+                       }
 
 ----------------------------  Unnested elements ---------------
 

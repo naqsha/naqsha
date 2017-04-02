@@ -27,6 +27,7 @@ source-repository head
 library
   ghc-options: -Wall
   build-depends: base                        >= 4.6   && < 4.10
+               , bytestring
                , conduit
                , conduit-combinators
                , containers
@@ -34,8 +35,10 @@ library
                , exceptions
                , groups
                , mtl
+               , primitive
                , text
                , time
+               , transformers-base
                , unordered-containers
                , vector                      >= 0.7.1 && < 0.12
                , xml-conduit                 >= 1.4   && <  1.5
