@@ -16,11 +16,11 @@ import Paths_naqsha as NP
 
 -- | Time format used by osm.
 osmDisplayFmt :: String
-osmDisplayFmt = "%Y-%m-%dT%H:%m:%Q%z"
+osmDisplayFmt = "%Y-%m-%dT%T%Q%z"
 
 -- | Time parse format (more liberal than display format).
 osmParseFmt :: String
-osmParseFmt = "%Y-%m-%dT%H:%m:%Q%Z"
+osmParseFmt = "%Y-%m-%dT%T%Q%Z"
 
 
 -- | The xml version of osm.
