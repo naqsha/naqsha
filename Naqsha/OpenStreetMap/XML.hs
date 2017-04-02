@@ -2,9 +2,9 @@
 {-# LANGUAGE Rank2Types        #-}
 {-# LANGUAGE TemplateHaskell   #-}
 module Naqsha.OpenStreetMap.XML
-       ( -- * XML stream functions
-         osmDoc, osm, compile, compileDoc
-       , translate
+       ( -- * Convertion between XML and OSM events.
+         osmDoc, osm, translate
+       , compile, compileDoc
        ) where
 
 import           Control.Lens

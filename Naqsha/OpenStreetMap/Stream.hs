@@ -4,8 +4,9 @@
 {-# LANGUAGE FlexibleInstances #-}
 module Naqsha.OpenStreetMap.Stream
        (
-         -- * An Open Street map event type
-         OsmEvent(..), OsmSource
+         -- * An Open Street Map Streaming interface.
+         osmFile
+       , OsmEvent(..), OsmSource
        , OsmEventElement(..)
        ) where
 
@@ -40,6 +41,19 @@ data OsmEvent = EventGeoBounds GeoBounds
 
 
 -------------- Some combinators for building sources ---------------
+
+-- | Stream an osm file given its bounds and contents. The contents
+-- stream should only generated events corresponding to node, ways,
+-- and relations. Otherwise the resulting file will be incorrect.
+osmFile :: Monad m
+        => GeoBounds   -- ^ The boundary associated with the file
+        -> OsmSource m -- ^ The contents
+        -> OsmSource m
+osmFile gb contents = do yield EventBeginOsm
+                         toSource gb
+                         contents
+                         yield EventEndOsm
+
 
 -- | Build a stream with a single node element.
 node :: Monad m
