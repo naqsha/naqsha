@@ -7,12 +7,13 @@ module Naqsha.OpenStreetMap.Stream
          -- * An Open Street Map Streaming interface.
          osmFile
        , OsmEvent(..), OsmSource
-       , OsmEventElement(..)
+       , OsmEventElement(..), toSource
        ) where
 
 import Control.Lens                 ( (^.) )
 import Data.Conduit
 import Data.Conduit.Combinators     ( yieldMany )
+import Data.Default                 ( def       )
 import Data.HashMap.Lazy         as HM
 import Data.Monoid                  ( (<>) )
 import Data.Text                    (Text)
@@ -32,9 +33,9 @@ data OsmEvent = EventGeoBounds GeoBounds
               ------------------------- Nested events ---------------------------------------
               | EventBeginOsm
               | EventEndOsm
-              | EventNodeBegin Node (OsmMeta Node)
+              | EventNodeBegin (OsmMeta Node) Node
               | EventNodeEnd
-              | EventWayBegin      (OsmMeta Way)
+              | EventWayBegin  (OsmMeta Way)
               | EventWayEnd
               | EventRelationBegin (OsmMeta Relation)
               | EventRelationEnd deriving (Show, Eq)
@@ -49,62 +50,71 @@ osmFile :: Monad m
         => GeoBounds   -- ^ The boundary associated with the file
         -> OsmSource m -- ^ The contents
         -> OsmSource m
-osmFile gb contents = do yield EventBeginOsm
-                         toSource gb
-                         contents
-                         yield EventEndOsm
-
-
--- | Build a stream with a single node element.
-node :: Monad m
-     => Node         -- ^ The node
-     -> OsmMeta Node -- ^ The metadata
-     -> OsmSource m  -- ^ The body (typically just the tags)
-     -> OsmSource m
-node n mt os = yield (EventNodeBegin n mt) >> os >> yield EventNodeEnd
-
-
--- | Build a stream with a single way.
-way :: Monad m
-   => OsmMeta Way -- ^ The meta data
-   -> OsmSource m -- ^ The body.
-   -> OsmSource m
-way mt os = yield (EventWayBegin mt) >> os >> yield EventWayEnd
-
--- | Build a relation stream.
-relation :: Monad m
-         => OsmMeta Relation -- ^ The meta data
-         -> OsmSource m      -- ^ The body
-         -> OsmSource m
-relation mt os = yield (EventRelationBegin mt) >> os >> yield EventRelationEnd
+osmFile gb contents = yield EventBeginOsm
+                      <> yield (EventGeoBounds gb)
+                      <> contents
+                      <> yield EventEndOsm
 
 -- | Osm event Source
 type OsmSource m = Source m OsmEvent
 
 -- | Types that an be converted to a source of osmEvents.
 class OsmEventElement a where
-  -- | Given an element convert it into a source.
-  toSource :: Monad m => a -> OsmSource m
+
+  -- | The starting event of the element.
+  startEvent :: a -> OsmEvent
+
+  -- | The body source for the given element.
+  bodySource :: Monad m => a -> OsmSource m
+
+  -- | The ending event of the element.
+  endEvent   :: a -> OsmEvent
+
+
+-- | Given an event element convert it into a source.
+toSource :: (OsmEventElement a, Monad m)
+         => a
+         -> OsmSource m
+toSource a = yield (startEvent a) <> bodySource a <> yield (endEvent a)
+
 
 ------------------- Nested events --------------------------------------
+instance OsmEventElement Node where
+  startEvent = EventNodeBegin def
+  endEvent   = const EventNodeEnd
+  bodySource = mempty
+
+
+instance OsmEventElement Way where
+  startEvent   = const $ EventWayBegin def
+  endEvent     = const EventWayEnd
+  bodySource w = mapOutput EventNodeRef $ yieldMany (w ^. wayNodes)
+
+
+instance OsmEventElement Relation where
+  startEvent   = const $ EventRelationBegin def
+  endEvent     = const EventRelationEnd
+  bodySource r = mapOutput EventMember $ yieldMany (r ^. relationMembers)
+
+instance OsmEventElement e => OsmEventElement (Tagged e) where
+  startEvent te = startEvent (te ^. untagged)
+  endEvent   te = endEvent   (te ^. untagged)
+  bodySource te = tagsToSource (te ^. tags) <> bodySource (te ^. untagged)
+
 instance OsmEventElement (Osm Node) where
-  toSource og = node (og ^. untagged) (og ^. meta) body
-    where body = tagsToSource (og ^. tags)
+  startEvent og = EventNodeBegin (og ^. meta) (og ^. untagged)
+  endEvent      = const EventNodeEnd
+  bodySource og = bodySource (og ^. unMeta)
 
 instance OsmEventElement (Osm Way) where
-  toSource wy = way (wy ^. meta) body
-    where body     = nodeRefs <> tagsToSource (wy ^. tags)
-          nodeRefs = mapOutput EventNodeRef $ yieldMany (wy ^. untagged . wayNodes)
+  startEvent ow = EventWayBegin (ow ^. meta)
+  endEvent      = const EventWayEnd
+  bodySource ow = bodySource (ow ^. unMeta)
 
 instance OsmEventElement (Osm Relation) where
-  toSource rel = relation  (rel ^. meta) body
-    where body = memSrc <> tagsToSource (rel ^. tags)
-          memSrc   = mapOutput EventMember $ yieldMany (rel ^. untagged . relationMembers)
-
-instance OsmEventElement Member where
-  toSource  = yield . EventMember
-instance OsmEventElement GeoBounds where
-  toSource = yield . EventGeoBounds
+  startEvent orel  = EventRelationBegin (orel ^. meta)
+  endEvent         = const EventRelationEnd
+  bodySource orel  = bodySource (orel ^. unMeta)
 
 ---------------------------- Unnested events. --------------------------
 
