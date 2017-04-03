@@ -2,11 +2,12 @@
 {-# LANGUAGE Rank2Types        #-}
 {-# LANGUAGE TemplateHaskell   #-}
 module Naqsha.OpenStreetMap.XML
-       ( -- * Convertion between XML and OSM events.
-         osmDoc, osm, translate
+       ( -- * Processing Open Street Map XML.
+         -- $xmlproc$
+        Compile, Trans
        , compile, compileDoc
-       -- ** Generate xml
-       , xml, pretty
+       , osmDoc, osm, translate
+       , asXML, asPrettyXML
        ) where
 
 import           Control.Lens
@@ -35,6 +36,13 @@ import Naqsha.Common
 import Naqsha.Position
 import Naqsha.OpenStreetMap.Element
 import Naqsha.OpenStreetMap.Stream
+
+-- $xmlproc$
+--
+-- This module provides a streaming interface to process xml files. We
+-- have various compilers (captured by `Compile`) that convert a
+-- stream OsmEvents to the corresponding xml events and a set of
+-- translators (captured by the `Trans`).
 
 -- | Conduit that converts OsmEvents to xml events.
 type Compile   m = Conduit  OsmEvent m Event
@@ -104,23 +112,24 @@ compiler evnt = case evnt of
 -- | Convert osm events to an xml file. It is the responsibility of
 -- the input conduit to ensure that it gives a well formed set of Osm
 -- events.
-xml :: (PrimMonad base, MonadBase base m)
+asXML :: (PrimMonad base, MonadBase base m)
     => OsmSource m             -- ^ The event source to render as xml
     -> Source m ByteString
-xml src = src =$= compileDoc =$= renderBytes settings
+asXML src = src =$= compileDoc =$= renderBytes settings
   where settings = def { rsNamespaces = [ ("osm", "http://openstreetmap.org/osm/0.6") ] }
 
 
 -- | Convert osm events to a pretty printed xml file. It is the
 -- responsibility of the input conduit to ensure that it gives a well
 -- formed set of Osm events.
-pretty :: (PrimMonad base, MonadBase base m)
-       => OsmSource m
-       -> Source m ByteString
-pretty src = src =$= compileDoc =$= renderBytes settings
+asPrettyXML :: (PrimMonad base, MonadBase base m)
+            => OsmSource m
+            -> Source m ByteString
+asPrettyXML src = src =$= compileDoc =$= renderBytes settings
   where settings = def { rsNamespaces = [ ("osm", "http://openstreetmap.org/osm/0.6") ]
                        , rsPretty     = True
                        }
+
 
 ----------------------------  Unnested elements ---------------
 
