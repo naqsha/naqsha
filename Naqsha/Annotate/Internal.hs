@@ -45,7 +45,7 @@ instance Show Feature where
 ------------------------------------- Annotated elements ---------------------------------------
 
 -- | An annotated type.
-data Annotated a = Annotated { __value      :: a
+data Annotated a = Annotated { __value     :: a
                              , _annotation :: FeatureMap
                              } deriving Show
 
