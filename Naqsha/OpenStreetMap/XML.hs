@@ -1,12 +1,13 @@
-{-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE Rank2Types        #-}
-{-# LANGUAGE TemplateHaskell   #-}
+{-# LANGUAGE OverloadedStrings         #-}
+{-# LANGUAGE Rank2Types                #-}
+{-# LANGUAGE TemplateHaskell           #-}
+{-# LANGUAGE ExistentialQuantification #-}
 module Naqsha.OpenStreetMap.XML
        ( -- * Processing Open Street Map XML.
          -- $xmlproc$
         Compile, Trans
        , compile, compileDoc
-       , osmDoc, osm, translate
+       , osm
        , asXML, asPrettyXML
        , parse, eventsFromFile
        ) where
@@ -23,7 +24,10 @@ import           Data.Conduit                ( Conduit, ConduitM, yield, await
                                              , Source, (=$=), Producer
                                              )
 import           Data.Conduit.List           ( concatMap                       )
+import           Data.Conduit.Combinators    ( peek                            )
 import           Data.Default
+import           Data.List                   ( intercalate                     )
+import qualified Data.Map        as M
 import           Data.Maybe                  ( catMaybes, fromMaybe            )
 import           Data.Text                   ( Text, unpack                    )
 import qualified Data.Vector     as V
@@ -49,38 +53,11 @@ import Naqsha.OpenStreetMap.Stream
 -- | Conduit that converts OsmEvents to xml events.
 type Compile   m = Conduit  OsmEvent m Event
 
--- | Conduit that converts XML events to the corresponding OsmEvents.
-type Trans     m = Conduit  Event    m OsmEvent
+-- | Name associated with osm
+osmName :: Name
+osmName = "{http://openstreetmap.org/osm/0.6}osm"
 
--- | Translate a single xml element to the corresponding set of
--- OsmEvents.
-type ElemTrans m = ConduitM Event    OsmEvent m (Maybe ())
-
--- | OSM xml name space.
-xmlNameSpace :: Text
-xmlNameSpace = "http://openstreetmap.org/osm/0.6"
-
-
--- | Translate the top level osm element
-osm  :: MonadThrow m => Trans m
-osm  = tagName "osm" ignoreAttrs (const osmBody) >>= check
-  where  osmBody = betweenC EventBeginOsm EventEndOsm translate
-         check = maybe (fail "osm-xml: expected osm element") return
-
--- | Translate bounds, nodes, ways, and relations.
-translate :: MonadThrow m => Trans m
-translate = transBody [boundsT, nodeT, wayT, relationT]
-
--- | Conduit to convert an XML document into the corresponding OSM
--- events.
-osmDoc :: MonadThrow m => Trans m
-osmDoc = do void $ await >>= check errBegin
-            osm
-            void $ await >>= check errEnd
-  where errBegin  = fail "xml preamble missing"
-        errEnd    = fail "xml document is not completely parsed"
-        check err = fromMaybe err . fmap return
-
+---------------------------  The translators and compilers ------------------------------------
 
 -- | Conduit to convert Osm Events to xml.
 compile :: Monad m => Compile m
@@ -100,8 +77,8 @@ compiler evnt = case evnt of
   EventTag  k v         -> osmTagE k v
   EventNodeRef   nid    -> nodeRefE nid
   ----------------------------- Nested elements ----------------
-  EventBeginOsm         -> [ EventBeginElement "osm" osmAttr               ]
-  EventEndOsm           -> [ EventEndElement   "osm"                       ]
+  EventBeginOsm         -> [ EventBeginElement osmName osmAttr             ]
+  EventEndOsm           -> [ EventEndElement   osmName                     ]
   EventNodeBegin mt n   -> [ EventBeginElement "node"     $ nodeAttr n  mt ]
   EventNodeEnd          -> [ EventEndElement   "node"                      ]
   EventWayBegin  mt     -> [ EventBeginElement "way"      $ metaAttrs mt   ]
@@ -115,11 +92,9 @@ compiler evnt = case evnt of
 -- the input conduit to ensure that it gives a well formed set of Osm
 -- events.
 asXML :: (PrimMonad base, MonadBase base m)
-    => OsmSource m             -- ^ The event source to render as xml
-    -> Source m ByteString
-asXML src = src =$= compileDoc =$= renderBytes settings
-  where settings = def { rsNamespaces = [ ("osm", "http://openstreetmap.org/osm/0.6") ] }
-
+      => OsmSource m             -- ^ The event source to render as xml
+      -> Source m ByteString
+asXML src = src =$= compileDoc =$= renderBytes def
 
 -- | Convert osm events to a pretty printed xml file. It is the
 -- responsibility of the input conduit to ensure that it gives a well
@@ -128,19 +103,19 @@ asPrettyXML :: (PrimMonad base, MonadBase base m)
             => OsmSource m
             -> Source m ByteString
 asPrettyXML src = src =$= compileDoc =$= renderBytes settings
-  where settings = def { rsNamespaces = [ ("osm", "http://openstreetmap.org/osm/0.6") ]
-                       , rsPretty     = True
-                       }
+  where settings = def { rsPretty     = True }
 
 
 -- | Translate a byte stream corresponding to an osm xml file into a
 -- stream of `OsmEvent`s.
 parse :: MonadThrow m =>  Conduit ByteString m OsmEvent
-parse = parseBytes def =$= osmDoc
+parse = parseBytes def =$= osm
+
 
 -- | Stream the osm events from an xml file.
 eventsFromFile :: MonadResource m => FilePath -> Producer m OsmEvent
-eventsFromFile fp = parseFile def fp =$= osmDoc
+eventsFromFile fp = parseFile def fp =$= osm
+
 
 ----------------------------  Unnested elements ---------------
 
@@ -199,8 +174,7 @@ nodeAttr n om = [ mkAttrLens "lat" latitude n
 
 -- | Attributes for an osm element.
 osmAttr :: [Attr]
-osmAttr = [ mkAttr "xmlns"     xmlNameSpace
-          , mkAttr "version" $ showVersionT osmXmlVersion
+osmAttr = [ mkAttr "version" $ showVersionT osmXmlVersion
           , mkAttr "generator" naqshaVersionT
           ]
 
@@ -226,44 +200,108 @@ metaAttrs mt = catMaybes [ maybeAttr mt _osmID          $ mkAttrS "id"
 
 ---------------   Translating XML events to Osm Events ------------------------------------------
 
+
+-- | Conduit that converts XML events to the corresponding OsmEvents.
+type Trans     m = Conduit  Event    m OsmEvent
+
+-- | Translate that signals failure with a Maybe.
+type TryTrans m  = ConduitM Event OsmEvent m (Maybe ())
+
+type TagParser m  = (Name, Match m)
+
+
+data Match  m  = forall a . Match (AttrParser a) (a -> Trans m)
+
+
+-- | Try running the match.
+tryTag :: MonadThrow m => TagParser m -> TryTrans m
+tryTag (nm, (Match ap run)) = tagName nm ap run
+
+
+body  :: MonadThrow m => Name -> [TagParser m] -> Trans m
+body nm choices = go [] choices
+  where go tried prs = case prs of
+          tp@(e,_) : prs' -> tryTag tp >>= continue (e:tried) prs'
+          []              -> peek      >>= maybe (err "eof encountered") closing
+
+
+        continue tried ps = maybe (go tried ps) $ const $ body nm choices
+        closing (EventEndElement nmp)
+          | nmp == nm = return ()
+          | otherwise = err "bad nesting"
+        closing _ = return ()
+
+        err  msg   = fail $ "osm-xml: <"  ++ show nm ++ "> " ++ msg
+
+matchTag :: MonadThrow m => TagParser m -> Trans m
+matchTag tp@(nm,_) = tryTag tp >>= maybe err return
+  where err = fail $ "osm-xml: unable to match <" ++ show nm ++ ">"
+
+
+
+------------------- Actual parsers -----------------------------------------------------------------
+
+-- | Tag matcher for tags that do not have a body.
+tagNoBodyP :: Monad m
+           => Name            -- ^ name of the tag
+           -> AttrParser a    -- ^ the attribute parser
+           -> (a -> OsmEvent) -- ^ function to generate the event.
+           -> TagParser m
+tagNoBodyP nm ap func = (nm, Match ap (yield . func))
+
+
+-- | Construct a matcher for a general element.
+tagP :: MonadThrow m
+     => Name            -- ^ name of the tag
+     -> AttrParser a    -- ^ attribute parser
+     -> (a -> OsmEvent) -- ^ the start of the tag
+     -> OsmEvent        -- ^ the end of the tag
+     -> [TagParser m]   -- ^ The body of the tag
+     -> TagParser m
+tagP nm ap str ed bd = (nm, Match ap continue)
+  where continue a = betweenC (str a) ed $ body nm bd
+
+
+
+-- | Translate the top level osm element
+osm  :: MonadThrow m => Trans m
+osm  = matchTag $ tagP osmName ignoreAttrs (const EventBeginOsm) EventEndOsm [boundsP, nodeP, wayP, relationP]
+
+
+----------------------- Matchers for different elements ----------------------------------
+
 -- | Translate a bounds element.
-boundsT :: MonadThrow m => ElemTrans m
-boundsT = tagName "bounds" bAttr $ yield . EventGeoBounds
+boundsP :: Monad m => TagParser m
+boundsP = tagNoBodyP "bounds" bAttr EventGeoBounds
   where bAttr = toAttrParser def $ do
           toAttrSetParser maxLatitude  $ angularAttrP "maxlat"
           toAttrSetParser maxLongitude $ angularAttrP "maxlon"
           toAttrSetParser minLatitude  $ angularAttrP "minlat"
           toAttrSetParser minLongitude $ angularAttrP "minlon"
 
--- | Translate a node element.
-nodeT :: MonadThrow m => ElemTrans m
-nodeT = tagName "node" nAttr nBody
-  where nBody (g,mt) = betweenC (EventNodeBegin mt g) EventNodeEnd $ transElements osmTagT
-        geoAttr = toAttrParser def $ do
+nodeP :: MonadThrow m => TagParser m
+nodeP = tagP "node" nAttr (uncurry EventNodeBegin) EventNodeEnd [osmTagP]
+  where geoAttr = toAttrParser def $ do
           toAttrSetParser latitude  $ angularAttrP "lat"
           toAttrSetParser longitude $ angularAttrP "lon"
-        nAttr = (,) <$> geoAttr <*> metaAttrP
+        nAttr = (,) <$> metaAttrP <*> geoAttr
 
 -- | Translate a way element
-wayT :: MonadThrow m => ElemTrans m
-wayT = tagName "way" metaAttrP wBody
-  where wBody mt = betweenC (EventWayBegin mt) EventWayEnd $ transBody [nodeRefT, osmTagT]
+wayP :: MonadThrow m => TagParser m
+wayP = tagP "way" metaAttrP EventWayBegin EventWayEnd [nodeRefP, osmTagP]
 
 -- | Translate a relation element.
-relationT :: MonadThrow m => ElemTrans m
-relationT = tagName "relation" metaAttrP rBody
-  where rBody mt = betweenC (EventRelationBegin mt) EventRelationEnd $ transBody [memberT, osmTagT]
-
-
+relationP :: MonadThrow m => TagParser m
+relationP = tagP "relation" metaAttrP EventRelationBegin EventRelationEnd [memberP, osmTagP]
 
 -- | Translate an osm elemnt.
-osmTagT :: MonadThrow m => ElemTrans m
-osmTagT = tagName "tag" kvAttr yield
+osmTagP :: Monad m => TagParser m
+osmTagP = tagNoBodyP "tag" kvAttr id
   where kvAttr = EventTag <$> requireAttr "k" <*> requireAttr "v"
 
 -- | Translate a member element
-memberT :: MonadThrow m => ElemTrans m
-memberT = tagName "member" mAttr $ yield . EventMember
+memberP :: Monad m => TagParser m
+memberP = tagNoBodyP "member" mAttr $ EventMember
   where mAttr = do r <- requireAttr "role"
                    t <- requireAttr "type"
                    case t of
@@ -274,26 +312,11 @@ memberT = tagName "member" mAttr $ yield . EventMember
 
 
 -- | Translate a node reference.
-nodeRefT :: MonadThrow m => ElemTrans m
-nodeRefT = tagName "nd" refAttrP $ yield . EventNodeRef
+nodeRefP :: Monad m => TagParser m
+nodeRefP = tagNoBodyP "nd" refAttrP $ EventNodeRef
 
 
 ----------------------------- Some Helper Conduit -------------------------
-
-
--- | Translate the body of the element.
-transBody :: MonadThrow m
-          => [ElemTrans m]  -- ^ translators for each element of the body
-          -> Trans m
-transBody = transElements . choose
-
--- | Translate a stream of
-transElements :: Monad m
-              => ElemTrans m  -- ^ The translator for a single element.
-              -> Trans m
-transElements pr = pr >>= checkAndRun
-   where checkAndRun = maybe (return ()) $ const $ transElements pr
-
 
 -- | Emit a preamble and a epilogue for the stream.
 betweenC :: Monad m
