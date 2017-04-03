@@ -12,6 +12,6 @@ import Naqsha.Arbitrary
 
 spec :: Spec
 spec = describe "xml file" $ do
-  prop "translate . compile = id" $ do
-    let transComp evs  = sourceToList $ sourceList evs =$= compile =$= translate
-        in forAll genOsmEvents $ \ xs -> transComp xs `shouldBe` Just xs
+  prop "osm . compile = id" $ do
+    let osmDotCompile evs  = sourceToList $ sourceList evs =$= compile =$= osm
+        in forAll genOsmEvents $ \ xs -> osmDotCompile xs `shouldBe` Just xs

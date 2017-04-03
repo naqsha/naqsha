@@ -2,7 +2,8 @@
 {-# LANGUAGE DataKinds            #-}
 {-# LANGUAGE TypeSynonymInstances #-}
 {-# LANGUAGE FlexibleInstances    #-}
-{-# LANGUAGE Rank2Types #-}
+{-# LANGUAGE Rank2Types           #-}
+{-# LANGUAGE ExistentialQuantification #-}
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 
 module Naqsha.Arbitrary where
@@ -48,18 +49,17 @@ instance Arbitrary (OsmID a) where
 
 
 genOsmEvents :: Gen [OsmEvent]
-genOsmEvents = oneof [nodeGen, relationGen, wayGen, boundsGen]
-    where nodeGen     = eventsFor (undefined :: Osm Node)
-          relationGen = eventsFor (undefined :: Osm Relation)
-          wayGen      = eventsFor (undefined :: Osm Way)
-          boundsGen   = eventsFor (undefined :: GeoBounds)
+genOsmEvents = do gb  <- arbitrary
+                  elm <- listOf elementEvents
+                  sourceToList $ osmFile gb $ yieldMany elm =$= Conduit.concat
 
-          singleElement :: Arbitrary a => a -> Conduit.Producer Gen a
-          singleElement _ = Conduit.replicateM 1 arbitrary
+    where elementEvents = oneof [ fmap toEvents (arbitrary :: Gen (Osm Node))
+                                , fmap toEvents (arbitrary :: Gen (Osm Way))
+                                , fmap toEvents (arbitrary :: Gen (Osm Relation))
+                                ]
 
-          eventsFor :: (Arbitrary a, OsmEventElement a) => a -> Gen [OsmEvent]
-          eventsFor a = sourceToList $ singleElement a =$= Conduit.awaitForever (toProducer . toSource)
-
+          toEvents :: OsmEventElement a => a -> [OsmEvent]
+          toEvents = runIdentity . sourceToList . toSource
 
 instance Arbitrary (OsmMeta a) where
   arbitrary = toGen def $ do setArbitrary       _osmID
