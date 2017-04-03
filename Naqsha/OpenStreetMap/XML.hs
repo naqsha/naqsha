@@ -91,7 +91,7 @@ compiler evnt = case evnt of
   ----------------------------- Nested elements ----------------
   EventBeginOsm         -> [ EventBeginElement "osm" osmAttr               ]
   EventEndOsm           -> [ EventEndElement   "osm"                       ]
-  EventNodeBegin n mt   -> [ EventBeginElement "node"     $ nodeAttr n  mt ]
+  EventNodeBegin mt n   -> [ EventBeginElement "node"     $ nodeAttr n  mt ]
   EventNodeEnd          -> [ EventEndElement   "node"                      ]
   EventWayBegin  mt     -> [ EventBeginElement "way"      $ metaAttrs mt   ]
   EventWayEnd           -> [ EventEndElement   "way"                       ]
@@ -217,7 +217,7 @@ boundsT = tagName "bounds" bAttr $ yield . EventGeoBounds
 -- | Translate a node element.
 nodeT :: MonadThrow m => ElemTrans m
 nodeT = tagName "node" nAttr nBody
-  where nBody (g,mt) = betweenC (EventNodeBegin g mt) EventNodeEnd $ transElements osmTagT
+  where nBody (g,mt) = betweenC (EventNodeBegin mt g) EventNodeEnd $ transElements osmTagT
         geoAttr = toAttrParser def $ do
           toAttrSetParser latitude  $ angularAttrP "lat"
           toAttrSetParser longitude $ angularAttrP "lon"
