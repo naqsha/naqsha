@@ -8,6 +8,7 @@ module Naqsha.OpenStreetMap.XML
        , compile, compileDoc
        , osmDoc, osm, translate
        , asXML, asPrettyXML
+       , parse, eventsFromFile
        ) where
 
 import           Control.Lens
@@ -16,9 +17,10 @@ import           Control.Monad.Catch         ( MonadThrow                      )
 import           Control.Monad.Primitive     ( PrimMonad                       )
 import           Control.Monad.Base          ( MonadBase                       )
 import           Control.Monad.State
+import           Control.Monad.Trans.Resource( MonadResource                   )
 import           Data.ByteString             ( ByteString                      )
 import           Data.Conduit                ( Conduit, ConduitM, yield, await
-                                             , Source, (=$=)
+                                             , Source, (=$=), Producer
                                              )
 import           Data.Conduit.List           ( concatMap                       )
 import           Data.Default
@@ -130,6 +132,15 @@ asPrettyXML src = src =$= compileDoc =$= renderBytes settings
                        , rsPretty     = True
                        }
 
+
+-- | Translate a byte stream corresponding to an osm xml file into a
+-- stream of `OsmEvent`s.
+parse :: MonadThrow m =>  Conduit ByteString m OsmEvent
+parse = parseBytes def =$= osmDoc
+
+-- | Stream the osm events from an xml file.
+eventsFromFile :: MonadResource m => FilePath -> Producer m OsmEvent
+eventsFromFile fp = parseFile def fp =$= osmDoc
 
 ----------------------------  Unnested elements ---------------
 
@@ -291,8 +302,6 @@ betweenC :: Monad m
          -> Conduit i m o
          -> Conduit i m o
 betweenC b e pr = yield b >> pr >> yield e
-
-
 
 
 -------------------------  Attribute parsers ----------------------------------

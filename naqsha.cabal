@@ -36,6 +36,7 @@ library
                , groups
                , mtl
                , primitive
+               , resourcet
                , text
                , time
                , transformers-base
