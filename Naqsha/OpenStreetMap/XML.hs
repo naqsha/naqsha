@@ -52,9 +52,10 @@ xmlNameSpace = "http://openstreetmap.org/osm/0.6"
 
 
 -- | Translate the top level osm element
-osm  :: MonadThrow m => ElemTrans m
-osm  = tagName "osm" ignoreAttrs (const osmBody)
-  where osmBody = betweenC EventBeginOsm EventEndOsm translate
+osm  :: MonadThrow m => Trans m
+osm  = tagName "osm" ignoreAttrs (const osmBody) >>= check
+  where  osmBody = betweenC EventBeginOsm EventEndOsm translate
+         check = maybe (fail "osm-xml: expected osm element") return
 
 -- | Translate bounds, nodes, ways, and relations.
 translate :: MonadThrow m => Trans m
