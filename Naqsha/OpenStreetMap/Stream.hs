@@ -4,10 +4,11 @@
 {-# LANGUAGE FlexibleInstances #-}
 module Naqsha.OpenStreetMap.Stream
        (
-         -- * An Open Street Map Streaming interface.
-         osmFile
-       , OsmEvent(..), OsmSource
+         -- * Streaming interface.
+         -- $osmstream$
+         OsmSource, OsmEvent(..)
        , OsmEventElement(..), toSource
+       , osmFile
        ) where
 
 import Control.Lens                 ( (^.) )
@@ -22,6 +23,19 @@ import Data.Text                    (Text)
 import Naqsha.Position
 import Naqsha.OpenStreetMap.Element
 
+-- $osmstream$
+--
+-- The total number of elements that describe a certain portion of a
+-- map are often huge. Therefore the only feasible method to process
+-- non-trivial regions of the world is by building a streaming
+-- interface.
+--
+-- A streaming interface of elements are provided by using `Source`s,
+-- `Sink`s, and `Conduit`s of `OsmEvent`. Types that can streamed as
+-- an `OsmSource` (i.e. `Source` of `OsmEvent`s) are captured by the
+-- class `OsmEventElement`. Elements of such type can be streamed
+-- using the combinator `toSource`. Finally the combinator `osmFile`
+-- can be used to put together a complete osm file.
 
 ------------------------ Osm events --------------------------
 
@@ -44,8 +58,9 @@ data OsmEvent = EventGeoBounds GeoBounds
 -------------- Some combinators for building sources ---------------
 
 -- | Stream an osm file given its bounds and contents. The contents
--- stream should only generated events corresponding to node, ways,
--- and relations. Otherwise the resulting file will be incorrect.
+-- stream should only generated events corresponding to `Node`s,
+-- `Way`s and `Relation`s. Otherwise the resulting file will not
+-- be wellformed.
 osmFile :: Monad m
         => GeoBounds   -- ^ The boundary associated with the file
         -> OsmSource m -- ^ The contents
