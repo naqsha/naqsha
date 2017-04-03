@@ -14,16 +14,17 @@ module Naqsha.OpenStreetMap.Element
        -- * Open Street Map elements.
        -- $osm$
          Node, Way, Relation, Member(..)
-       , Tagged, Osm
-       , OsmTags, OsmTagged(..)
-       , OsmElement(..), unMeta
-       , OsmMeta, OsmID(..), unsafeToOsmID, readOsmID
+       , Tagged, OsmTags, Osm
+       , OsmTagged(..)
+       , OsmID(..), unsafeToOsmID, readOsmID
        , NodeID, WayID, RelationID
        -- ** Useful Lenses.
        , tagAt, wayNodes, relationMembers
        , osmID, modifiedUser, modifiedUserID, timeStamp, changeSet, version
        , isVisible
-       -- *** Lenses for OsmMeta
+       , unMeta, meta
+       -- *** Osm Meta data.
+       , OsmMeta
        , _osmID, _modifiedUser, _modifiedUserID, _timeStamp, _changeSet, _version
        , _isVisible
        ) where
@@ -158,7 +159,7 @@ type OsmTags = HM.HashMap Text Text
 -- | A tagged element.
 data Tagged e = Tagged { __element :: e
                        , __tags    :: OsmTags
-                       } deriving Show
+                       } deriving (Show, Eq)
 
 makeLenses ''Tagged
 
@@ -195,9 +196,9 @@ instance OsmTagged (Tagged e) where
 -- | An fully qualified osm element. The type @Osm e@ should be seen
 -- as elements of type @e@ glued with a set of osm tags together with
 -- the meta data for the object in the Open street map database.
-data Osm e = Osm { __osmTaggedElement :: Tagged e
-                 , __osmMeta          :: OsmMeta e
-                 } deriving Show
+data Osm e = Osm { __osmTaggedElement  :: Tagged e
+                 , __osmMeta           :: OsmMeta e
+                 } deriving (Show, Eq)
 
 -- | The open street map metadata that is associated with each
 -- element.
@@ -238,19 +239,13 @@ instance Location e => Location (Osm e) where
   longitude   = untagged . longitude
   geoPosition = untagged . geoPosition
 
--- | Class that captures elements that behave like a fully for some e
-class OsmTagged a => OsmElement a where
-  meta :: Lens' a (OsmMeta (ElementType a))
+-- | Strip off the meta data and return the underlying tagged data.
+unMeta :: Lens' (Osm e) (Tagged e)
+unMeta = _osmTaggedElement
 
-instance OsmElement (Osm e) where
-  meta = _osmMeta
-
-
--- | Only peal of the meta data but get the tagged variant.
-unMeta :: OsmElement a => a -> Tagged  (ElementType a)
-unMeta a = Tagged { __element = a ^. untagged
-                  , __tags    = a ^. tags
-                  }
+-- | Lens to focus on the meta information of the element.
+meta :: Lens' (Osm e) (OsmMeta e)
+meta = _osmMeta
 
 -------------- Some useful lenses -------------------------------
 
@@ -259,35 +254,34 @@ tagAt :: OsmTagged a => Text -> Lens' a (Maybe Text)
 tagAt k = tags . at k
 
 -- | Lens to focus on the Id of the element.
-osmID :: OsmElement a => Lens' a (Maybe (OsmID (ElementType a)))
-osmID = meta . _osmID
+osmID :: Lens' (Osm a) (Maybe (OsmID  a))
+osmID = _osmMeta . _osmID
 
 -- | Lens to focus on the user who last modified.
-modifiedUser  :: OsmElement a => Lens' a (Maybe Text)
+modifiedUser  :: Lens' (Osm a) (Maybe Text)
 {-# INLINE modifiedUser #-}
-modifiedUser = meta . _modifiedUser
+modifiedUser = _osmMeta . _modifiedUser
 
 -- | Lens to focus on the user id of the user that last modified.
-modifiedUserID :: OsmElement a => Lens' a (Maybe Integer)
-modifiedUserID = meta . _modifiedUserID
+modifiedUserID :: Lens' (Osm a) (Maybe Integer)
+modifiedUserID = _osmMeta . _modifiedUserID
 
 -- | Flag which indicates whether the associated element is visible or
 -- not.
-isVisible :: OsmElement a => Lens' a (Maybe Bool)
-isVisible  = meta . _isVisible
-
+isVisible :: Lens' (Osm a) (Maybe Bool)
+isVisible  = _osmMeta . _isVisible
 
 -- | The version number of the associated entry.
-version :: OsmElement a => Lens' a (Maybe Integer)
-version =  meta . _version
+version :: Lens' (Osm a) (Maybe Integer)
+version =  _osmMeta . _version
 
 -- | The time stamp (utc) when the entry was last changed.
-timeStamp ::OsmElement a =>  Lens' a (Maybe UTCTime)
-timeStamp = meta . _timeStamp
+timeStamp :: Lens' (Osm a) (Maybe UTCTime)
+timeStamp = _osmMeta . _timeStamp
 
 -- | The change set number where the object was changed.
-changeSet :: OsmElement a => Lens' a (Maybe Integer)
-changeSet = meta . _changeSet
+changeSet :: Lens' (Osm a) (Maybe Integer)
+changeSet = _osmMeta . _changeSet
 
 ---------- The element of Open street map -----------------
 
