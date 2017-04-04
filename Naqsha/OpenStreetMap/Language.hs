@@ -1,6 +1,8 @@
 {-# LANGUAGE OverloadedStrings #-}
-module Naqsha.Language
-       ( Language
+-- | The language codes to use in Open Street map. The constructors
+-- are not exposed to avoid typos in names.
+module Naqsha.OpenStreetMap.Language
+       ( Language(..), lang
        , english, french, hindi, malayalam
        ) where
 
@@ -14,7 +16,6 @@ lang = Language
 
 instance Show Language where
   show = T.unpack . unLang
-
 
 ------------ Some language ----------------------------
 

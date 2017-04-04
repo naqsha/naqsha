@@ -25,7 +25,7 @@ import           Test.QuickCheck
 import Naqsha.Position
 import Naqsha.OpenStreetMap
 import Naqsha.OpenStreetMap.Stream
-import Naqsha.OpenStreetMap.XML
+import Naqsha.OpenStreetMap.Element
 
 
 instance Arbitrary Angle where
