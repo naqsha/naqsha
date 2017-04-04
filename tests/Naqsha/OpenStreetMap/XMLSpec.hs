@@ -8,7 +8,6 @@ import Test.Hspec.QuickCheck
 
 
 import Naqsha.OpenStreetMap.XML
-import Naqsha.OpenStreetMap.Stream
 
 import Naqsha.Arbitrary
 
