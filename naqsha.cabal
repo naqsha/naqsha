@@ -47,11 +47,11 @@ library
                , lens
 
   exposed-modules: Naqsha.Position
-                 , Naqsha.Language
                  , Naqsha.OpenStreetMap
                  , Naqsha.OpenStreetMap.Stream
                  , Naqsha.OpenStreetMap.XML
   other-modules: Naqsha.OpenStreetMap.Element
+               , Naqsha.OpenStreetMap.Language
                , Paths_naqsha
                , Naqsha.Common
 
