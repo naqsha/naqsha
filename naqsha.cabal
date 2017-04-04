@@ -48,10 +48,10 @@ library
 
   exposed-modules: Naqsha.Position
                  , Naqsha.OpenStreetMap
+                 , Naqsha.OpenStreetMap.Language
                  , Naqsha.OpenStreetMap.Stream
                  , Naqsha.OpenStreetMap.XML
   other-modules: Naqsha.OpenStreetMap.Element
-               , Naqsha.OpenStreetMap.Language
                , Paths_naqsha
                , Naqsha.Common
 
