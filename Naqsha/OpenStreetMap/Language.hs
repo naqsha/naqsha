@@ -2,7 +2,7 @@
 -- | The language codes to use in Open Street map. The constructors
 -- are not exposed to avoid typos in names.
 module Naqsha.OpenStreetMap.Language
-       ( Language, lang
+       ( Language(..), lang
        , english, french, hindi, malayalam
        ) where
 
