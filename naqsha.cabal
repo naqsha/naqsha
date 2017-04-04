@@ -51,9 +51,11 @@ library
                  , Naqsha.OpenStreetMap.Element
                  , Naqsha.OpenStreetMap.Language
                  , Naqsha.OpenStreetMap.Stream
+                 , Naqsha.OpenStreetMap.Tags
                  , Naqsha.OpenStreetMap.XML
   other-modules: Paths_naqsha
                , Naqsha.Common
+
 
   default-language: Haskell2010
 

@@ -9,3 +9,4 @@ import Naqsha.OpenStreetMap.Element hiding( OsmMeta
                                           )
 
 import Naqsha.OpenStreetMap.Language hiding ( lang )
+import Naqsha.OpenStreetMap.Tags
