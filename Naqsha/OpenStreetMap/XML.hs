@@ -20,22 +20,17 @@ import           Control.Monad.Base          ( MonadBase                       )
 import           Control.Monad.State
 import           Control.Monad.Trans.Resource( MonadResource                   )
 import           Data.ByteString             ( ByteString                      )
-import           Data.Conduit                ( Conduit, ConduitM, yield, await
-                                             , Source, (=$=), Producer
+import           Data.Conduit                ( Conduit, ConduitM, yield, Source
+                                             , (=$=), Producer
                                              )
 import           Data.Conduit.List           ( concatMap                       )
 import           Data.Conduit.Combinators    ( peek                            )
 import           Data.Default
-import           Data.List                   ( intercalate                     )
-import qualified Data.Map        as M
-import           Data.Maybe                  ( catMaybes, fromMaybe            )
-import           Data.Text                   ( Text, unpack                    )
-import qualified Data.Vector     as V
+import           Data.Maybe                  ( catMaybes                       )
+import           Data.Text                   ( Text                            )
 import           Data.XML.Types              ( Event(..), Name, Content(..)    )
 import           Prelude         hiding      ( concatMap                       )
-import           Text.XML.Stream.Render      ( renderBytes, rsNamespaces
-                                             , rsPretty
-                                             )
+import           Text.XML.Stream.Render      ( renderBytes, rsPretty           )
 import           Text.XML.Stream.Parse
 
 import Naqsha.Common
@@ -215,7 +210,7 @@ data Match  m  = forall a . Match (AttrParser a) (a -> Trans m)
 
 -- | Try running the match.
 tryTag :: MonadThrow m => TagParser m -> TryTrans m
-tryTag (nm, (Match ap run)) = tagName nm ap run
+tryTag (nm, (Match atp run)) = tagName nm atp run
 
 
 body  :: MonadThrow m => Name -> [TagParser m] -> Trans m
@@ -247,7 +242,7 @@ tagNoBodyP :: Monad m
            -> AttrParser a    -- ^ the attribute parser
            -> (a -> OsmEvent) -- ^ function to generate the event.
            -> TagParser m
-tagNoBodyP nm ap func = (nm, Match ap (yield . func))
+tagNoBodyP nm atp func = (nm, Match atp (yield . func))
 
 
 -- | Construct a matcher for a general element.
@@ -258,7 +253,7 @@ tagP :: MonadThrow m
      -> OsmEvent        -- ^ the end of the tag
      -> [TagParser m]   -- ^ The body of the tag
      -> TagParser m
-tagP nm ap str ed bd = (nm, Match ap continue)
+tagP nm atp str ed bd = (nm, Match atp continue)
   where continue a = betweenC (str a) ed $ body nm bd
 
 
@@ -371,5 +366,5 @@ toAttrParser = flip execStateT
 toAttrSetParser :: Setter' s a  -- ^ The setter to use
                 -> AttrParser a -- ^ parser for the value to be set.
                 -> AttrSetParser s
-toAttrSetParser setter ap = do x <- lift ap;
-                               setter .= x
+toAttrSetParser setter atp = do x <- lift atp;
+                                setter .= x
