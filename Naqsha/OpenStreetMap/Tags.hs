@@ -1,9 +1,13 @@
 {-# LANGUAGE Rank2Types        #-}
 {-# LANGUAGE OverloadedStrings #-}
--- | This module exposes some standard tags use in the open street map
--- setting. We give a lens based interface for setting and reading
--- tags of open street map elements. It is often more type safe to use
--- the lenses here than directly using `tagAt`.
+-- | This module exposes some standard tags use in the open street
+-- map. We give a lens based interface for setting and reading tags of
+-- open street map elements. The lenses defined here gives a more type
+-- safe to set and access the tags than directly using `tagAt`.
+--
+-- TODO: There are a huge number of standard tags supported by Open
+-- Street Map that are not yet present here. Please contribute towards
+-- expanding the list here.
 module Naqsha.OpenStreetMap.Tags
        ( name, nameIn, elevation
        ) where
