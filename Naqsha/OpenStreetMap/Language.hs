@@ -1,43 +1,60 @@
-{-# LANGUAGE OverloadedStrings #-}
--- | The language codes to use in Open Street map. The constructors
+{-# LANGUAGE OverloadedStrings          #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
+
+-- | The language codes to use in Open Street Map. The constructors
 -- are not exposed to avoid typos in names.
---
--- TODO: Want to see support for your favourite language? please send
--- pull requests.
 module Naqsha.OpenStreetMap.Language
-       ( Language(..), lang
+       ( Language(..)
        -- * Some pre-defined  languages.
        , english, french, hindi, malayalam
+       , inNativeScript
        ) where
 
-import Data.Text          as T
+import Data.Text           as T
+import Data.HashMap.Strict as HM
+import Data.Hashable
 
--- | The language code use to distinguish names in different languages.
-newtype Language = Language { unLang :: Text } deriving (Eq, Ord)
-
--- | Construct a language out of the text given. Avoid using this
--- constructor if you already have a symbolic name to your language
--- like for example `english`.
-lang :: Text -> Language
-lang = Language
+-- | This type captures various languages supported by Open Street
+-- Map. To avoid typos in the language use symbolic names like
+-- `malayalam` instead of @Language "ml"
+--
+-- == More langauage support.
+--
+-- Contributing a new language name requires very little knowledge of
+-- Haskell. Please consider contributing missing languages to this
+-- module.
+newtype Language = Language { languageCode :: Text -- ^ The code to be use for the language
+                            } deriving (Hashable, Eq, Ord)
 
 instance Show Language where
-  show = T.unpack . unLang
+  show = T.unpack . languageCode
 
 ------------ Some language ----------------------------
 
 -- | The english language
 english :: Language
-english = lang "en"
+english = Language "en"
 
--- | The french language
+-- | The French language
 french :: Language
-french = lang "fr"
+french = Language "fr"
 
 -- | The Hindi language
 hindi :: Language
-hindi = lang "hin"
-
--- | The malayalam language
+hindi = Language "hin"
+-- | The Malayalam language.
 malayalam :: Language
-malayalam = lang "ml"
+malayalam = Language "ml"
+
+-- | The name of the language in the language itself.
+nativeNames :: HM.HashMap Language Text
+nativeNames = HM.fromList [ (french, "française")
+                          , (english, "English")
+                          , (hindi, "हिन्दी")
+                          , (malayalam, "മലയാളം")
+                          ]
+
+-- | The name of the language in the native script itself. For
+-- example, @inNativeScript malayalam@ should give @Just "മലയാളം"@.
+inNativeScript :: Language -> Maybe Text
+inNativeScript = flip HM.lookup nativeNames
