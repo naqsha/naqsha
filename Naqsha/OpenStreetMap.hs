@@ -1,7 +1,7 @@
 module Naqsha.OpenStreetMap
        ( module Naqsha.OpenStreetMap.Element
-       , module Naqsha.OpenStreetMap.Language
        , module Naqsha.OpenStreetMap.Tags
+       , module Naqsha.Position
        ) where
 
 import Naqsha.OpenStreetMap.Element hiding( OsmMeta
@@ -10,6 +10,5 @@ import Naqsha.OpenStreetMap.Element hiding( OsmMeta
                                           , osmID, modifiedUser, modifiedUserID
                                           , timeStamp, changeSet, version, isVisible
                                           )
-
-import Naqsha.OpenStreetMap.Language hiding ( Language, lang )
 import Naqsha.OpenStreetMap.Tags
+import Naqsha.Position
