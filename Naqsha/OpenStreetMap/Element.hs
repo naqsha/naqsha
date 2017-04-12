@@ -13,17 +13,27 @@ module Naqsha.OpenStreetMap.Element
 
        -- * Open Street Map elements.
        -- $osm$
-         Node, Way, Relation, Member(..)
-       , Tagged, OsmTags, Osm
+         Node, Way, Relation
+       , wayNodes, relationMembers
+       , Member(..)
+       -- ** Building/Updating via lens interface.
+       , build, withChanges, buildM, withChangesM
+       -- * Semantic Tags.
+       , Tagged, OsmTags
        , OsmTagged(..)
-       , OsmID(..), unsafeToOsmID, readOsmID
+       , tagAt
+       -- * Database and its types.
+       -- $database$
+       --
+       , OsmID(..)
        , NodeID, WayID, RelationID
-       -- ** Useful Lenses.
-       , tagAt, wayNodes, relationMembers
+       , unsafeToOsmID, readOsmID
+       -- ** Meta data.
+       , Osm
+       -- *** Lenses to access the meta data.
        , osmID, modifiedUser, modifiedUserID, timeStamp, changeSet, version
-       , isVisible
-       , unMeta, meta
-       -- *** Osm Meta data.
+       , isVisible, unMeta, meta
+       -- ** The metadata type.
        , OsmMeta
        , _osmID, _modifiedUser, _modifiedUserID, _timeStamp, _changeSet, _version
        , _isVisible
@@ -46,7 +56,6 @@ import Naqsha.Position
 import Naqsha.Common
 
 
-
 -- $osm$
 --
 -- The Open street map describes the world using three kinds of
@@ -55,7 +64,7 @@ import Naqsha.Common
 -- location, a `Way` captures a path and a `Relation` captures a
 -- combination of other elements.
 --
--- === Sematics of Elements.
+-- == Semantic contents.
 --
 -- `Node`s, `Way`s, and `Relation`s have complex semantics in Open
 -- Street Map.  For example, a `Node` could be just an intermediate
@@ -66,17 +75,48 @@ import Naqsha.Common
 -- @`Tagged` e@ captures elements of type @e@ together with a set of
 -- tags which fully describe the semantics of the object.
 --
--- === Database meta information.
+-- == Lenses interface.
 --
--- The Open street map infrastructure also keeps track of some meta
--- information that helps managing the elements in the database.  One
--- of the most important information that is kept track of is the
--- element id, captured by the type `OsmID`. The element id servers as
--- a unique reference to objects in the data base and is also used
--- inside elements like `Way` and `Relation`. The meta information
+-- Lenses play an important role in providing a powerful interfaces to
+-- information regarding the various element.  For example, the lenses
+-- `wayNodes` focuses on the intermediate points in the way and
+-- `relationMembers` give access to the members in the
+-- relation. Lenses for some standard tags are exposed via the module
+-- `Naqsha.OpenStreetMap.Tags`. The lens `tagAt` gives ways to add
+-- arbitrary tags but its use is discouraged and is to be used only if
+-- `Naqsha.OpenStreetMap.Tags` does not expose it.
+--
+-- === Build and modify elements using lenses
+--
+-- The combinators `build` and `withChanges` gives a natural way to
+-- build/modify elements of interest to us.
+--
+-- > import Control.Lenses
+-- > import Naqsha.OpenStreetMap
+-- >
+-- > kanpur = Osm Node
+-- > kanpur = build $ do name      .= Just "Kanpur"
+-- >                     latitude  .= lat 26.4477777
+-- >                     longitude .= lon 80.3461111
+-- >
+-- > kanpurHindi = kanpur `withChanges` do nameIn hindi .= Just "कानपुर"
+-- >
+-- > -- Unsets the elevation tag of  node
+-- > unsetElevation :: Osm Node -> Osm Node
+-- > unsetElevation x = x `withChanges` do elevation .= Nothing
+
+
+
+-- $database$
+--
+-- Elements in Open Street Map are stored in a database and are thus
+-- associated with some metadata. For example, elements have database
+-- ID's captured by the data type `OsmID`.  This serves as a unique
+-- reference for the element in the data base.  The meta information
 -- also has other data like object revision number, change set,
--- etc. which are important if one wants to edit the Open Street Map
--- database.
+-- etc. The type `OsmMeta` captures these meta information. An
+-- element, together with its database metadata is captured by the
+-- type `Osm`.
 
 ------------------------ Element Identifiers ---------------------
 
@@ -249,7 +289,10 @@ meta = _osmMeta
 
 -------------- Some useful lenses -------------------------------
 
--- | Lens to focus on the tag at a given key.
+-- | Lens to focus on the tag at a given key. A more type safe method
+-- to access tags is given in the module
+-- "Naqsha.OpenStreetMap.Tags". Always prefer the one exposed from
+-- this module instead of using `tagAt` directly.
 tagAt :: OsmTagged a => Text -> Lens' a (Maybe Text)
 tagAt k = tags . at k
 
