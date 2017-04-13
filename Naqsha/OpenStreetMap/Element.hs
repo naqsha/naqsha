@@ -61,50 +61,53 @@ import Naqsha.Common
 -- The Open street map describes the world using three kinds of
 -- elements given by the types `Node`, `Way` and `Relation`
 -- respectively. Intuitively, an element of type `Node` captures a
--- location, a `Way` captures a path and a `Relation` captures a
--- combination of other elements.
+-- location, a `Way` captures path traversed on the globe, and a
+-- relation is a collection of nodes and ways which together forms
+-- some interesting cartographic entity.
 --
--- == Semantic contents.
+-- == Semantics of Elements and Lenses
 --
--- `Node`s, `Way`s, and `Relation`s have complex semantics in Open
--- Street Map.  For example, a `Node` could be just an intermediate
--- point in a path or might have a more significant semantic like
--- being a bus stop. A `Way` might be a road or a boundary for a
--- region or a river. Such complex semantics is associated to elements
--- through a set of tags captured by the type `OsmTags`. The type
--- @`Tagged` e@ captures elements of type @e@ together with a set of
--- tags which fully describe the semantics of the object.
+-- The three elements described above have some basic semantic
+-- information. For example, a `Node` has a `latitude` and a
+-- `longitude`, a way is an ordered list of nodes that forms the
+-- continuous curve on the globe, and a relation is on a collection of
+-- its members nodes and ways. These basic information can be accessed
+-- via the lenses `latitude`, `longitude`, `wayNodes`, and
+-- `relationMembers`.
 --
--- == Lenses interface.
+-- Besides these basic semantic content, elements often have other
+-- cartographic information associated with them.  For example, a node
+-- might be a location of a bus stop. A `Way` might be a road or a
+-- boundary of a region or a river. Open Street Map associates all
+-- such through a collection of optional @(key,value)@ pairs called
+-- tags and naqsha provides lenses to access these tags. See the
+-- module "Naqsha.OpenStreetMap.Tags" for some standard tags.
 --
--- Lenses play an important role in providing a powerful interfaces to
--- information regarding the various element.  For example, the lenses
--- `wayNodes` focuses on the intermediate points in the way and
--- `relationMembers` give access to the members in the
--- relation. Lenses for some standard tags are exposed via the module
--- `Naqsha.OpenStreetMap.Tags`. The lens `tagAt` gives ways to add
--- arbitrary tags but its use is discouraged and is to be used only if
--- `Naqsha.OpenStreetMap.Tags` does not expose it.
+-- === Examples.
 --
--- === Build and modify elements using lenses
---
--- The combinators `build` and `withChanges` gives a natural way to
--- build/modify elements of interest to us.
+-- We also expose a lens based creation and updation interface using
+-- the `build` and `withChanges` combinators.
 --
 -- > import Control.Lenses
 -- > import Naqsha.OpenStreetMap
 -- >
 -- > kanpur = Osm Node
--- > kanpur = build $ do name      .= Just "Kanpur"
--- >                     latitude  .= lat 26.4477777
--- >                     longitude .= lon 80.3461111
+-- > kanpur = build $ do latitude  .= lat 26.4477777  -- basic information
+-- >                     longitude .= lon 80.3461111  -- basic information
+-- >                     name      .= Just "Kanpur"   -- the name tag. Notice the Just
 -- >
--- > kanpurHindi = kanpur `withChanges` do nameIn hindi .= Just "कानपुर"
+-- >
+-- > kanpurHindi = kanpur `withChanges` do
+-- >       nameIn hindi .= Just "कानपुर" -- adds a multi-lingual name.
 -- >
 -- > -- Unsets the elevation tag of  node
 -- > unsetElevation :: Osm Node -> Osm Node
 -- > unsetElevation x = x `withChanges` do elevation .= Nothing
-
+--
+-- Notice that all lenses corresponding to tags focus on a value of
+-- type @`Maybe` v@. This is because, all tags in Open Street Map are
+-- optional and can be set/unset using `Just` and `Nothing`
+-- respectively.
 
 
 -- $database$
