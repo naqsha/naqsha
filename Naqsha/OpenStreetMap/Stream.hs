@@ -25,18 +25,34 @@ import Naqsha.OpenStreetMap.Element
 
 -- $osmstream$
 --
+-- Open Street Map elements are streamed by streaming values of type
+-- `OsmEvent`. An important streaming operation is to convert a given
+-- Open Street Map element into the corresponding stream. This is
+-- accomplished using the combinator `toSource`. For any type that is
+-- an instance of the class `OsmEventElement` can be converted to a
+-- source of `OsmEvent` using this combinator.  Finally the combinator
+-- `osmFile` can be used to put together a complete osm file.
+--
+-- Here is an example containing a single node.
+--
+--
+-- > myMap :: OsmSource m
+-- > myMap = osmFile region $ toSource taj
+-- >     where region = build $ do maxLatitude  .= lat 27.17396
+-- >                               minLatitude  .= lat 27.17394
+-- >                               maxLongitude .= lon 78.04430
+-- >                               minLongitude .= lon 78.04428
+-- >           taj    :: Tagged Node
+-- >           taj    =  build $ do latitude     .= lat 27.17395
+-- >                                longitude    .= lon 78.04429
+-- >                                name         .= Just "Taj Mahal"
+-- >
+--
+--
 -- The total number of elements that describe a certain portion of a
 -- map are often huge. Therefore the only feasible method to process
 -- non-trivial regions of the world is by building a streaming
 -- interface.
---
--- A streaming interface of elements are provided by using `Source`s,
--- `Sink`s, and `Conduit`s of `OsmEvent`. Types that can streamed as
--- an `OsmSource` (i.e. `Source` of `OsmEvent`s) are captured by the
--- class `OsmEventElement`. Elements of such type can be streamed
--- using the combinator `toSource`. Finally the combinator `osmFile`
--- can be used to put together a complete osm file.
-
 ------------------------ Osm events --------------------------
 
 -- | Osm events for streaming.
@@ -59,8 +75,8 @@ data OsmEvent = EventGeoBounds GeoBounds
 
 -- | Stream an osm file given its bounds and contents. The contents
 -- stream should only generated events corresponding to `Node`s,
--- `Way`s and `Relation`s. Otherwise the resulting file will not
--- be wellformed.
+-- `Way`s and `Relation`s. Otherwise the resulting file will not be
+-- wellformed.
 osmFile :: Monad m
         => GeoBounds   -- ^ The boundary associated with the file
         -> OsmSource m -- ^ The contents
