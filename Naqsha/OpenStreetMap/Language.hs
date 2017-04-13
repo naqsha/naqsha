@@ -16,13 +16,10 @@ import Data.Hashable
 
 -- | This type captures various languages supported by Open Street
 -- Map. To avoid typos in the language use symbolic names like
--- `malayalam` instead of @Language "ml"
---
--- == More langauage support.
---
--- Contributing a new language name requires very little knowledge of
--- Haskell. Please consider contributing missing languages to this
--- module.
+-- `malayalam` instead of @`Language` "ml"@. If your language does not
+-- have a symbolic name please consider contributing it. Such
+-- contributions requires very little knowledge of Haskell.
+
 newtype Language = Language { languageCode :: Text -- ^ The code to be use for the language
                             } deriving (Hashable, Eq, Ord)
 
@@ -30,6 +27,9 @@ instance Show Language where
   show = T.unpack . languageCode
 
 ------------ Some language ----------------------------
+
+-- TODO: Add more symbolic names. Also update the list of native
+-- names.
 
 -- | The english language
 english :: Language
@@ -48,7 +48,7 @@ malayalam = Language "ml"
 
 -- | The name of the language in the language itself.
 nativeNames :: HM.HashMap Language Text
-nativeNames = HM.fromList [ (french, "française")
+nativeNames = HM.fromList [ (french, "Française")
                           , (english, "English")
                           , (hindi, "हिन्दी")
                           , (malayalam, "മലയാളം")
