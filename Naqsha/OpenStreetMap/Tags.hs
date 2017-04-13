@@ -14,7 +14,7 @@ module Naqsha.OpenStreetMap.Tags
        (
        -- $tags$
        name, elevation
-       -- * Multilingual.
+       -- * Multi-lingual names.
        -- $multilingual$
        , nameIn
        , module Naqsha.OpenStreetMap.Language
@@ -52,6 +52,7 @@ elevation = fromTagLens $ tagAt $ "ele"
 --
 -- Open street map has ways to provide multi-lingual names to objects.
 -- Using the `nameIn` lens to set or access the multi-lingual names.
+
 -- | Lens to focus on the name in a given language.
 nameIn :: OsmTagged e => Language -> Lens' e (Maybe Text)
 nameIn (Language l) = tagAt $ "name:" <> l
