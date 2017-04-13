@@ -29,15 +29,14 @@ import Naqsha.OpenStreetMap.Element
 import Naqsha.OpenStreetMap.Language
 
 
-
-
-
+-- | Low-level lens creator which parses the text tag.
 fromTagLens :: (Show a, Read a)
             => Lens' e (Maybe Text)
             -> Lens' e (Maybe a)
 fromTagLens lenz = lenz . lens toA fromA
-  where toA   ma  = ma >>= readMaybeT
-        fromA _ a = Just $ showT a
+  where toA   ma = ma >>= readMaybeT
+        fromA _  = fmap showT
+
 
 -- | Lens to focus on the name of the element
 name :: OsmTagged e => Lens' e (Maybe Text)
