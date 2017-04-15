@@ -5,11 +5,12 @@
 module Naqsha.OpenStreetMap.XML
        ( -- * Processing Open Street Map XML.
          -- $xmlproc$
-        Compile, Trans
+         eventsFromFile
+       , parse, asXML
+       , asPrettyXML
+       -- ** Conduits to translate to and from XML.
        , compile, compileDoc
        , osm
-       , asXML, asPrettyXML
-       , parse, eventsFromFile
        ) where
 
 import           Control.Lens
@@ -40,13 +41,10 @@ import Naqsha.OpenStreetMap.Stream
 
 -- $xmlproc$
 --
--- This module provides a streaming interface to process xml files. We
--- have various compilers (captured by `Compile`) that convert a
--- stream OsmEvents to the corresponding xml events and a set of
--- translators (captured by the `Trans`).
-
--- | Conduit that converts OsmEvents to xml events.
-type Compile   m = Conduit  OsmEvent m Event
+-- This module provides a streaming interface to process osm's xml
+-- files. The basic combinators are `eventsFromFile`, which streams an
+-- xml file as a stream of OSMEvents, and `asXML` which converts an
+-- stream of OSM events into the corresponding xml file.
 
 -- | Name associated with osm
 osmName :: Name
@@ -55,12 +53,12 @@ osmName = "{http://openstreetmap.org/osm/0.6}osm"
 ---------------------------  The translators and compilers ------------------------------------
 
 -- | Conduit to convert Osm Events to xml.
-compile :: Monad m => Compile m
+compile :: Monad m => Conduit OsmEvent m Event
 compile = concatMap compiler
 
 -- | Conduit to convert Osm Events to a complete xml document,
 -- i.e. with preamble.
-compileDoc :: Monad m => Compile m
+compileDoc :: Monad m => Conduit OsmEvent m Event
 compileDoc = betweenC EventBeginDocument EventEndDocument compile
 
 
@@ -259,7 +257,7 @@ tagP nm atp str ed bd = (nm, Match atp continue)
 
 
 -- | Translate the top level osm element
-osm  :: MonadThrow m => Trans m
+osm  :: MonadThrow m => Conduit Event m OsmEvent
 osm  = matchTag $ tagP osmName ignoreAttrs (const EventBeginOsm) EventEndOsm [boundsP, nodeP, wayP, relationP]
 
 
