@@ -266,7 +266,7 @@ osm  = matchTag $ tagP osmName ignoreAttrs (const EventBeginOsm) EventEndOsm [bo
 -- | Translate a bounds element.
 boundsP :: Monad m => TagParser m
 boundsP = tagNoBodyP "bounds" bAttr EventGeoBounds
-  where bAttr = toAttrParser def $ do
+  where bAttr = buildM $ do
           toAttrSetParser maxLatitude  $ angularAttrP "maxlat"
           toAttrSetParser maxLongitude $ angularAttrP "maxlon"
           toAttrSetParser minLatitude  $ angularAttrP "minlat"
@@ -274,7 +274,7 @@ boundsP = tagNoBodyP "bounds" bAttr EventGeoBounds
 
 nodeP :: MonadThrow m => TagParser m
 nodeP = tagP "node" nAttr (uncurry EventNodeBegin) EventNodeEnd [osmTagP]
-  where geoAttr = toAttrParser def $ do
+  where geoAttr =  buildM $ do
           toAttrSetParser latitude  $ angularAttrP "lat"
           toAttrSetParser longitude $ angularAttrP "lon"
         nAttr = (,) <$> metaAttrP <*> geoAttr
@@ -337,7 +337,7 @@ refAttrP  =  force err $ readOsmID <$> requireAttr "ref"
   where err = "bad osm id"
 
 metaAttrP :: AttrParser (OsmMeta a)
-metaAttrP = toAttrParser def $ do
+metaAttrP = buildM $ do
   toAttrSetParser _osmID          $ attrConvP "id"        (fmap OsmID . readMaybeT)
   toAttrSetParser _modifiedUser   $ attr      "user"
   toAttrSetParser _modifiedUserID $ attrConvP "uid"       readMaybeT
@@ -355,10 +355,6 @@ metaAttrP = toAttrParser def $ do
 
 -- | An attribute parser that sets the attribute values.
 type AttrSetParser s = StateT s AttrParser ()
-
--- | Convert an attribute setting parser to a normal attribute parser.
-toAttrParser :: s -> AttrSetParser s -> AttrParser s
-toAttrParser = flip execStateT
 
 -- | Create an attribute setting parser out of a given setter.
 toAttrSetParser :: Setter' s a  -- ^ The setter to use
