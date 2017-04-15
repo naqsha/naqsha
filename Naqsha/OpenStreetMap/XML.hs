@@ -118,10 +118,10 @@ nodeRefE nid = [EventBeginElement "nd" [mkAttrS "ref" nid], EventEndElement "nd"
 
 boundE :: GeoBounds -> [Event]
 boundE = noBody "bounds" . attrsOfGB
-  where attrsOfGB gb = [ mkAttrLens "minlat" minLatitude  gb
-                       , mkAttrLens "maxlat" maxLatitude  gb
-                       , mkAttrLens "minlon" minLongitude gb
-                       , mkAttrLens "maxlon" maxLongitude gb
+  where attrsOfGB gb = [ mkAttrS "minlat" $ gb ^. minLatitude
+                       , mkAttrS "maxlat" $ gb ^. maxLatitude
+                       , mkAttrS "minlon" $ gb ^. minLongitude
+                       , mkAttrS "maxlon" $ gb ^. maxLongitude
                        ]
 
 memberE :: Member -> [Event]
@@ -154,14 +154,10 @@ mkAttr n v = (n, [ContentText v])
 mkAttrS :: Show a => Name -> a -> Attr
 mkAttrS n = mkAttr n  . showT
 
--- | Make an attribute using a getter for the attribute value.
-mkAttrLens :: Show a => Name -> Getter s a -> s -> Attr
-mkAttrLens n lenz s = mkAttrS n $ s ^. lenz
-
 -- | Attributes for a node element.
 nodeAttr      :: Node -> OsmMeta Node -> [Attr]
-nodeAttr n om = [ mkAttrLens "lat" latitude n
-                , mkAttrLens "lon" longitude n
+nodeAttr n om = [ mkAttrS "lat"  $ n ^. latitude
+                , mkAttrS "lon"  $ n ^. longitude
                 ]
                 ++ metaAttrs om
 
@@ -175,17 +171,16 @@ osmAttr = [ mkAttr "version" $ showVersionT osmXmlVersion
 -- | Attributes associated with meta information to the given generator.
 metaAttrs :: OsmMeta e
           -> [Attr]
-metaAttrs mt = catMaybes [ maybeAttr mt _osmID          $ mkAttrS "id"
-                         , maybeAttr mt _modifiedUser   $ mkAttr "user"
-                         , maybeAttr mt _modifiedUserID $ mkAttrS "uid"
-                         , maybeAttr mt _timeStamp      $ mkAttr "timestamp" . showTime
-                         , maybeAttr mt _version        $ mkAttrS "version"
-                         , maybeAttr mt _changeSet      $ mkAttrS "changeset"
-                         , maybeAttr mt _isVisible      $ visibleFunc
+metaAttrs mt = catMaybes [ mkAttr  "user"      <$>  mt ^. _modifiedUser
+                         , timeStampAttr       <$>  mt ^. _timeStamp
+                         , visibleFunc         <$>  mt ^. _isVisible
+                         , mkAttrS "id"        <$>  mt ^. _osmID
+                         , mkAttrS "uid"       <$>  mt ^. _modifiedUserID
+                         , mkAttrS "version"   <$>  mt ^. _version
+                         , mkAttrS "changeset" <$>  mt ^. _changeSet
                          ]
 
-  where maybeAttr :: a -> Lens' a (Maybe b) -> (b -> Attr) -> Maybe Attr
-        maybeAttr a lns gen = gen <$> a ^. lns
+  where timeStampAttr = mkAttr "timestamp" . showTime
         visibleFunc cond
           | cond          = mkAttr "visible" "true"
           | otherwise     = mkAttr "visible" "false"
@@ -267,16 +262,16 @@ osm  = matchTag $ tagP osmName ignoreAttrs (const EventBeginOsm) EventEndOsm [bo
 boundsP :: Monad m => TagParser m
 boundsP = tagNoBodyP "bounds" bAttr EventGeoBounds
   where bAttr = buildM $ do
-          toAttrSetParser maxLatitude  $ angularAttrP "maxlat"
-          toAttrSetParser maxLongitude $ angularAttrP "maxlon"
-          toAttrSetParser minLatitude  $ angularAttrP "minlat"
-          toAttrSetParser minLongitude $ angularAttrP "minlon"
+          maxLatitude  <~ angularAttrP "maxlat"
+          maxLongitude <~ angularAttrP "maxlon"
+          minLatitude  <~ angularAttrP "minlat"
+          minLongitude <~ angularAttrP "minlon"
 
 nodeP :: MonadThrow m => TagParser m
 nodeP = tagP "node" nAttr (uncurry EventNodeBegin) EventNodeEnd [osmTagP]
   where geoAttr =  buildM $ do
-          toAttrSetParser latitude  $ angularAttrP "lat"
-          toAttrSetParser longitude $ angularAttrP "lon"
+          latitude  <~ angularAttrP "lat"
+          longitude <~ angularAttrP "lon"
         nAttr = (,) <$> metaAttrP <*> geoAttr
 
 -- | Translate a way element
@@ -327,8 +322,8 @@ betweenC b e pr = yield b >> pr >> yield e
 -- longitude etc.
 angularAttrP :: (Angular a, Read a)
              => Name
-             -> AttrParser a
-angularAttrP nm = force err $ readMaybeT <$> requireAttr nm
+             -> StateT s AttrParser a
+angularAttrP nm = lift $ force err $ readMaybeT <$> requireAttr nm
   where err = "bad " ++ show nm
 
 
@@ -338,27 +333,17 @@ refAttrP  =  force err $ readOsmID <$> requireAttr "ref"
 
 metaAttrP :: AttrParser (OsmMeta a)
 metaAttrP = buildM $ do
-  toAttrSetParser _osmID          $ attrConvP "id"        (fmap OsmID . readMaybeT)
-  toAttrSetParser _modifiedUser   $ attr      "user"
-  toAttrSetParser _modifiedUserID $ attrConvP "uid"       readMaybeT
-  toAttrSetParser _timeStamp      $ attrConvP "timestamp" timeParser
-  toAttrSetParser _version        $ attrConvP "version"   readMaybeT
-  toAttrSetParser _changeSet      $ attrConvP "changeset" readMaybeT
-  toAttrSetParser _isVisible      $ attrConvP "visible"   visibleConv
+  _osmID          <~  attrConvP  "id"       readOsmID
+  _modifiedUser   <~  lift (attr "user")
+  _modifiedUserID <~  attrConvP "uid"       readMaybeT
+  _timeStamp      <~  attrConvP "timestamp" timeParser
+  _version        <~  attrConvP "version"   readMaybeT
+  _changeSet      <~  attrConvP "changeset" readMaybeT
+  _isVisible      <~  attrConvP "visible"   visibleConv
   where attrConvP :: Name                 -- ^ name of the attribute
                   -> (Text -> Maybe x)    -- ^ text to x converter
-                  -> AttrParser (Maybe x)
-        attrConvP name conv = (>>= conv) <$> attr name
+                  -> StateT s AttrParser (Maybe x)
+        attrConvP name conv = lift $ (>>= conv) <$> attr name
         visibleConv "true"  = Just True
         visibleConv "false" = Just False
         visibleConv _       = Nothing
-
--- | An attribute parser that sets the attribute values.
-type AttrSetParser s = StateT s AttrParser ()
-
--- | Create an attribute setting parser out of a given setter.
-toAttrSetParser :: Setter' s a  -- ^ The setter to use
-                -> AttrParser a -- ^ parser for the value to be set.
-                -> AttrSetParser s
-toAttrSetParser setter atp = do x <- lift atp;
-                                setter .= x
