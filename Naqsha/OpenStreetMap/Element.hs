@@ -25,7 +25,7 @@ module Naqsha.OpenStreetMap.Element
        -- * Database and its types.
        -- $database$
        --
-       , OsmID(..)
+       , OsmID
        , NodeID, WayID, RelationID
        , unsafeToOsmID, readOsmID
        -- ** Meta data.
