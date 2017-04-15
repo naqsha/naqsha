@@ -48,7 +48,7 @@ instance Arbitrary GeoBounds where
                              setArbitrary minLongitude
 
 instance Arbitrary (OsmID a) where
-  arbitrary = OsmID <$> arbitrary
+  arbitrary = unsafeToOsmID <$> arbitrary
 
 
 genOsmEvents :: Gen [OsmEvent]
