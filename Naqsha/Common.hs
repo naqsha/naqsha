@@ -1,6 +1,5 @@
--- The prelude to use functions used by Naqsha. Only for internal use.
-
 {-# LANGUAGE OverloadedStrings #-}
+-- | Some common function that is required every where.
 module Naqsha.Common
        ( showT, readMaybeT, showVersionT, naqshaVersionT
        , showTime, timeParser, osmXmlVersion, buildM, build, withChanges, withChangesM
@@ -51,7 +50,7 @@ readMaybeT = readMaybe . unpack
 showVersionT :: Version -> Text
 showVersionT = pack . showVersion
 
-
+-- | The version text for the library.
 naqshaVersionT :: Text
 naqshaVersionT = "naqsha-" <> showVersionT NP.version
 
