@@ -12,8 +12,7 @@
 
 module Naqsha.OpenStreetMap.Tags
        (
-       -- $tags$
-       name, elevation
+         name, elevation
        -- * Multi-lingual names.
        -- $multilingual$
        , nameIn
