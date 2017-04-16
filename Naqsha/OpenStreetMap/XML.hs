@@ -2,6 +2,8 @@
 {-# LANGUAGE Rank2Types                #-}
 {-# LANGUAGE TemplateHaskell           #-}
 {-# LANGUAGE ExistentialQuantification #-}
+
+-- | Interface for generating the Open Street Map XML file.
 module Naqsha.OpenStreetMap.XML
        ( -- * Processing Open Street Map XML.
          -- $xmlproc$
