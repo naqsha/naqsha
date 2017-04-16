@@ -18,3 +18,5 @@ import Naqsha.OpenStreetMap.Element hiding( OsmMeta
 import Naqsha.OpenStreetMap.Stream
 import Naqsha.OpenStreetMap.Tags
 import Naqsha.Position
+
+{-# ANN module "HLint: ignore Use import/export shortcut" #-}

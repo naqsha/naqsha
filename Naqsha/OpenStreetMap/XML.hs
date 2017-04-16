@@ -1,6 +1,5 @@
 {-# LANGUAGE OverloadedStrings         #-}
 {-# LANGUAGE Rank2Types                #-}
-{-# LANGUAGE TemplateHaskell           #-}
 {-# LANGUAGE ExistentialQuantification #-}
 
 -- | Interface for generating the Open Street Map XML file.
@@ -205,7 +204,7 @@ data Match  m  = forall a . Match (AttrParser a) (a -> Trans m)
 
 -- | Try running the match.
 tryTag :: MonadThrow m => TagParser m -> TryTrans m
-tryTag (nm, (Match atp run)) = tagName nm atp run
+tryTag (nm, Match atp run) = tagName nm atp run
 
 
 body  :: MonadThrow m => Name -> [TagParser m] -> Trans m
@@ -291,7 +290,7 @@ osmTagP = tagNoBodyP "tag" kvAttr id
 
 -- | Translate a member element
 memberP :: Monad m => TagParser m
-memberP = tagNoBodyP "member" mAttr $ EventMember
+memberP = tagNoBodyP "member" mAttr EventMember
   where mAttr = do r <- requireAttr "role"
                    t <- requireAttr "type"
                    case t of
@@ -303,7 +302,7 @@ memberP = tagNoBodyP "member" mAttr $ EventMember
 
 -- | Translate a node reference.
 nodeRefP :: Monad m => TagParser m
-nodeRefP = tagNoBodyP "nd" refAttrP $ EventNodeRef
+nodeRefP = tagNoBodyP "nd" refAttrP EventNodeRef
 
 
 ----------------------------- Some Helper Conduit -------------------------

@@ -43,7 +43,7 @@ name = tagAt "name"
 
 -- | Lens to focus on the elevation (in meters).
 elevation :: OsmTagged e => Lens' e (Maybe Double)
-elevation = fromTagLens $ tagAt $ "ele"
+elevation = fromTagLens $ tagAt "ele"
 
 ----------------------- Multi-lingual names -----------------
 
