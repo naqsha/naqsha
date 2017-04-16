@@ -83,6 +83,7 @@ import           Prelude         -- To avoid redundunt import warnings.
 
 newtype Latitude = Latitude { unLat :: Angle }
 
+-- | Construct latitude out of an angle.
 lat :: Angle -> Latitude
 lat = Latitude
 
