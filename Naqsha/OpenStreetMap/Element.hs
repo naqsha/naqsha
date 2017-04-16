@@ -23,14 +23,14 @@ module Naqsha.OpenStreetMap.Element
        , OsmTagged(..)
        , tagAt
        -- * Database and its types.
-       -- $database$
        --
        , OsmID
        , NodeID, WayID, RelationID
        , unsafeToOsmID, readOsmID
        -- ** Meta data.
        , Osm
-       -- *** Lenses to access the meta data.
+       -- *** Lenses to access the meta data.        #metalenses#
+       --
        , osmID, modifiedUser, modifiedUserID, timeStamp, changeSet, version
        , isVisible, unMeta, meta
        -- ** The metadata type.
@@ -67,34 +67,55 @@ import Naqsha.Common
 --
 -- == Semantics of Elements and Lenses
 --
--- The three elements described above have some basic semantic
--- information. For example, a `Node` has a `latitude` and a
--- `longitude`, a way is an ordered list of nodes that forms the
--- continuous curve on the globe, and a relation is on a collection of
--- its members nodes and ways. These basic information can be accessed
--- via the lenses `latitude`, `longitude`, `wayNodes`, and
--- `relationMembers`.
+-- There are three layers in which the semantics information of
+-- elements in Open Street Map are organised. Naqsha provides lenses
+-- to get/set various values of the element and thus controls their
+-- semantics.
 --
--- Besides these basic semantic content, elements often have other
--- cartographic information associated with them.  For example, a node
--- might be a location of a bus stop. A `Way` might be a road or a
--- boundary of a region or a river. Open Street Map associates all
--- such through a collection of optional @(key,value)@ pairs called
--- tags and naqsha provides lenses to access these tags. See the
--- module "Naqsha.OpenStreetMap.Tags" for some standard tags.
+-- [Basic information:] The type of the element determine its basic
+--   semantics. For example, a `Node` is a position on the globe and
+--   hence has a `Latitude` and a `Longitude` associated with it. A
+--   way is an ordered list of nodes that forms the continuous curve
+--   on the globe, and a relation is on a collection of its members
+--   elements. These basic information can be accessed via the lenses
+--   `latitude`, `longitude`, `wayNodes`, and `relationMembers`.
 --
--- === Examples.
+-- [Tags:] Besides these basic semantic content, elements often have
+--   other cartographic information associated with them.  For
+--   example, a node might be a location of a bus stop. A `Way` might
+--   be a road or a boundary of a region or a river. Open Street Map
+--   associates all such through a collection of optional
+--   @(key,value)@ pairs called tags The type @Tagged ele@ captures
+--   the tagged version of an element of type @ele@. Naqsha provides
+--   lenses to access some standard tags in the module
+--   "Naqsha.OpenStreetMap.Tags". Custom tags can be set using the
+--   `tagAt`
+--
+-- [Database meta fields:] Elements in Open Street Map are stored in a
+--   database and are thus associated with some metadata. For example,
+--   elements have database ID's captured by the data type `OsmID`.
+--   This serves as a unique reference for the element in the data
+--   base.  The meta information also has other data like object
+--   revision number, change set, etc. The type `OsmMeta` captures
+--   these meta information. The type @`Osm` ele@ is the type of
+--   version of the element type @ele@ with tags and database meta
+--   data.  As with tags, we have lenses to access/set these meta
+--   information (see "Naqsha.OpenStreetMap.Element#metalenses").
 --
 -- We also expose a lens based creation and updation interface using
 -- the `build` and `withChanges` combinators.
 --
+--
 -- > import Control.Lenses
 -- > import Naqsha.OpenStreetMap
 -- >
--- > kanpur = Osm Node
+-- > kanpur :: Osm Node
 -- > kanpur = build $ do latitude  .= lat 26.4477777  -- basic information
 -- >                     longitude .= lon 80.3461111  -- basic information
 -- >                     name      .= Just "Kanpur"   -- the name tag. Notice the Just
+-- >
+-- > -- The above definition could be used for Tagged Node as well as we are not setting any
+-- > -- database fields.
 -- >
 -- >
 -- > kanpurHindi = kanpur `withChanges` do
@@ -108,18 +129,6 @@ import Naqsha.Common
 -- type @`Maybe` v@. This is because, all tags in Open Street Map are
 -- optional and can be set/unset using `Just` and `Nothing`
 -- respectively.
-
-
--- $database$
---
--- Elements in Open Street Map are stored in a database and are thus
--- associated with some metadata. For example, elements have database
--- ID's captured by the data type `OsmID`.  This serves as a unique
--- reference for the element in the data base.  The meta information
--- also has other data like object revision number, change set,
--- etc. The type `OsmMeta` captures these meta information. An
--- element, together with its database metadata is captured by the
--- type `Osm`.
 
 ------------------------ Element Identifiers ---------------------
 
@@ -331,6 +340,7 @@ changeSet = _osmMeta . _changeSet
 
 ---------- The element of Open street map -----------------
 
+-- | The osm node is nothing but a geo-position.
 type    Node       = Geo
 
 -- | ID of Nodes
