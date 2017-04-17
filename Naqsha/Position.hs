@@ -308,7 +308,7 @@ instance Eq Geo where
 -- | Mean earth radius in meters. This is the radius used in the
 -- haversine formula of `dHvs`.
 rMean  :: Double
-rMean = 637100.88
+rMean = 6371008
 
 
 -- | This combinator computes the distance (in meters) between two geo-locations
