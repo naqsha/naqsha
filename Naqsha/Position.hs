@@ -16,7 +16,6 @@ module Naqsha.Position
        , greenwich
          -- * Angles and angular quantities.
        , Angle, Angular(..)
-       , Area, area
          -- * A geographic bound.
        , GeoBounds, maxLatitude, maxLongitude, minLatitude, minLongitude
        -- ** Distance calculation.
@@ -619,22 +618,3 @@ minLongitude = _minLongitude
 
 instance Default GeoBounds where
   def = GeoBounds def def def def
-
----------------- Angular area ------------------------------------------------------
-
-data AREA
-
-instance HasResolution AREA where
-  resolution _ =  res * res
-    where res = resolution (undefined :: AngEnc)
-
--- | Type to measure the angular area on the glob.
-type Area = Fixed AREA
-
--- | Given a bounding region calculate its angular area.
-area :: GeoBounds -> Area
-area gb = MkFixed (x * y)
-  where dlat  = unLat (gb ^. maxLatitude <> invert (gb ^. minLatitude))
-        dlong = unLong (gb ^. maxLongitude <> invert (gb ^. minLongitude))
-        MkFixed x = toAngEnc dlat
-        MkFixed y = toAngEnc dlong
