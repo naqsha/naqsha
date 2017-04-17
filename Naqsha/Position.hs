@@ -18,8 +18,6 @@ module Naqsha.Position
        , Angle, Angular(..)
          -- * A geographic bound.
        , GeoBounds, maxLatitude, maxLongitude, minLatitude, minLongitude
-       -- ** Distance calculation.
-       , dHvS, dHvS', rMean
        ) where
 
 import           Control.Lens
@@ -303,50 +301,6 @@ instance Eq Geo where
     | xlat == southPole = ylat == southPole  -- longitude irrelevant for south pole
     | otherwise         = xlat == ylat && xlong == ylong
 
---------------------- Distance calculation -------------------------------------
-
--- | Mean earth radius in meters. This is the radius used in the
--- haversine formula of `dHvs`.
-rMean  :: Double
-rMean = 6371008
-
-
--- | This combinator computes the distance (in meters) between two geo-locations
--- using the haversine distance between two points. For `Position` which have an
-dHvS :: ( Location geo1
-        , Location geo2
-        )
-      => geo1   -- ^ Point 1
-      -> geo2   -- ^ Point 2
-      -> Double -- ^ Distance in meters.
-dHvS = dHvS' rMean
-
-{-# SPECIALISE dHvS :: Geo      -> Geo      -> Double #-}
-
--- | A generalisation of `dHvS` that takes the radius as
--- argument. Will work on Mars for example once we set up a latitude
--- longitude system there. For this function units does not matter ---
--- the computed distance is in the same unit as the input radius. We have
---
--- > dHvS = dHvS' rMean
---
-dHvS' :: ( Location geo1
-         , Location geo2
-         )
-      => Double  -- ^ Radius (in whatever unit)
-      -> geo1     -- ^ Point 1
-      -> geo2     -- ^ Point 2
-      -> Double
-{-# SPECIALISE dHvS' :: Double -> Geo      -> Geo      -> Double #-}
-dHvS' r g1 g2 = r * c
-  where p1    = toRad $ g1 ^. latitude
-        l1    = toRad $ g1 ^. longitude
-        p2    = toRad $ g2 ^. latitude
-        l2    = toRad $ g2 ^. longitude
-        dp    = p2 - p1
-        dl    = l2 - l1
-        a     = sin (dp/2.0) ^ (2 :: Int) + cos p1 * cos p2 * (sin (dl/2) ^ (2 :: Int))
-        c     = 2 * atan2 (sqrt a) (sqrt (1 - a))
 
 --------------------------- Internal helper functions ------------------------
 
