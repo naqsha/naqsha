@@ -66,11 +66,11 @@ import           Prelude         -- To avoid redundunt import warnings.
 -- express a latitude of -1° 2′ 3″ one should use
 --
 -- > someNegLatitude :: Latitude
--- > someNegLatitude = invert $ deg 1 <> minute 2 <> second 3  -- correct
+-- > someNegLatitude = invert $ lat 1 <> minute 2 <> second 3  -- correct
 --
 -- and not
 --
--- > someNegLatitude = deg (-1) <> minute 2 <> second 3  -- wrong
+-- > someNegLatitude = lat (-1) <> minute 2 <> second 3  -- wrong
 --
 -- We would like to attach additional information with geographic
 -- locations. The type class `Location` captures all types that have
