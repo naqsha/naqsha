@@ -9,13 +9,11 @@
 module Naqsha.Arbitrary where
 
 import           Control.Lens
-import           Control.Monad.State
-import           Data.Default
-
+import           Control.Monad.Trans ( lift )
 import           Test.QuickCheck
 
 
-import Naqsha.Position
+import Naqsha
 
 
 instance Arbitrary Angle where
@@ -32,7 +30,7 @@ instance Arbitrary Geo where
   arbitrary = Geo <$> arbitrary <*> arbitrary
 
 instance Arbitrary GeoBounds where
-  arbitrary = toGen def $ do setArbitrary maxLatitude
-                             setArbitrary maxLongitude
-                             setArbitrary minLatitude
-                             setArbitrary minLongitude
+  arbitrary = buildM $ do maxLatitude  <~ lift arbitrary
+                          maxLongitude <~ lift arbitrary
+                          minLatitude  <~ lift arbitrary
+                          minLongitude <~ lift arbitrary

@@ -49,7 +49,6 @@ test-Suite test
   other-modules: Naqsha.PositionSpec
                , Naqsha.Arbitrary
   build-depends: base
-               , data-default
                , HUnit                          >= 1.2
                , QuickCheck                     >= 2.4
                , hspec
