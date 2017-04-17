@@ -34,6 +34,7 @@ library
                , lens
 
   exposed-modules: Naqsha.Position
+                 , Naqsha.Version
   other-modules: Paths_naqsha
                -- , Naqsha.Common
   default-language: Haskell2010
