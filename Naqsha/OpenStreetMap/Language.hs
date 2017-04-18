@@ -42,14 +42,25 @@ french = Language "fr"
 -- | The Hindi language
 hindi :: Language
 hindi = Language "hin"
+
 -- | The Malayalam language.
 malayalam :: Language
 malayalam = Language "ml"
+
+-- | The Spanish language.
+malayalam :: Language
+malayalam = Language "es"
+
+-- | The German language.
+malayalam :: Language
+malayalam = Language "de"
 
 -- | The name of the language in the language itself.
 nativeNames :: HM.HashMap Language Text
 nativeNames = HM.fromList [ (french, "Française")
                           , (english, "English")
+                          , (spanish, "Español")
+                          , (german, "Deutsh")
                           , (hindi, "हिन्दी")
                           , (malayalam, "മലയാളം")
                           ]
