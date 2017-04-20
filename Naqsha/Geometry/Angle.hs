@@ -25,15 +25,17 @@ import qualified Data.Vector.Generic.Mutable as GVM
 
 ----------------------------- Angles and Angular quantities -----------------------
 
--- | An abstract angle. Internally, the to represent as a 64-bit
--- integer where each unit contribute 1/2^64 fraction of a complete
--- circle. This a fast way to perform arithmetic on angles with no
--- errors (up to a resolution of 2ᴨ/2^64 radians).
+-- | An abstract angle. Internally, angles are represented as a 64-bit
+-- integer with each unit contribute 1/2^64 fraction of a complete
+-- circle. This means that angles are accurate up to a resolution of 2
+-- π / 2^64 radians. Angles form a group under the angular addition
+-- and the fact that these are represented as integers means one can
+-- expect high speed accurate angle arithmetic.
 --
--- You can express angles in a convenient notation as follows.
+-- When expressing angles one can use a more convenient notation:
 --
--- > myAngle = degree 23.45
--- > yourAngle = degree 23 <> minute 45 <> second 42
+-- > myAngle   = degree 21.71167
+-- > yourAngle = degree 21 <> minute 42 <> second 42
 --
 newtype Angle = Angle {unAngle :: Int64} deriving (Enum, Eq, Ord, Unbox, Show, Read)
 
