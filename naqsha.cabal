@@ -54,6 +54,7 @@ test-Suite test
   build-depends: base
                , HUnit                          >= 1.2
                , QuickCheck                     >= 2.4
+               , groups
                , hspec
                , lens
                , mtl

@@ -1,11 +1,13 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 module Naqsha.PositionSpec where
 import Data.Monoid
+import Data.Fixed
 import Test.QuickCheck
 import Test.Hspec
 import Test.Hspec.QuickCheck
 
 import Naqsha.Position
+import Naqsha.Geometry.Angle
 import Naqsha.Arbitrary ()
 
 inRange :: Testable prop
@@ -13,27 +15,30 @@ inRange :: Testable prop
         -> String         -- ^ description
         -> ((Angle,Angle) -> prop)
         -> Spec
-inRange rng@(mi,mx) descr prop_test = it msg $ forAll pair prop_test
+inRange (mi,mx) descr prop_test = it msg $ forAll pair prop_test
   where pair  = (,) <$> gen <*> gen
-        msg   = "in range " ++ show rng ++ ": " ++ descr
+        msg   = "in range " ++ show (toNano mi,toNano mx) ++ ": " ++ descr
         gen   =  toEnum <$> choose (fromEnum mi, fromEnum mx)
 
-isIncreasing :: Ord a => (Angle -> a) -> (Angle, Angle) -> Bool
-isIncreasing conv (x , y)
+        toNano :: Angle -> Nano
+        toNano = toDegree
+
+isIncreasing :: (Angle, Angle) -> Bool
+isIncreasing (x , y)
   | x == y    = xA == yA
   | x <  y    = xA <  yA
   | otherwise = xA >  yA
-  where xA = conv x
-        yA = conv y
+  where xA = lat x
+        yA = lat y
 
 
-isDecreasing :: Ord a => (Angle -> a) -> (Angle, Angle) -> Bool
-isDecreasing conv (x, y)
+isDecreasing :: (Angle, Angle) -> Bool
+isDecreasing (x, y)
   | x == y    = xA == yA
   | x >  y    = xA <  yA
   | otherwise = xA >  yA
-  where xA  = conv x
-        yA  = conv y
+  where xA  = lat x
+        yA  = lat y
 
 shouldBeBounded :: (Arbitrary a, Ord a, Show a, Bounded a) => a -> Spec
 shouldBeBounded a = prop msg $ \ x -> x >= mi && x <= mx
@@ -50,25 +55,16 @@ spec :: Spec
 spec = do
 
   describe "latitudes" $ do
-    prop "read . show = id" $
-      \ (x :: Latitude) -> x `shouldBe` read (show x)
 
-    prop "show have a period of 360 deg" $
-      \ (x :: Latitude) -> x <> lat 360 `shouldBe` x
+    inRange (degree (-90),  degree 90)    "increases monotonically" isIncreasing
+    inRange (degree 90 ,  maxBound)     "decreases monotonically"   isDecreasing
+    inRange (minBound , degree (-90)) "decreases monotonically"     isDecreasing
 
-    shouldBeBounded (undefined ::Latitude)
+    shouldBeBounded (undefined :: Latitude)
 
-    inRange (-90,90)        "increases monotonically" $ isIncreasing lat
-    inRange (90,maxBound)   "decreases monotonically" $ isDecreasing lat
-    inRange (minBound, -90) "decreases monotonically" $ isDecreasing lat
   describe "longitudes" $ do
 
-    prop "read . show = id" $
-      \ (x :: Latitude) -> x `shouldBe` read (show x)
-
     prop "should have a period of 360 deg" $
-      \ (x :: Longitude) -> x <> lon 360 `shouldBe` x
+      \ (x :: Longitude) -> x <> lon (degree 360) `shouldBe` x
 
     shouldBeBounded (undefined ::Longitude)
-
-    inRange (succ (-180), 180) "increases monotonically" $ isIncreasing lon
