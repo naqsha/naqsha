@@ -27,37 +27,16 @@ source-repository head
 library
   ghc-options: -Wall
   build-depends: base                        >= 4.6   && < 4.11
-               , bytestring
-               , conduit
-               , conduit-combinators
-               , containers
                , data-default
-               , exceptions
                , groups
-               , hashable
-               , mtl
-               , primitive
-               , resourcet
-               , text
-               , time
-               , transformers-base
-               , unordered-containers
                , vector                      >= 0.7.1 && < 0.13
-               , xml-conduit                 >= 1.4   && <  1.5
-               , xml-types
-               , lens
 
-  exposed-modules: Naqsha.Position
-                 , Naqsha.OpenStreetMap
-                 , Naqsha.OpenStreetMap.Element
-                 , Naqsha.OpenStreetMap.Stream
-                 , Naqsha.OpenStreetMap.Tags
-                 , Naqsha.OpenStreetMap.XML
+  exposed-modules: Naqsha
+                 , Naqsha.Position
+                 , Naqsha.Geometry.Angle
+                 , Naqsha.Geometry.Spherical
+                 , Naqsha.Version
   other-modules: Paths_naqsha
-               , Naqsha.Common
-               , Naqsha.OpenStreetMap.Language
-
-
   default-language: Haskell2010
 
 test-Suite test
@@ -67,22 +46,13 @@ test-Suite test
   main-is: Main.hs
   ghc-options: -Wall
   other-modules: Naqsha.PositionSpec
+               , Naqsha.Geometry.AngleSpec
                , Naqsha.Arbitrary
   build-depends: base
-               , bytestring
-               , conduit
-               , conduit-combinators
-               , data-default
                , HUnit                          >= 1.2
                , QuickCheck                     >= 2.4
+               , groups
                , hspec
-               , lens
-               , mtl
-               , text
-               , time
-               , transformers
-               , unordered-containers
-               , vector
                --
                --   This package
                --
