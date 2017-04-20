@@ -7,11 +7,10 @@
 module Naqsha.Position
        ( -- * Latitude, longitude and geopositions.
          -- $latandlong$
-         Latitude, Longitude, lat, lon, Geo(..)
-         -- ** Some common latitude
-       , equator, northPole, southPole
-         -- ** Some common longitude
-       , greenwich
+         Geo(..)
+       , northPole, southPole
+       , Latitude, Longitude, lat, lon
+       , equator, greenwich
        ) where
 
 import           Control.Monad               ( liftM )
@@ -79,17 +78,9 @@ instance Default Latitude where
 equator :: Latitude
 equator = lat $ degree 0
 
--- | The latitude of north pole.
-northPole :: Latitude
-northPole = lat $ degree 90
-
--- | The latitude of south pole.
-southPole :: Latitude
-southPole = lat $ degree (-90)
-
 instance Bounded Latitude where
-  maxBound = northPole
-  minBound = southPole
+  maxBound = lat $ degree 90
+  minBound = lat $ degree (-90)
 
 
 -------------------------- Longitude ------------------------------------------
@@ -123,12 +114,20 @@ data Geo = Geo {-# UNPACK #-} !Latitude
 instance Default Geo where
   def = Geo def def
 
+
+-- | The North pole
+northPole :: Geo
+northPole = Geo maxBound $ lon $ degree 0
+
+-- | The South pole
+southPole :: Geo
+southPole = Geo minBound $ lon $ degree 0
+
 instance Eq Geo where
   (==) (Geo xlat xlong) (Geo ylat ylong)
-    | xlat == northPole = ylat == northPole  -- longitude irrelevant for north pole
-    | xlat == southPole = ylat == southPole  -- longitude irrelevant for south pole
-    | otherwise         = xlat == ylat && xlong == ylong
-
+    | xlat == maxBound = ylat == maxBound  -- longitude irrelevant for north pole
+    | xlat == minBound = ylat == minBound  -- longitude irrelevant for south pole
+    | otherwise     = xlat == ylat && xlong == ylong
 
 -- | normalise latitude values.
 normLat :: Angle -> Angle
