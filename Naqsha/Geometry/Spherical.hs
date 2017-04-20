@@ -8,7 +8,10 @@ module Naqsha.Geometry.Spherical
        ) where
 
 import Control.Lens
+import Data.Monoid
+import Data.Group
 import Naqsha.Position
+import Naqsha.Geometry.Angle
 
 --------------------- Distance calculation -------------------------------------
 
@@ -48,17 +51,21 @@ distance' :: ( Location geo1
           -> Double
 {-# SPECIALISE distance' :: Double -> Geo      -> Geo      -> Double #-}
 distance' r g1 g2 = r * c
-  where p1    = toRad $ g1 ^. latitude
-        l1    = toRad $ g1 ^. longitude
-        p2    = toRad $ g2 ^. latitude
-        l2    = toRad $ g2 ^. longitude
-        dp    = p2 - p1
-        dl    = l2 - l1
-        a     = hav dp  + cos p1 * cos p2 * hav dl
+  where p1    = toAngle $ g1 ^. latitude
+        l1    = toAngle $ g1 ^. longitude
+        p2    = toAngle $ g2 ^. latitude
+        l2    = toAngle $ g2 ^. longitude
+        dp    = p2 <> invert p1
+        dl    = l2 <> invert l1
+
+        phi1  = toRadian p1
+        phi2  = toRadian p2
+
+        a     = hav dp  + cos phi1 * cos phi2 * hav dl
         c     = 2 * atan2 (sqrt a) (sqrt (1 - a))
 
 -- | The haversine functions.
-hav :: Double -> Double
+hav :: Angle -> Double
 {-# INLINE hav #-}
 hav theta = stheta * stheta
-  where stheta = sin (theta/2.0)
+  where stheta = sin (toRadian theta/2.0)
