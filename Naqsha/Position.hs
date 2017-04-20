@@ -3,7 +3,6 @@
 {-# LANGUAGE TypeFamilies               #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE Rank2Types                 #-}
-{-# LANGUAGE TemplateHaskell            #-}
 -- | This module captures position of a point on the globe.
 module Naqsha.Position
        ( -- * Latitude, longitude and geopositions.

@@ -83,7 +83,7 @@ instance Angular Angle where
 instance Monoid Angle where
   mempty                        = Angle 0
   mappend  (Angle x)  (Angle y) = Angle $ x + y
-  mconcat                       = Angle . foldr (+) 0 . map unAngle
+  mconcat                       = Angle . sum . map unAngle
 
 instance Group Angle where
   invert (Angle x) = Angle $ negate x
