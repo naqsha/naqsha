@@ -7,7 +7,6 @@ module Naqsha.Geometry.Spherical
        , rMean
        ) where
 
-import Control.Lens
 import Data.Monoid
 import Data.Group
 import Naqsha.Position
@@ -24,15 +23,11 @@ rMean = 6371008
 -- | This combinator computes the distance (in meters) between two
 -- geo-locations using the haversine distance between two points. For
 -- `Position` which have an
-distance :: ( Location geo1
-            , Location geo2
-            )
-         => geo1   -- ^ Point 1
-         -> geo2   -- ^ Point 2
+distance :: Geo
+         -> Geo
          -> Double -- ^ Distance in meters.
 distance = distance' rMean
 
-{-# SPECIALISE distance :: Geo      -> Geo      -> Double #-}
 
 -- | A generalisation of `dHvS` that takes the radius as
 -- argument. Will work on Mars for example once we set up a latitude
@@ -42,19 +37,16 @@ distance = distance' rMean
 --
 -- > distance = distance' rMean
 --
-distance' :: ( Location geo1
-             , Location geo2
-             )
-          => Double  -- ^ Radius (in whatever unit)
-          -> geo1     -- ^ Point 1
-          -> geo2     -- ^ Point 2
+distance' :: Double  -- ^ Radius (in whatever unit)
+          -> Geo
+          -> Geo
           -> Double
-{-# SPECIALISE distance' :: Double -> Geo      -> Geo      -> Double #-}
-distance' r g1 g2 = r * c
-  where p1    = toAngle $ g1 ^. latitude
-        l1    = toAngle $ g1 ^. longitude
-        p2    = toAngle $ g2 ^. latitude
-        l2    = toAngle $ g2 ^. longitude
+
+distance' r (Geo lat1 lon1) (Geo lat2 lon2) = r * c
+  where p1    = toAngle lat1
+        l1    = toAngle lon1
+        p2    = toAngle lat2
+        l2    = toAngle lon2
         dp    = p2 <> invert p1
         dl    = l2 <> invert l1
 

@@ -31,7 +31,6 @@ library
                , groups
                , mtl
                , vector                      >= 0.7.1 && < 0.13
-               , lens
 
   exposed-modules: Naqsha
                  , Naqsha.Position
