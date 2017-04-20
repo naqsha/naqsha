@@ -24,16 +24,16 @@ import           Control.Lens
 import           Control.Monad               ( liftM )
 import           Data.Default
 import           Data.Fixed
-import           Data.Int
 import           Data.Monoid
 import           Data.Group
-import           Data.Vector.Unboxed         ( MVector(..), Vector, Unbox)
+import           Data.Vector.Unboxed         ( MVector(..), Vector)
 import qualified Data.Vector.Generic         as GV
 import qualified Data.Vector.Generic.Mutable as GVM
 import           Text.Read
 
 import           Prelude         -- To avoid redundunt import warnings.
 
+import           Naqsha.Geometry.Angle
 
 -- $latandlong$
 --
@@ -41,91 +41,62 @@ import           Prelude         -- To avoid redundunt import warnings.
 -- captures by the type `Geo`.  It is essentially a pair of the
 -- `Latitude` and `Longitude` of the point.
 --
--- The default representation of Latitude and Longitudes are in
--- degrees.
+-- == Examples
 --
 -- > kanpurLatitude  :: Latitude
--- > kanpurLatitude  = lat 26.4477777
+-- > kanpurLatitude  = lat $ degree 26.4477777
 -- > kanpurLongitude :: Longitude
--- > kanpurLongitude = lon 80.3461111
+-- > kanpurLongitude = lon $ degree 80.3461111
 --
--- Latitudes and longitudes are instances of `Monoid` where the monoid
--- instance adds up the angle. One can use this `Monoid` instance to
--- express in degrees, minutes and seconds as follows
 --
--- > kanpurLatitude  = lat 26 <> minute 26 <> second 52
--- > kanpurLongitude = lon 80 <> minute 20 <> second 46
---
--- They are also instances of `Group` where `invert` is the angle in
--- the opposite direction, i.e for latitudes, `invert` converts from
--- North to South and vice-versa and for longitudes `invert` converts
--- from East to West. Be careful with negative quantities though. To
--- express a latitude of -1° 2′ 3″ one should use
---
--- > someNegLatitude :: Latitude
--- > someNegLatitude = invert $ lat 1 <> minute 2 <> second 3  -- correct
---
--- and not
---
--- > someNegLatitude = lat (-1) <> minute 2 <> second 3  -- wrong
+-- > kanpurLatitude  = lat $ degree 26 <> minute 26 <> second 52
+-- > kanpurLongitude = lon $ degree 80 <> minute 20 <> second 46
 --
 -- We would like to attach additional information with geographic
 -- locations. The type class `Location` captures all types that have
 -- an associated geographical coordinates.
+--
+-- The show and read instance of the `Latitude` and `Longitude` types
+-- uses degrees for displaying and reading respectively. Show and Read
+-- instances can express these quantities up to Nano degree precision.
+--
+
 
 ----------------------------- Lattitude ----------------------------------
 
 -- | The latitude of a point. Positive denotes North of Equator where
 -- as negative South.
-
-newtype Latitude = Latitude { unLat :: Angle }
+newtype Latitude = Latitude { unLat :: Angle } deriving (Eq, Ord)
 
 -- | Construct latitude out of an angle.
 lat :: Angle -> Latitude
-lat = Latitude
-
-instance Show Latitude where
-  show = show . unLat . normalise
-
-instance Read Latitude where
-  readsPrec n = map conv . readsPrec n
-    where conv (ang,s) = (Latitude ang, s)
-
+lat = Latitude . normLat
 
 instance Angular Latitude where
-  normalise = normLat  . unLat
-  minutes   = Latitude . minutes
-  seconds   = Latitude . seconds
-  rad       = Latitude . rad
-  toRad     = toRad . normLat . unLat
+  toAngle = unLat
 
-instance Eq Latitude where
-  (==) l1 l2 = unLat (normalise l1) == unLat (normalise l2)
+instance Show Latitude where
+  show = show . (toDegree :: Angle -> Nano) . unLat
 
-instance Ord Latitude where
-  compare x y = unLat (normalise x) `compare` unLat (normalise y)
+instance Read Latitude where
+  readPrec = conv <$> readPrec
+    where conv = lat . degree . (toRational :: Nano -> Rational)
 
-instance Monoid Latitude where
-  mempty      = equator
-  mappend x y = Latitude $ unLat x + unLat y
-
-instance Group Latitude where
-  invert  = Latitude . negate . unLat
 
 instance Default Latitude where
   def = equator
 
 -- | The latitude of equator.
 equator :: Latitude
-equator = lat 0
+equator = lat $ degree 0
 
 -- | The latitude of north pole.
 northPole :: Latitude
-northPole = lat 90
+northPole = lat $ degree 90
 
 -- | The latitude of south pole.
 southPole :: Latitude
-southPole = lat (-90)
+southPole = lat $ degree (-90)
 
 instance Bounded Latitude where
   maxBound = northPole
@@ -137,35 +108,28 @@ instance Bounded Latitude where
 -- | The longitude of a point. Positive denotes East of the Greenwich
 -- meridian where as negative denotes West.
 newtype Longitude = Longitude { unLong :: Angle }
-  deriving (Eq,Bounded, Default, Angular, Ord, Monoid, Group)
+  deriving (Eq, Bounded, Default, Angular, Ord, Monoid, Group)
 
 instance Show Longitude where
-  show = show . unLong
+  show = show . (toDegree :: Angle -> Nano) . unLong
 
 instance Read Longitude where
-  readsPrec n = map conv . readsPrec n
-    where conv (ang, s) = (lon ang, s)
+  readPrec = conv <$> readPrec
+    where conv  = lon . degree . (toRational :: Nano -> Rational)
 
 -- | Convert angles to longitude.
-lon :: Angle-> Longitude
+lon :: Angle -> Longitude
 lon = Longitude
 
 
 -- | The zero longitude.
 greenwich :: Longitude
-greenwich = lon 0
+greenwich = lon $ degree 0
 
 -- | The coordinates of a point on the earth's surface.
 data Geo = Geo {-# UNPACK #-} !Latitude
                {-# UNPACK #-} !Longitude
          deriving Show
-
-instance Monoid Geo where
-  mempty      = Geo mempty mempty
-  mappend (Geo xlat xlong) (Geo ylat  ylong) = Geo (xlat `mappend` ylat) (xlong `mappend` ylong)
-
-instance Group Geo where
-  invert (Geo lt lg) = Geo (invert lt) $ invert lg
 
 instance Default Geo where
   def = Geo def def
@@ -187,104 +151,6 @@ class Location a where
 
   longitude = geoPosition . longitude
 
------------------------------ Angles and Angular quantities -----------------------
-
--- | An abstract angle measured in degrees up to some precision
--- (system dependent).
-newtype Angle = Angle {unAngle ::  Int64} deriving Unbox
-
-instance Enum Angle where
-   toEnum   = fromAngEnc . toEnum
-   fromEnum = fromEnum   . toAngEnc . normalise
-
-instance Default Angle where
-  def = 0
-
-instance Angular Angle where
-  normalise ang | r > oneEighty = Angle $ r - threeSixty
-                | otherwise     = Angle r
-    where r = unAngle ang `rem` threeSixty
-          threeSixty =  360 * scale
-          oneEighty  =  180 * scale
-
-  minutes   = fromAngEnc . (/60) . fromIntegral
-  seconds   = fromDouble . (/3600)
-  rad       = fromDouble . (/pi) . (*180)
-  toRad     = (*pi) . (/180) . toDouble
-  {-# INLINE normalise #-}
-
-instance Num Angle where
-  x + y         = normalise $ Angle $ unAngle x + unAngle y
-  x - y         = normalise $ Angle $ unAngle x - unAngle y
-  x * y         = normalise $ Angle $ unAngle x * unAngle y
-  negate        = Angle . negate . unAngle
-  abs           = Angle . abs    . unAngle
-  signum        = fromIntegral   . signum . unAngle  -- Angle . abs . unAngle will result in 1 * 10^9
-  fromInteger   = fromAngEnc     . fromInteger
-
-instance Show Angle where
-  show = show . toAngEnc
-
-instance Read Angle where
-  readsPrec n = map conv . readsPrec n
-    where conv (x,s) = (fromAngEnc x, s)
-
-instance Eq Angle where
-  (==) x y = unAngle (normalise x) == unAngle (normalise y)
-
-instance Ord Angle where
-  compare x y = unAngle (normalise x) `compare` unAngle (normalise y)
-
-instance Monoid Angle where
-  mempty      = 0
-  mappend     = (+)
-
-instance Group Angle where
-  invert = negate
-
-instance Bounded Angle where
-  maxBound = fromAngEnc 180
-  minBound = fromAngEnc $ succ (-180)
-
------------------ Encoding Angles ---------------------------------------------------
-
--- | Angles are encoded in nano-degrees.
-type AngEnc = Nano
-
-toAngEnc :: Angle -> AngEnc
-toAngEnc = MkFixed . toInteger . unAngle
-
-fromAngEnc :: AngEnc  -> Angle
-fromAngEnc a@(MkFixed x) =  Angle $ fromIntegral $ x `rem` (360 * resolution a)
-
-scale :: Num a => a
-scale = fromIntegral $ resolution (1 :: AngEnc)
-
-fromDouble :: Double -> Angle
-fromDouble = fromAngEnc . fromInteger . round . (*scale)
-
-toDouble :: Angle -> Double
-toDouble = (/scale) . fromIntegral . unAngle
-
------------------------------- The angular class ------------------------
-
-
--- | Angular quantities.
-class Angular a where
-  -- | Express angular quantity in minutes.
-  minutes :: Int -> a
-
-  -- | Express angular quantity in seconds.
-  seconds :: Double -> a
-
-  -- | Express angular quantity in radians
-  rad  :: Double -> a
-
-  -- | Get the angle in radians.
-  toRad :: a -> Double
-
-  -- | Normalise the quantity
-  normalise  :: a -> a
 
 instance Location Geo where
   latitude  = lens getter setter
@@ -302,25 +168,15 @@ instance Eq Geo where
     | otherwise         = xlat == ylat && xlong == ylong
 
 
+-- | normalise latitude values.
+normLat :: Angle -> Angle
+normLat ang | degree (-90)  <= ang && ang < degree 90 = ang
+            | ang > degree 90                         = succ (maxBound  <> invert ang)
+            | otherwise                               = minBound <> invert ang
+
+
 --------------------------- Internal helper functions ------------------------
 
-
--- | Function to normalise latitudes. It essentially is a saw-tooth
--- function of period 360 with max values 90.
-normLat :: Angle -> Latitude
-normLat ang = Latitude $ fromAngEnc $ signum y * normPosLat (abs y)
-  where y = toAngEnc ang
-
--- | Normalise a positive latitude.
-normPosLat :: AngEnc -> AngEnc
-normPosLat x | x <= 90   = x
-             | x <= 270  = 180 - x
-             | otherwise = x  - 360
-
-------------------- Making stuff suitable for unboxed vector. --------------------------
-
-newtype instance MVector s Angle = MAngV  (MVector s Int64)
-newtype instance Vector    Angle = AngV   (Vector Int64)
 
 newtype instance MVector s Latitude = MLatV (MVector s Angle)
 newtype instance Vector    Latitude = LatV  (Vector Angle)
@@ -335,53 +191,6 @@ newtype instance Vector    Geo = GeoV  (Vector    (Angle,Angle))
 
 
 -------------------- Instance for Angle --------------------------------------------
-
-instance GVM.MVector MVector Angle where
-  {-# INLINE basicLength #-}
-  {-# INLINE basicUnsafeSlice #-}
-  {-# INLINE basicOverlaps #-}
-  {-# INLINE basicUnsafeNew #-}
-  {-# INLINE basicUnsafeReplicate #-}
-  {-# INLINE basicUnsafeRead #-}
-  {-# INLINE basicUnsafeWrite #-}
-  {-# INLINE basicClear #-}
-  {-# INLINE basicSet #-}
-  {-# INLINE basicUnsafeCopy #-}
-  {-# INLINE basicUnsafeGrow #-}
-  basicLength          (MAngV v)          = GVM.basicLength v
-  basicUnsafeSlice i n (MAngV v)          = MAngV $ GVM.basicUnsafeSlice i n v
-  basicOverlaps (MAngV v1) (MAngV v2)     = GVM.basicOverlaps v1 v2
-
-  basicUnsafeRead  (MAngV v) i            = Angle `liftM` GVM.basicUnsafeRead v i
-  basicUnsafeWrite (MAngV v) i (Angle x)  = GVM.basicUnsafeWrite v i x
-
-  basicClear (MAngV v)                    = GVM.basicClear v
-  basicSet   (MAngV v)         (Angle x)  = GVM.basicSet v x
-
-  basicUnsafeNew n                        = MAngV `liftM` GVM.basicUnsafeNew n
-  basicUnsafeReplicate n     (Angle x)    = MAngV `liftM` GVM.basicUnsafeReplicate n x
-  basicUnsafeCopy (MAngV v1) (MAngV v2)   = GVM.basicUnsafeCopy v1 v2
-  basicUnsafeGrow (MAngV v)   n           = MAngV `liftM` GVM.basicUnsafeGrow v n
-
-#if MIN_VERSION_vector(0,11,0)
-  basicInitialize (MAngV v)               = GVM.basicInitialize v
-#endif
-
-instance GV.Vector Vector Angle where
-  {-# INLINE basicUnsafeFreeze #-}
-  {-# INLINE basicUnsafeThaw #-}
-  {-# INLINE basicLength #-}
-  {-# INLINE basicUnsafeSlice #-}
-  {-# INLINE basicUnsafeIndexM #-}
-  {-# INLINE elemseq #-}
-  basicUnsafeFreeze (MAngV v)         = AngV  `liftM` GV.basicUnsafeFreeze v
-  basicUnsafeThaw (AngV v)            = MAngV `liftM` GV.basicUnsafeThaw v
-  basicLength (AngV v)                = GV.basicLength v
-  basicUnsafeSlice i n (AngV v)       = AngV $ GV.basicUnsafeSlice i n v
-  basicUnsafeIndexM (AngV v) i        = Angle   `liftM`  GV.basicUnsafeIndexM v i
-
-  basicUnsafeCopy (MAngV mv) (AngV v) = GV.basicUnsafeCopy mv v
-  elemseq _ (Angle x)                 = GV.elemseq (undefined :: Vector a) x
 
 
 -------------------- Instance for latitude --------------------------------------------
