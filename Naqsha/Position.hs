@@ -60,6 +60,21 @@ newtype Latitude = Latitude { unLat :: Angle } deriving (Eq, Ord)
 lat :: Angle -> Latitude
 lat = Latitude . normLat
 
+-- | Convert an angle to a northern latitude
+--
+-- > tropicOfCancer = north $ degree 23.5
+--
+north :: Angle -> Latitude
+north = lat
+
+-- | Convert an angle to a southern latitude.
+--
+-- >  tropicOfCapricon = south $ degree 23.5
+--
+south :: Angle -> Latitude
+south = lat . invert
+
+
 instance Angular Latitude where
   toAngle = unLat
 
@@ -77,6 +92,15 @@ instance Default Latitude where
 -- | The latitude of equator.
 equator :: Latitude
 equator = lat $ degree 0
+
+-- | The latitude corresponding to the Tropic of Cancer.
+tropicOfCancer :: Latitude
+tropicOfCancer = north $ degree 23.5
+
+-- | The latitude corresponding to the Tropic of Capricon
+tropicOfCapricon :: Latitude
+tropicOfCapricon = south $ degree 23.5
+
 
 instance Bounded Latitude where
   maxBound = lat $ degree 90
@@ -100,6 +124,21 @@ instance Read Longitude where
 -- | Convert angles to longitude.
 lon :: Angle -> Longitude
 lon = Longitude
+
+-- | Convert angle to an eastern longitude.
+--
+-- > kanpurLongitude = east $ degree 80.3461
+--
+east :: Angle -> Longitude
+east = lon
+
+-- | Convert angle to a western longitude
+--
+-- > newyorkLongitude = west $ degree 74.0059
+--
+west :: Angle -> Longitude
+west = lon . invert
+
 
 
 -- | The zero longitude.
