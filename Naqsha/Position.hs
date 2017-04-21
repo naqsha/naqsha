@@ -5,12 +5,20 @@
 {-# LANGUAGE Rank2Types                 #-}
 -- | This module captures position of a point on the globe.
 module Naqsha.Position
-       ( -- * Latitude, longitude and geopositions.
+       ( -- * Basics
          -- $latandlong$
          Geo(..)
        , northPole, southPole
-       , Latitude, Longitude, lat, lon
-       , equator, greenwich
+       -- ** Latitudes
+       , Latitude
+       , north, south, lat
+       , equator
+       , tropicOfCancer
+       , tropicOfCapricon
+       -- ** Longitudes.
+       , Longitude
+       , east, west, lon
+       , greenwich
        ) where
 
 import           Control.Monad               ( liftM )
@@ -47,6 +55,14 @@ import           Naqsha.Geometry.Angle
 -- The show and read instance of the `Latitude` and `Longitude` types
 -- uses degrees for displaying and reading respectively. Show and Read
 -- instances can express these quantities up to Nano degree precision.
+--
+-- == Convention on sign.
+--
+-- For latitudes, positive means north and negative means south. For
+-- longitudes, positive means east and negative means west. However,
+-- if you find these conventions confusing you can use the combinators
+-- `north`, `south`, `east`, and `west` when constructing latitudes or
+-- longitudes.
 --
 
 
