@@ -3,10 +3,14 @@ Naqsha
 
 [![Build Staus][travis-status]][travis-naqsha]
 
-Naqsha is a Haskell library to work with maps and related data. We
-plan to support various operations on points, trails and other map
-related objects. We also plan to support reading, writing and
-generating various standard data file format.
+Naqsha is a Haskell library to work with geospatial data types. The
+goal of this library is to provide fast and high level access to
+various operations in the geospatial setting like distance
+calculations, azimuth etc. Due to the very nature of the geometry on
+the surface of the globe, many of these basic tasks have multiple
+algorithms based on criteria like speed of computation and
+accuracy. We would like to provide all such algorithms in this
+package.
 
 The word naqsha, or more accurately naqshA (नक़्शा), means a map or a
 sketch.
