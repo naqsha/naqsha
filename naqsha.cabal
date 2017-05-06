@@ -1,8 +1,9 @@
 name:        naqsha
 version:     0.1.0.0
-synopsis:    A library for working with map and various maping formats.
+synopsis:    A library for working with geospatial data types.
 
-description: Naqsha is a library to work with geographic data, mapping formats etc.
+description: Naqsha is a library to work with geospatial data types like latitudes and longitudes. It provides
+             some basic operations like distance calculations.
 
 homepage:    http://github.com/naqsha/naqsha.git
 
@@ -12,7 +13,7 @@ license-file: LICENSE
 author:     Piyush P Kurur
 maintainer: ppk@cse.iitk.ac.in
 
-category:  Geospatial
+category:  Geospatial, Naqsha
 
 build-type:    Simple
 cabal-version: >=1.10
