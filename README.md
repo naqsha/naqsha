@@ -2,6 +2,8 @@ Naqsha
 ------
 
 [![Build Staus][travis-status]][travis-naqsha]
+[![Hackage][hackage-badge]][hackage]
+[![Hackage Dependencies][hackage-deps-badge]][hackage-deps]
 
 Naqsha is a Haskell library to work with geospatial data types. The
 goal of this library is to provide fast and high level access to
@@ -17,3 +19,8 @@ sketch.
 
 [travis-status]: <https://secure.travis-ci.org/naqsha/naqsha.png> "Build status"
 [travis-naqsha]: <https://travis-ci.org/naqsha/naqsha>
+
+[hackage]:       <https://hackage.haskell.org/package/naqsha>
+[hackage-badge]: <https://img.shields.io/hackage/v/naqsha.svg>
+[hackage-deps-badge]: <https://img.shields.io/hackage-deps/v/naqsha.svg>
+[hackage-deps]: <http://packdeps.haskellers.com/feed?needle=naqsha>
