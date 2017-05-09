@@ -1,5 +1,9 @@
 # Change log for [naqsha]
 
+## [0.1.0.1] - Pending
+
+* Bearing calculations.
+
 ## [0.1.0.0] - 6th May, 2017
 
 Very first release of naqsha.
