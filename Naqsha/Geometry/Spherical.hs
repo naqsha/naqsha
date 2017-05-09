@@ -29,7 +29,7 @@ distance :: Geo
 distance = distance' rMean
 
 
--- | A generalisation of `dHvS` that takes the radius as
+-- | A generalisation of `distance` that takes the radius as
 -- argument. Will work on Mars for example once we set up a latitude
 -- longitude system there. For this function units does not matter ---
 -- the computed distance is in the same unit as the input radius. We
