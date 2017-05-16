@@ -35,6 +35,7 @@ library
   exposed-modules: Naqsha
                  , Naqsha.Geometry.Angle
                  , Naqsha.Geometry.Coordinate
+                 , Naqsha.Geometry.Coordinate.GeoHash
                  , Naqsha.Geometry.Spherical
                  , Naqsha.Version
   other-modules: Paths_naqsha
