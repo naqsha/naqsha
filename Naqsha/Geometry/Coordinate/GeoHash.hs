@@ -19,41 +19,46 @@ instance Ord GeoHash where
     where cmp0 = a0 `xor` b0
           cmp1 = a1 `xor` b1
 
-
 --------------- Encoding and decoding -------------------------
 
 
 -- | Encode Geo position to the corresponding GeoHash.
 encode :: Geo -> GeoHash
-encode (Geo x y) = GeoHash (latToWord63 x) $ lonToWord64 y
+encode (Geo x y)  = GeoHash (encLon y) $ encLat x
+  where encLat = invertSignShiftLeft . unAngle . unLat
 
+        encLon = invertSign . unAngle . unLong
 
 decode :: GeoHash -> Geo
-decode (GeoHash u v) = Geo (word63ToLat u) $ word64ToLon v
-
--- | Helper function to convert signed latitude to its geohash
--- code. There is only 63 bits of precision because the angle varies
--- from -90 to 90.
-latToWord63 :: Latitude -> Word64
-latToWord63 (Latitude (Angle ang))
-  | ang < 0   = clearBit magBits 63
-  | otherwise = setBit   magBits 63
-  where magBits = fromIntegral ang `shiftL` 1
+decode (GeoHash u v) = Geo (decLat v) $ decLon u
+  where decLat = Latitude  . Angle . invertSignShiftRight
+        decLon = Longitude . Angle . invertSign
 
 
--- | Inverse geohash latitude to angular latitude
-word63ToLat :: Word64 -> Latitude
-word63ToLat w64 | testBit w64 63 =  Latitude $ Angle $ magBits
-                | otherwise      =  Latitude $ Angle $ magBits .|. mask
-  where magBits = fromIntegral $ clearBit w64 63  `shiftR` 1
-        mask    = 0x3 `shiftL` 62
-
--- | Helper function to convert the signed longitude to an appropriate
--- 64-bit geohash code.
-lonToWord64 :: Longitude -> Word64
-lonToWord64 (Longitude (Angle ang)) = flip complementBit 63 $ fromIntegral ang
+invertSignShiftLeft :: (Integral a, Num b, Bits b) => a -> b
+invertSignShiftLeft u
+  | testBit res 63 =  clearBit resp 63
+  | otherwise      =  setBit   resp 63
+  where res  = fromIntegral u
+        resp = res `shiftL` 1
 
 
--- | Inverse geohash latitude to angular latitude
-word64ToLon :: Word64 -> Longitude
-word64ToLon = Longitude . Angle . fromIntegral . flip complementBit 63
+invertSignShiftRight :: (Integral a, Num b, Bits b) => a -> b
+invertSignShiftRight = flip shiftR 1 . invertSign
+
+-- | Sign inversion for adjusting.
+invertSign :: (Integral a, Num b, Bits b) => a -> b
+invertSign = flip complementBit 63 . fromIntegral
+
+{-# SPECIALIZE invertSign :: Word64 -> Int64  #-}
+{-# SPECIALIZE invertSign :: Int64  -> Word64 #-}
+
+foreign import ccall unsafe "naqsha_geohash32"
+  c_geohash32 :: Word64 -> Word64 -> Ptr Word8 -> IO ()
+
+
+-- | Generates a 24-byte, base32 encoding of geohash values. This
+-- encoding is a little bit lossy; Latitudes lose lower 3-bits and
+-- Longitudes loose lower 4-bits of information.
+toByteString :: GeoHash -> ByteString
+toByteString (GeoHash x y) = unsafeCreate 24 $ c_geohash32 x y
