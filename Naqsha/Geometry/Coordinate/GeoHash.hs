@@ -19,11 +19,28 @@ data GeoHash = GeoHash  {-# UNPACK #-} !Word64
 
 
 instance Ord GeoHash where
-  (<=) (GeoHash a0 a1)(GeoHash b0 b1)
-    | cmp0 >= cmp1 = a0 <= b0
-    | otherwise    = a1 <= b1
-    where cmp0 = a0 `xor` b0
-          cmp1 = a1 `xor` b1
+  (<=)    = priorityApply (<=)
+  (<)     = priorityApply (<)
+  (>=)    = priorityApply (>=)
+  (>)     = priorityApply (>)
+  compare = priorityApply compare
+
+{-# INLINE priorityApply #-}
+
+-- | Should the first or the second coordinate be used for comparison.
+priorityApply :: (Word64 -> Word64 -> a) -> GeoHash -> GeoHash -> a
+priorityApply cmp (GeoHash a0 a1) (GeoHash b0 b1)
+  | xor0 >= xor1 = a0 `cmp` b0
+  | xor0 > xor01 = a0 `cmp` b0
+  | otherwise    = a1 `cmp` b1
+  where xor0  = a0 `xor` b0
+        xor1  = a1 `xor` b1
+        xor01 = xor0 `xor` xor1
+
+
+
+
+
 
 --------------- Encoding and decoding -------------------------
 
