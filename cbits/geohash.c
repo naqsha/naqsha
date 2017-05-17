@@ -86,5 +86,8 @@ void naqsha_geohash32(const uint64_t x, const uint64_t y, char *output)
     output[22] = high(x, y, 11);
     output[23] =  low(x, y, 11);
 
+    output[24] = high(x, y, 12);
+    output[25] =  low(x, y, 12);
+
 
 }

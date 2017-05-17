@@ -67,4 +67,4 @@ foreign import ccall unsafe "naqsha_geohash32"
 -- encoding is a little bit lossy; Latitudes lose lower 3-bits and
 -- Longitudes loose lower 4-bits of information.
 toByteString :: GeoHash -> ByteString
-toByteString (GeoHash x y) = unsafeCreate 24 $ c_geohash32 x y
+toByteString (GeoHash x y) = unsafeCreate 26 $ c_geohash32 x y
