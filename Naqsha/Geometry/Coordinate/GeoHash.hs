@@ -1,13 +1,19 @@
+{-# LANGUAGE ForeignFunctionInterface   #-}
 module Naqsha.Geometry.Coordinate.GeoHash
-       ( GeoHash, encode, decode
+       ( GeoHash, encode, decode, toByteString
        ) where
 
-import Data.Word
+import Data.Word                ( Word64, Word8 )
 import Data.Bits
-
+import Data.ByteString          ( ByteString    )
+import Data.ByteString.Internal ( unsafeCreate  )
+import  Data.Int                ( Int64         )
+import Foreign.Ptr              ( Ptr           )
 import Naqsha.Geometry.Internal
 import Naqsha.Geometry.Coordinate ( Geo(..) )
 
+
+-- | The encoding of geo-coordinates as a geohash string. The
 data GeoHash = GeoHash  {-# UNPACK #-} !Word64
                         {-# UNPACK #-} !Word64 deriving (Eq, Show)
 
