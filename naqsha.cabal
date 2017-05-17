@@ -36,10 +36,10 @@ library
                  , Naqsha.Geometry.Angle
                  , Naqsha.Geometry.Coordinate
                  , Naqsha.Geometry.Coordinate.GeoHash
+                 , Naqsha.Geometry.Internal
                  , Naqsha.Geometry.Spherical
                  , Naqsha.Version
   other-modules: Paths_naqsha
-               , Naqsha.Geometry.Internal
 
   default-language: Haskell2010
 
