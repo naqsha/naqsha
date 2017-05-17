@@ -13,7 +13,7 @@ module Naqsha.Geometry.Internal
   ) where
 
 import           Control.Monad               ( liftM )
-
+import           Data.Bits                   ( Bits  )
 import           Data.Fixed
 import           Data.Group
 import           Data.Int
@@ -38,7 +38,7 @@ import           Text.Read
 -- > myAngle   = degree 21.71167
 -- > yourAngle = degree 21 <> minute 42 <> second 42
 --
-newtype Angle = Angle {unAngle :: Int64} deriving (Enum, Eq, Ord, Unbox, Show, Read)
+newtype Angle = Angle {unAngle :: Int64} deriving (Enum, Eq, Ord, Unbox, Show, Read, Bits)
 
 instance Monoid Angle where
   mempty                        = Angle 0
