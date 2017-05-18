@@ -2,7 +2,9 @@
 
 ## [0.2.0.0] - Pending
 
-* Bearing calculations.
+* Overall change in module structure.
+* Support for geohash
+* Haversine bearing calculations.
 
 * Geohash computation.
 
