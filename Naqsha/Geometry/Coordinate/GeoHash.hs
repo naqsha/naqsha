@@ -7,7 +7,7 @@ import Data.Word                ( Word64, Word8 )
 import Data.Bits
 import Data.ByteString          ( ByteString    )
 import Data.ByteString.Internal ( unsafeCreate  )
-import  Data.Int                ( Int64         )
+import Data.Int                 ( Int64         )
 import Foreign.Ptr              ( Ptr           )
 import Naqsha.Geometry.Internal
 import Naqsha.Geometry.Coordinate ( Geo(..) )
