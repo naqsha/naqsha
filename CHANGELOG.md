@@ -4,6 +4,8 @@
 
 * Bearing calculations.
 
+* Geohash computation.
+
 ## [0.1.0.0] - 6th May, 2017
 
 Very first release of naqsha.
