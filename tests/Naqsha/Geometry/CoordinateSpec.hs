@@ -1,12 +1,12 @@
 {-# LANGUAGE ScopedTypeVariables #-}
-module Naqsha.PositionSpec where
+module Naqsha.Geometry.CoordinateSpec where
 import Data.Monoid
 import Data.Fixed
 import Test.QuickCheck
 import Test.Hspec
 import Test.Hspec.QuickCheck
 
-import Naqsha.Position
+import Naqsha.Geometry.Coordinate
 import Naqsha.Geometry.Angle
 import Naqsha.Arbitrary ()
 

@@ -9,7 +9,7 @@ module Naqsha.Geometry.Spherical
 
 import Data.Monoid
 import Data.Group
-import Naqsha.Position
+import Naqsha.Geometry.Coordinate
 import Naqsha.Geometry.Angle
 
 --------------------- Distance calculation -------------------------------------

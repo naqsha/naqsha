@@ -12,6 +12,7 @@ import           Test.QuickCheck
 
 
 import Naqsha
+import Naqsha.Geometry.Coordinate.GeoHash
 
 
 instance Arbitrary Angle where
@@ -26,3 +27,10 @@ instance Arbitrary Longitude where
 
 instance Arbitrary Geo where
   arbitrary = Geo <$> arbitrary <*> arbitrary
+
+
+geoHashRange :: Gen Geo
+geoHashRange = suchThat arbitrary ( \ g -> g /= northPole && g /= southPole)
+
+instance Arbitrary GeoHash where
+  arbitrary = encode <$> geoHashRange
