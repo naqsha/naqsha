@@ -63,4 +63,4 @@ test-Suite test
                --
                --   This package
                --
-               , naqsha                         == 0.1.0.0
+               , naqsha
