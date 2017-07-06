@@ -3,10 +3,11 @@ module Naqsha.Geometry.Coordinate.GeoHash
        ( GeoHash, encode, decode, toByteString
        ) where
 
-import Data.Word                ( Word64, Word8 )
 import Data.Bits
 import Data.ByteString          ( ByteString    )
 import Data.ByteString.Internal ( unsafeCreate  )
+import Data.Char                ( ord, chr      )
+import Data.Word                ( Word64, Word8 )
 import Data.Int                 ( Int64         )
 import Foreign.Ptr              ( Ptr           )
 import Naqsha.Geometry.Internal
@@ -38,7 +39,69 @@ priorityApply cmp (GeoHash a0 a1) (GeoHash b0 b1)
         xor01 = xor0 `xor` xor1
 
 
+------------------------------------------ Base 32 encoding used by geohash --------------------------
 
+-- | A base 32-digit
+newtype B32 = B32 Word8
+
+-- The digit ranges are
+-- 0-9, b-h, jk, mn, p-z
+--
+-- b - 10
+-- c - 11
+-- d - 12
+-- e - 13
+-- f - 14
+-- g - 15
+-- h - 16
+--------- Broken range ---
+-- j - 17
+-- k - 18
+--------- Broken range ----
+-- m - 19
+-- n - 20
+---------- Broken range ---
+-- p - 21
+-- q - 22
+-- r - 23
+-- s - 24
+-- t - 25
+-- u - 26
+-- v - 27
+-- w - 28
+-- x - 29
+-- y - 30
+-- x - 31
+
+cToB32 :: Char -> Maybe B32
+cToB32 x
+  | '0'   <= x && x <= '9' = Just $ B32 $ toEnum $ ord x - ord '0'
+  | 'b'   <= x && x <= 'h' = Just $ B32 $ toEnum $ ord x - ord 'b' + 10
+  | 'p'   <= x && x <= 'z' = Just $ B32 $ toEnum $ ord x - ord 'p' + 21
+  | x    == 'j'            = Just $ B32 17
+  | x    == 'k'            = Just $ B32 18
+  | x    == 'm'            = Just $ B32 19
+  | x    == 'n'            = Just $ B32 20
+  | otherwise              = Nothing
+
+b32ToChar :: B32 -> Char
+b32ToChar b32
+  | 0  <= w && w <= 9  = chr (ord '0' + w)
+  | 10 <= w && w <= 16 = chr (ord 'b' + w - 10)
+  | 21 <= w && w <= 32 = chr (ord 'p' + w - 21)
+  | w == 17            = 'j'
+  | w == 18            = 'k'
+  | w == 19            = 'm'
+  | w == 20            = 'n'
+  | otherwise          = error "error:b32: fatal this should never happen"
+  where w = fromEnum $ b32ToWord8 b32
+
+-- | Convert word8 to base32 by truncation after 5 bits.
+word8ToB32 :: Word8 -> B32
+word8ToB32 = B32 . (.&. 0x1F)
+
+-- | Convert from base32 to the word8 value.
+b32ToWord8 (B32 x) = x .&. 0x1F
 
 
 
