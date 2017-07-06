@@ -53,6 +53,9 @@ priorityApply cmp (GeoHash a0 a1) (GeoHash b0 b1)
 -- | A base 32-digit
 newtype B32 = B32 Word8
 
+instance Show B32 where
+  show b32 = [b32ToChar b32]
+
 -- The digit ranges are
 -- 0-9, b-h, jk, mn, p-z
 --
