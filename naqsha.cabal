@@ -50,9 +50,11 @@ test-Suite test
   hs-source-dirs: tests
   main-is: Main.hs
   ghc-options: -Wall
-  other-modules: Naqsha.Geometry.CoordinateSpec
+  other-modules: Naqsha.Arbitrary
                , Naqsha.Geometry.AngleSpec
-               , Naqsha.Arbitrary
+               , Naqsha.Geometry.CoordinateSpec
+               , Naqsha.Geometry.Coordinate.GeoHashSpec
+
   build-depends: base
                , HUnit                          >= 1.2
                , QuickCheck                     >= 2.4
