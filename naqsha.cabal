@@ -44,8 +44,6 @@ library
 
   default-language: Haskell2010
 
-  c-sources: cbits/geohash.c
-
 test-Suite test
   default-language: Haskell2010
   type: exitcode-stdio-1.0
