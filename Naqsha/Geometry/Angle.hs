@@ -1,8 +1,3 @@
-{-# LANGUAGE GeneralizedNewtypeDeriving #-}
-{-# LANGUAGE CPP                        #-}
-{-# LANGUAGE MultiParamTypeClasses      #-}
-{-# LANGUAGE TypeFamilies               #-}
-
 -- | Basic types associated with geometry.
 module Naqsha.Geometry.Angle
   ( Angle
