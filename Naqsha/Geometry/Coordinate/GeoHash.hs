@@ -1,15 +1,24 @@
+{-# LANGUAGE CPP                        #-}
 {-# LANGUAGE ForeignFunctionInterface   #-}
+{-# LANGUAGE MultiParamTypeClasses      #-}
+{-# LANGUAGE TypeFamilies               #-}
+
 module Naqsha.Geometry.Coordinate.GeoHash
        ( GeoHash, encode, decode, toByteString
        ) where
 
-import Data.Bits
-import Data.ByteString          ( ByteString    )
-import Data.ByteString.Internal ( unsafeCreate  )
-import Data.Char                ( ord, chr      )
-import Data.Word                ( Word64, Word8 )
-import Data.Int                 ( Int64         )
-import Foreign.Ptr              ( Ptr           )
+import           Control.Monad            ( liftM         )
+import           Data.Bits
+import           Data.ByteString          ( ByteString    )
+import           Data.ByteString.Internal ( unsafeCreate  )
+import           Data.Char                ( ord, chr      )
+import           Data.Vector.Unboxed      ( MVector(..), Vector, Unbox )
+import           Data.Word                ( Word64, Word8 )
+import           Data.Int                 ( Int64         )
+import           Foreign.Ptr              ( Ptr           )
+import qualified Data.Vector.Generic         as GV
+import qualified Data.Vector.Generic.Mutable as GVM
+
 import Naqsha.Geometry.Internal
 import Naqsha.Geometry.Coordinate ( Geo(..) )
 
@@ -102,6 +111,61 @@ word8ToB32 = B32 . (.&. 0x1F)
 
 -- | Convert from base32 to the word8 value.
 b32ToWord8 (B32 x) = x .&. 0x1F
+
+------------------------------- Vector instance for B32 --------------
+
+
+instance Unbox B32
+newtype instance MVector s B32 = MVB32 (MVector s Word8)
+newtype instance Vector    B32 = VB32  (Vector Word8)
+
+instance GVM.MVector MVector B32 where
+  {-# INLINE basicLength #-}
+  {-# INLINE basicUnsafeSlice #-}
+  {-# INLINE basicOverlaps #-}
+  {-# INLINE basicUnsafeNew #-}
+  {-# INLINE basicUnsafeReplicate #-}
+  {-# INLINE basicUnsafeRead #-}
+  {-# INLINE basicUnsafeWrite #-}
+  {-# INLINE basicClear #-}
+  {-# INLINE basicSet #-}
+  {-# INLINE basicUnsafeCopy #-}
+  {-# INLINE basicUnsafeGrow #-}
+  basicLength          (MVB32 v)        = GVM.basicLength v
+  basicUnsafeSlice i n (MVB32 v)        = MVB32 $ GVM.basicUnsafeSlice i n v
+  basicOverlaps (MVB32 v1) (MVB32 v2)   = GVM.basicOverlaps v1 v2
+
+  basicUnsafeRead  (MVB32 v) i          = B32 `liftM` GVM.basicUnsafeRead v i
+  basicUnsafeWrite (MVB32 v) i (B32 x)  = GVM.basicUnsafeWrite v i x
+
+  basicClear (MVB32 v)                  = GVM.basicClear v
+  basicSet   (MVB32 v)         (B32 x)  = GVM.basicSet v x
+
+  basicUnsafeNew n                      = MVB32 `liftM` GVM.basicUnsafeNew n
+  basicUnsafeReplicate n     (B32 x)    = MVB32 `liftM` GVM.basicUnsafeReplicate n x
+  basicUnsafeCopy (MVB32 v1) (MVB32 v2) = GVM.basicUnsafeCopy v1 v2
+  basicUnsafeGrow (MVB32 v)   n         = MVB32 `liftM` GVM.basicUnsafeGrow v n
+
+#if MIN_VERSION_vector(0,11,0)
+  basicInitialize (MVB32 v)           = GVM.basicInitialize v
+#endif
+
+instance GV.Vector Vector B32 where
+  {-# INLINE basicUnsafeFreeze #-}
+  {-# INLINE basicUnsafeThaw #-}
+  {-# INLINE basicLength #-}
+  {-# INLINE basicUnsafeSlice #-}
+  {-# INLINE basicUnsafeIndexM #-}
+  {-# INLINE elemseq #-}
+  basicUnsafeFreeze (MVB32 v)   = VB32  `liftM` GV.basicUnsafeFreeze v
+  basicUnsafeThaw (VB32 v)      = MVB32 `liftM` GV.basicUnsafeThaw v
+  basicLength (VB32 v)          = GV.basicLength v
+  basicUnsafeSlice i n (VB32 v) = VB32 $ GV.basicUnsafeSlice i n v
+  basicUnsafeIndexM (VB32 v) i  = B32   `liftM`  GV.basicUnsafeIndexM v i
+
+  basicUnsafeCopy (MVB32 mv) (VB32 v) = GV.basicUnsafeCopy mv v
+  elemseq _ (B32 x)                    = GV.elemseq (undefined :: Vector a) x
+
 
 
 
