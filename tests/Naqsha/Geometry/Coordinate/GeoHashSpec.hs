@@ -2,12 +2,11 @@
 {-# LANGUAGE Rank2Types          #-}
 module Naqsha.Geometry.Coordinate.GeoHashSpec where
 import Data.String
-import Test.QuickCheck
 import Test.Hspec
 import Test.Hspec.QuickCheck
 
 import Naqsha.Geometry.Coordinate.GeoHash as GeoHash
-import Naqsha.Arbitrary
+import Naqsha.Arbitrary()
 
 
 
