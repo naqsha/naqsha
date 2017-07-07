@@ -111,11 +111,11 @@ adjustEncodeLat lt
   | testBit lt 63 = clearBit a 63          -- ^ negative angle (all their starting bits are 0)
   | testBit a 63  = complement zeroBits    -- ^ +90
   | otherwise     = setBit a 63
-  where a = shiftL (unLat lt) 1
+  where a = unsafeShiftL (unLat lt) 1
 
 -- | Adjust the angle while decoding.
 adjustDecodeLat :: Angle -> Latitude
-adjustDecodeLat a = sgnBit .|. shiftR lt 1
+adjustDecodeLat a = sgnBit .|. unsafeShiftR lt 1
     where lt     = Latitude $ complementBit a 63
           sgnBit = bit 63 .&. lt
 
@@ -146,11 +146,11 @@ interleaveAndMerge (x,y) = (w, (yp, xp))
         yp = rotateL y 2  -- Take the top 2 bits
         wx = fromIntegral $ unAngle xp
         wy = fromIntegral $ unAngle yp
-        w  = shiftL     (wx .&. 4) 2     -- x2 -> w4
-             .|. shiftL (wx .&. 2) 1     -- x1 -> w2
-             .|.        (wx .&. 1)       -- x0 -> w0
-             .|. shiftL (wy .&. 2) 2     -- y1 -> w3
-             .|. shiftL (wy .&. 1) 1     -- y0 -> w1
+        w  = unsafeShiftL     (wx .&. 4) 2     -- x2 -> w4
+             .|. unsafeShiftL (wx .&. 2) 1     -- x1 -> w2
+             .|.              (wx .&. 1)       -- x0 -> w0
+             .|. unsafeShiftL (wy .&. 2) 2     -- y1 -> w3
+             .|. unsafeShiftL (wy .&. 1) 1     -- y0 -> w1
 
 
 encode :: Geo -> GeoHash
@@ -165,19 +165,21 @@ encode (Geo lt lng)  = GeoHash $ fst $ B.unfoldrN 24 fld (adjustEncodeLon lng , 
 -- the next byte is distributed to y and x respectively.
 splitAndDistribute :: (Angle, Angle) -> Word8 -> (Angle , Angle)
 splitAndDistribute (x,y) w = (yp,xp)
-  where xp        = shiftL x 3 .|. (4 `bitTo` 2)
-                               .|. (2 `bitTo` 1)
-                               .|. (0 `bitTo` 0)
-        yp        = shiftL y 2 .|. (3 `bitTo` 1)
-                               .|. (1 `bitTo` 0)
-        bitTo i j = Angle $ fromIntegral $ shiftL (shiftR w i .&. 1) j
+  where xp        = unsafeShiftL x 3
+                    .|. (4 `bitTo` 2)
+                    .|. (2 `bitTo` 1)
+                    .|. (0 `bitTo` 0)
+        yp        = unsafeShiftL y 2
+                    .|. (3 `bitTo` 1)
+                    .|. (1 `bitTo` 0)
+        bitTo i j = Angle $ fromIntegral $ unsafeShiftL (unsafeShiftR w i .&. 1) j
 
 
 
 decode :: GeoHash -> Geo
 decode (GeoHash hsh) = Geo lt ln
-  where lt     = adjustDecodeLat $ shiftL y 4
-        ln     = adjustDecodeLon $ shiftL x 4
+  where lt     = adjustDecodeLat $ unsafeShiftL y 4
+        ln     = adjustDecodeLon $ unsafeShiftL x 4
         (x,y)  = B.foldl splitAndDistribute (Angle 0,Angle 0) strP
         hshLen = B.length hsh
         strP   = if hshLen > 24 then B.take 24 hsh
