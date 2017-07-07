@@ -79,20 +79,53 @@ b32ToChar b32
   | otherwise          = error "geohash: fatal this should never happen"
   where w = fromEnum $ b32 .&. 0x1F
 
-invertSignShiftLeft :: Angle -> Angle
-invertSignShiftLeft u
-  | testBit res 63 =  clearBit resp 63
-  | otherwise      =  setBit   resp 63
-  where res  = u
-        resp = res `shiftL` 1
+-- Geohash encoding
+-- ---------------
+--
+-- Notice that the bits of the geohash encoding is essentially got by
+-- iterleaving the bits of the longitude and the latitude. However,
+-- the first bit is 0 for negative angles 1 for positive
+-- angles. Therefore we need to complement the sign bit. Since
+-- longitudes vary over the entire range of angles, this is all we
+-- need to do for adjustment before interleaving the bits.
+--
+-- However, the latitudes like in the range -90 to +90. If we ignore the
+-- +90 angle then we have the following property of its bit pattern
+--
+-- 1. Every positive angle (other than +90) is of the form 00xxxxxxx.
+--
+-- 2. Every negative angle is of the form 11xxxxxxx.
+--
+-- Therefore, to get the actual bits that need to be interleaved, we
+-- need to shift left the bits left by 1 and complement the
+-- bit. During decoding, we need to do the reverse, i.e. complement
+-- the bit and shift right by 1 with sign extension.
+--
+-- For the +90 case while encoding we treat the bit stream as all 1's.
+-- While decoding we will never get an angle of 90 but can be pretty
+-- close.
 
+-- | Adjust the latitude for encoding.
+adjustEncodeLat :: Latitude -> Angle
+adjustEncodeLat lt
+  | testBit lt 63 = clearBit a 63          -- ^ negative angle (all their starting bits are 0)
+  | testBit a 63  = complement zeroBits    -- ^ +90
+  | otherwise     = setBit a 63
+  where a = shiftL (unLat lt) 1
 
-invertSignShiftRight :: Angle -> Angle
-invertSignShiftRight = flip shiftR 1 . invertSign
+-- | Adjust the angle while decoding.
+adjustDecodeLat :: Angle -> Latitude
+adjustDecodeLat a = sgnBit .|. shiftR lt 1
+    where lt     = Latitude $ complementBit a 63
+          sgnBit = bit 63 .&. lt
 
--- | Sign inversion for adjusting.
-invertSign :: Angle -> Angle
-invertSign = flip complementBit 63
+-- | Adjusting longitude while encoding. Just nee
+adjustEncodeLon :: Longitude -> Angle
+adjustEncodeLon = flip complementBit 63 . unLong
+
+-- | Adjusting longitude while decoding
+adjustDecodeLon :: Angle -> Longitude
+adjustDecodeLon = Longitude . flip complementBit 63
 
 {-
 -- | Generates a 24-byte, base32 encoding of geohash values. This
@@ -121,10 +154,8 @@ interleaveAndMerge (x,y) = (w, (yp, xp))
 
 
 encode :: Geo -> GeoHash
-encode (Geo lt lng)  = GeoHash $ fst $ B.unfoldrN 24 fld (x , y)
+encode (Geo lt lng)  = GeoHash $ fst $ B.unfoldrN 24 fld (adjustEncodeLon lng , adjustEncodeLat lt)
   where fld = Just . interleaveAndMerge
-        x   = invertSign $ unLong lng
-        y   = invertSignShiftLeft  $ unLat lt
 
 -------------------------- Decoding --------------------------------
 
@@ -143,11 +174,10 @@ splitAndDistribute (x,y) w = (yp,xp)
 
 
 
-
 decode :: GeoHash -> Geo
 decode (GeoHash hsh) = Geo lt ln
-  where lt     = Latitude  $ invertSignShiftRight $ shiftL y 4
-        ln     = Longitude $ invertSign           $ shiftL x 4
+  where lt     = adjustDecodeLat $ shiftL y 4
+        ln     = adjustDecodeLon $ shiftL x 4
         (x,y)  = B.foldl splitAndDistribute (Angle 0,Angle 0) strP
         hshLen = B.length hsh
         strP   = if hshLen > 24 then B.take 24 hsh
