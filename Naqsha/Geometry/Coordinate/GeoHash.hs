@@ -79,24 +79,20 @@ b32ToChar b32
   | otherwise          = error "geohash: fatal this should never happen"
   where w = fromEnum $ b32 .&. 0x1F
 
-invertSignShiftLeft :: (Integral a, Num b, Bits b) => a -> b
+invertSignShiftLeft :: Angle -> Angle
 invertSignShiftLeft u
   | testBit res 63 =  clearBit resp 63
   | otherwise      =  setBit   resp 63
-  where res  = fromIntegral u
+  where res  = u
         resp = res `shiftL` 1
 
 
-invertSignShiftRight :: (Integral a, Num b, Bits b) => a -> b
+invertSignShiftRight :: Angle -> Angle
 invertSignShiftRight = flip shiftR 1 . invertSign
 
 -- | Sign inversion for adjusting.
-invertSign :: (Integral a, Num b, Bits b) => a -> b
-invertSign = flip complementBit 63 . fromIntegral
-
-{-# SPECIALIZE invertSign :: Word64 -> Int64  #-}
-{-# SPECIALIZE invertSign :: Int64  -> Word64 #-}
-
+invertSign :: Angle -> Angle
+invertSign = flip complementBit 63
 
 {-
 -- | Generates a 24-byte, base32 encoding of geohash values. This
@@ -111,12 +107,12 @@ toByteString (GeoHash x y) = unsafeCreate 26 $ c_geohash32 x y
 -- | The @interleaveAndMerge (x,y)@ merges 5-bits, 3 from @x@ and 2
 -- from @y@ into a word and returns it. An appropriate swap is done so
 -- that the next bytes are taken from y and x respectively.
-interleaveAndMerge :: (Word64, Word64) -> (Word8, (Word64, Word64))
+interleaveAndMerge :: (Angle, Angle) -> (Word8, (Angle, Angle))
 interleaveAndMerge (x,y) = (w, (yp, xp))
   where xp = rotateL x 3  -- Take the top 3 bits
         yp = rotateL y 2  -- Take the top 2 bits
-        wx = fromIntegral xp
-        wy = fromIntegral yp
+        wx = fromIntegral $ unAngle xp
+        wy = fromIntegral $ unAngle yp
         w  = shiftL     (wx .&. 4) 2     -- x2 -> w4
              .|. shiftL (wx .&. 2) 1     -- x1 -> w2
              .|.        (wx .&. 1)       -- x0 -> w0
@@ -127,8 +123,8 @@ interleaveAndMerge (x,y) = (w, (yp, xp))
 encode :: Geo -> GeoHash
 encode (Geo lt lng)  = GeoHash $ fst $ B.unfoldrN 24 fld (x , y)
   where fld = Just . interleaveAndMerge
-        x   = invertSign $ unAngle $ unLong lng
-        y   = invertSignShiftLeft  $ unAngle    $ unLat lt
+        x   = invertSign $ unLong lng
+        y   = invertSignShiftLeft  $ unLat lt
 
 -------------------------- Decoding --------------------------------
 
@@ -136,23 +132,23 @@ encode (Geo lt lng)  = GeoHash $ fst $ B.unfoldrN 24 fld (x , y)
 -- (actually only 5-bits matter) to x and y in an interleaved fashion.
 -- x gets 3-bits and y gets 2. The arguments are switched so that for
 -- the next byte is distributed to y and x respectively.
-splitAndDistribute :: (Word64, Word64) -> Word8 -> (Word64 , Word64)
+splitAndDistribute :: (Angle, Angle) -> Word8 -> (Angle , Angle)
 splitAndDistribute (x,y) w = (yp,xp)
   where xp        = shiftL x 3 .|. (4 `bitTo` 2)
                                .|. (2 `bitTo` 1)
                                .|. (0 `bitTo` 0)
         yp        = shiftL y 2 .|. (3 `bitTo` 1)
                                .|. (1 `bitTo` 0)
-        bitTo i j = fromIntegral $ shiftL (shiftR w i .&. 1) j
+        bitTo i j = Angle $ fromIntegral $ shiftL (shiftR w i .&. 1) j
 
 
 
 
 decode :: GeoHash -> Geo
 decode (GeoHash hsh) = Geo lt ln
-  where lt     = Latitude  $ Angle $ invertSignShiftRight $ shiftL y 4
-        ln     = Longitude $ Angle $ invertSign           $ shiftL x 4
-        (x,y)  = B.foldl splitAndDistribute (0,0) strP
+  where lt     = Latitude  $ invertSignShiftRight $ shiftL y 4
+        ln     = Longitude $ invertSign           $ shiftL x 4
+        (x,y)  = B.foldl splitAndDistribute (Angle 0,Angle 0) strP
         hshLen = B.length hsh
         strP   = if hshLen > 24 then B.take 24 hsh
                  else hsh <> B.replicate (24 - hshLen) 0
