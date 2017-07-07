@@ -8,8 +8,8 @@ import qualified Data.ByteString as B
 import           Data.Char                ( ord, chr      )
 import           Data.String
 import           Data.Monoid              ( (<>)          )
-import           Data.Word                ( Word64, Word8 )
-import           Data.Int                 ( Int64         )
+import           Data.Word                (  Word8 )
+
 
 
 import Naqsha.Geometry.Internal
