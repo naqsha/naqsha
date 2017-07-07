@@ -2,11 +2,9 @@
 
 ## [0.2.0.0] - Pending
 
-* Bearing calculations.
-
-* Geohash computation.
-
-* Naqsha.Position becomes Naqsha.Geometry.Coordinate
+* Overall change in module structure.
+  - Naqsha.Position becomes Naqsha.Geometry.Coordinate
+* Support for geohash
 
 ## [0.1.0.0] - 6th May, 2017
 
