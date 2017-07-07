@@ -145,7 +145,7 @@ instance GV.Vector Vector Angle where
 
 -- | The latitude of a point. Positive denotes North of Equator where
 -- as negative South.
-newtype Latitude = Latitude { unLat :: Angle } deriving (Eq, Ord)
+newtype Latitude = Latitude { unLat :: Angle } deriving (Eq, Ord, Bits)
 
 
 instance Show Latitude where
@@ -177,7 +177,7 @@ normLat ang | degree (-90)  <= ang && ang < degree 90 = ang
 -- | The longitude of a point. Positive denotes East of the Greenwich
 -- meridian where as negative denotes West.
 newtype Longitude = Longitude { unLong :: Angle }
-  deriving (Eq, Bounded, Ord, Monoid, Group)
+  deriving (Eq, Bounded, Ord, Monoid, Group, Bits)
 
 -- | Convert angles to longitude.
 lon :: Angle -> Longitude
