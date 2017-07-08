@@ -11,7 +11,7 @@ module Naqsha.Arbitrary where
 import           Test.QuickCheck
 
 
-import Naqsha
+import Naqsha.Geometry
 import Naqsha.Geometry.Coordinate.GeoHash
 
 

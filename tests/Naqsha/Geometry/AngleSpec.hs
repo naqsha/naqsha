@@ -6,7 +6,7 @@ import Data.Group
 import Test.Hspec
 import Test.Hspec.QuickCheck
 
-import Naqsha
+import Naqsha.Geometry
 import Naqsha.Arbitrary ()
 
 spec :: Spec

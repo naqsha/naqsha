@@ -10,7 +10,7 @@ import Data.String
 import Test.Hspec
 import Test.Hspec.QuickCheck
 
-import Naqsha
+import Naqsha.Geometry
 import Naqsha.Geometry.Coordinate.GeoHash as GeoHash
 import Naqsha.Arbitrary()
 

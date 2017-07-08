@@ -6,8 +6,7 @@ import Test.QuickCheck
 import Test.Hspec
 import Test.Hspec.QuickCheck
 
-import Naqsha.Geometry.Coordinate
-import Naqsha.Geometry.Angle
+import Naqsha.Geometry
 import Naqsha.Arbitrary ()
 
 inRange :: Testable prop
