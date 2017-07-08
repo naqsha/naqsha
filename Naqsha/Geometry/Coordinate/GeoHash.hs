@@ -1,5 +1,5 @@
 module Naqsha.Geometry.Coordinate.GeoHash
-       ( GeoHash, encode, decode
+       ( GeoHash, encode, decode, accuracy
        ) where
 
 
@@ -15,6 +15,21 @@ import           Data.Word                (  Word8 )
 import Naqsha.Geometry.Internal
 import Naqsha.Geometry.Coordinate ( Geo(..) )
 
+
+
+-- | Precision of encoding measured in base32 digits.
+accuracyBase32 :: Int
+accuracyBase32 = 12
+
+-- | Precision of encoding measured in bits. We use 64-bit integers
+-- for angles and in latitude one of the bits is redundant. So this
+-- quantity should be less than 63.
+accuracy :: Int
+accuracy = accuracyBase32 * 5
+
+-- | The length of the output.
+outputLength :: Int
+outputLength = 2 * accuracyBase32
 
 -- | The encoding of geo-coordinates as a geohash string. The
 data GeoHash = GeoHash B.ByteString deriving (Eq, Ord)
@@ -154,7 +169,7 @@ interleaveAndMerge (x,y) = (w, (yp, xp))
 
 
 encode :: Geo -> GeoHash
-encode (Geo lt lng)  = GeoHash $ fst $ B.unfoldrN 24 fld (adjustEncodeLon lng , adjustEncodeLat lt)
+encode (Geo lt lng)  = GeoHash $ fst $ B.unfoldrN outputLength fld (adjustEncodeLon lng , adjustEncodeLat lt)
   where fld = Just . interleaveAndMerge
 
 -------------------------- Decoding --------------------------------
@@ -182,5 +197,5 @@ decode (GeoHash hsh) = Geo lt ln
         ln     = adjustDecodeLon $ unsafeShiftL x 4
         (x,y)  = B.foldl splitAndDistribute (Angle 0,Angle 0) strP
         hshLen = B.length hsh
-        strP   = if hshLen > 24 then B.take 24 hsh
-                 else hsh <> B.replicate (24 - hshLen) 0
+        strP   = if hshLen > outputLength then B.take outputLength hsh
+                 else hsh <> B.replicate (outputLength - hshLen) 0
