@@ -1,3 +1,7 @@
+-- | This module implements the geohash encoding of geo-locations.
+-- https://en.wikipedia.org/wiki/Geohash. To try out geohash encoding
+-- on web visit http://geohash.org
+
 module Naqsha.Geometry.Coordinate.GeoHash
        ( GeoHash, encode, decode, accuracy
        ) where
@@ -168,6 +172,7 @@ interleaveAndMerge (x,y) = (w, (yp, xp))
              .|. unsafeShiftL (wy .&. 1) 1     -- y0 -> w1
 
 
+-- | Encode a geo-location into its GeoHash string.
 encode :: Geo -> GeoHash
 encode (Geo lt lng)  = GeoHash $ fst $ B.unfoldrN outputLength fld (adjustEncodeLon lng , adjustEncodeLat lt)
   where fld = Just . interleaveAndMerge
@@ -190,7 +195,7 @@ splitAndDistribute (x,y) w = (yp,xp)
         bitTo i j = Angle $ fromIntegral $ unsafeShiftL (unsafeShiftR w i .&. 1) j
 
 
-
+-- | Decode the geo-location from its GeoHash string.
 decode :: GeoHash -> Geo
 decode (GeoHash hsh) = Geo lt ln
   where lt     = adjustDecodeLat $ unsafeShiftL y 4
