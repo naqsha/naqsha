@@ -123,9 +123,9 @@ b32ToChar b32
 -- | Adjust the latitude for encoding.
 adjustEncodeLat :: Latitude -> Angle
 adjustEncodeLat lt
-  | testBit lt 63 = clearBit a 63          -- ^ negative angle (all their starting bits are 0)
-  | testBit a 63  = complement zeroBits    -- ^ +90
-  | otherwise     = setBit a 63
+  | testBit lt 63 = clearBit a 63          -- negative angle (starting bit = 0)
+  | testBit a 63  = complement zeroBits    -- +90
+  | otherwise     = setBit a 63            -- positive angle (starting bit = 1)
   where a = unsafeShiftL (unLat lt) 1
 
 -- | Adjust the angle while decoding.
