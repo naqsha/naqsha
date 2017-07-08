@@ -103,3 +103,4 @@ after_failure:
 branches:
   only:
     - master
+    - v0.2.0.0
