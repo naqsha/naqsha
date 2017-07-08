@@ -1,5 +1,5 @@
 name:        naqsha
-version:     0.1.0.0
+version:     0.2.0.0
 synopsis:    A library for working with geospatial data types.
 
 description: Naqsha is a library to work with geospatial data types like latitudes and longitudes. It provides
