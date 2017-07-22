@@ -3,13 +3,14 @@
 -- on web visit http://geohash.org
 
 module Naqsha.Geometry.Coordinate.GeoHash
-       ( GeoHash, encode, decode, accuracy
+       ( GeoHash, encode, decode, accuracy, toByteString
        ) where
 
 
 import           Data.Bits
 import qualified Data.ByteString as B
-import           Data.Char                ( ord, chr      )
+import           Data.ByteString.Internal ( c2w, w2c      )
+import           Data.Char                ( ord           )
 import           Data.String
 import           Data.Monoid              ( (<>)          )
 import           Data.Word                (  Word8 )
@@ -35,7 +36,7 @@ accuracy = accuracyBase32 * 5
 outputLength :: Int
 outputLength = 2 * accuracyBase32
 
--- | The encoding of geo-coordinates as a geohash string. The
+-- | The encoding of geo-coordinates as a geohash string.
 data GeoHash = GeoHash B.ByteString deriving (Eq, Ord)
 
 instance Show GeoHash where
@@ -86,17 +87,20 @@ cToB32 x
   | x    == 'n'            = 20
   | otherwise              = error $ "geohash: bad character " ++ show x
 
-b32ToChar :: Word8 -> Char
-b32ToChar b32
-  | 0  <= w && w <= 9  = chr (ord '0' + w)
-  | 10 <= w && w <= 16 = chr (ord 'b' + w - 10)
-  | 21 <= w && w <= 32 = chr (ord 'p' + w - 21)
-  | w == 17            = 'j'
-  | w == 18            = 'k'
-  | w == 19            = 'm'
-  | w == 20            = 'n'
+b32ToChar8 :: Word8 -> Word8
+b32ToChar8 b32
+  | 0  <= w && w <= 9  = c2w '0' + w
+  | 10 <= w && w <= 16 = c2w 'b' + w - 10
+  | 21 <= w && w <= 32 = c2w 'p' + w - 21
+  | w == 17            = c2w 'j'
+  | w == 18            = c2w 'k'
+  | w == 19            = c2w 'm'
+  | w == 20            = c2w 'n'
   | otherwise          = error "geohash: fatal this should never happen"
-  where w = fromEnum $ b32 .&. 0x1F
+  where w = b32 .&. 0x1F
+
+b32ToChar :: Word8 -> Char
+b32ToChar = w2c . b32ToChar8
 
 -- Geohash encoding
 -- ---------------
@@ -146,13 +150,12 @@ adjustEncodeLon = flip complementBit 63 . unLong
 adjustDecodeLon :: Angle -> Longitude
 adjustDecodeLon = Longitude . flip complementBit 63
 
-{-
+
 -- | Generates a 24-byte, base32 encoding of geohash values. This
 -- encoding is a little bit lossy; Latitudes lose lower 3-bits and
 -- Longitudes loose lower 4-bits of information.
-toByteString :: GeoHash -> ByteString
-toByteString (GeoHash x y) = unsafeCreate 26 $ c_geohash32 x y
--}
+toByteString :: GeoHash -> B.ByteString
+toByteString (GeoHash x) = B.map b32ToChar8 x
 
 --------------- Interleaved base32 encoding ------
 
