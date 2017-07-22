@@ -26,9 +26,7 @@ import Naqsha.Geometry.Coordinate ( Geo(..) )
 accuracyBase32 :: Int
 accuracyBase32 = 12
 
--- | Precision of encoding measured in bits. We use 64-bit integers
--- for angles and in latitude one of the bits is redundant. So this
--- quantity should be less than 63.
+-- | Precision of encoding measured in bits.
 accuracy :: Int
 accuracy = accuracyBase32 * 5
 
@@ -36,7 +34,16 @@ accuracy = accuracyBase32 * 5
 outputLength :: Int
 outputLength = 2 * accuracyBase32
 
--- | The encoding of geo-coordinates as a geohash string.
+-- | The encoding of geo-coordinates as a geohash string. Currently,
+-- the encoding supports 24 base32 digits of geo hash value which
+-- means we loose about 4-bits of accuracy w.r.t the representation of
+-- angles in the library. However, this loss is rather theoretical as
+-- the angular error that results from such loss is so insignificant
+-- that for all practical purposes, this accuracy is good enough ---
+-- GPS devices will have much greater errors. The quantity `accuracy`
+-- gives the number of bits of precision supported by the geohash
+-- implementation exposed here. As expected GeoHash implementations
+-- here will have problems at regions close to the poles.
 data GeoHash = GeoHash B.ByteString deriving (Eq, Ord)
 
 instance Show GeoHash where
@@ -151,9 +158,7 @@ adjustDecodeLon :: Angle -> Longitude
 adjustDecodeLon = Longitude . flip complementBit 63
 
 
--- | Generates a 24-byte, base32 encoding of geohash values. This
--- encoding is a little bit lossy; Latitudes lose lower 3-bits and
--- Longitudes loose lower 4-bits of information.
+-- | Convert the geo hash to bytestring.
 toByteString :: GeoHash -> B.ByteString
 toByteString (GeoHash x) = B.map b32ToChar8 x
 
