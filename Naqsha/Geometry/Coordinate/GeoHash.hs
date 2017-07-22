@@ -44,7 +44,7 @@ outputLength = 2 * accuracyBase32
 -- gives the number of bits of precision supported by the geohash
 -- implementation exposed here. As expected GeoHash implementations
 -- here will have problems at regions close to the poles.
-data GeoHash = GeoHash B.ByteString deriving (Eq, Ord)
+newtype GeoHash = GeoHash B.ByteString deriving (Eq, Ord)
 
 instance Show GeoHash where
   show (GeoHash x) = map b32ToChar $ B.unpack x
