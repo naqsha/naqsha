@@ -20,7 +20,7 @@ module Naqsha.Geometry
 import Naqsha.Geometry.Angle
 import Naqsha.Geometry.Coordinate
 
--- Noting imported here. Only for docs.
+-- Nothing imported here. Only for docs.
 import Naqsha.Geometry.Spherical()
 
 
