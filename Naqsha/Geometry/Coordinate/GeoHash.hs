@@ -1,11 +1,16 @@
+-- | This module implements the geohash encoding of geo-locations.
+-- https://en.wikipedia.org/wiki/Geohash. To try out geohash encoding
+-- on web visit http://geohash.org
+
 module Naqsha.Geometry.Coordinate.GeoHash
-       ( GeoHash, encode, decode, accuracy
+       ( GeoHash, encode, decode, accuracy, toByteString
        ) where
 
 
 import           Data.Bits
 import qualified Data.ByteString as B
-import           Data.Char                ( ord, chr      )
+import           Data.ByteString.Internal ( c2w, w2c      )
+import           Data.Char                ( ord           )
 import           Data.String
 import           Data.Monoid              ( (<>)          )
 import           Data.Word                (  Word8 )
@@ -21,9 +26,7 @@ import Naqsha.Geometry.Coordinate ( Geo(..) )
 accuracyBase32 :: Int
 accuracyBase32 = 12
 
--- | Precision of encoding measured in bits. We use 64-bit integers
--- for angles and in latitude one of the bits is redundant. So this
--- quantity should be less than 63.
+-- | Precision of encoding measured in bits.
 accuracy :: Int
 accuracy = accuracyBase32 * 5
 
@@ -31,8 +34,17 @@ accuracy = accuracyBase32 * 5
 outputLength :: Int
 outputLength = 2 * accuracyBase32
 
--- | The encoding of geo-coordinates as a geohash string. The
-data GeoHash = GeoHash B.ByteString deriving (Eq, Ord)
+-- | The encoding of geo-coordinates as a geohash string. Currently,
+-- the encoding supports 24 base32 digits of geo hash value which
+-- means we loose about 4-bits of accuracy w.r.t the representation of
+-- angles in the library. However, this loss is rather theoretical as
+-- the angular error that results from such loss is so insignificant
+-- that for all practical purposes, this accuracy is good enough ---
+-- GPS devices will have much greater errors. The quantity `accuracy`
+-- gives the number of bits of precision supported by the geohash
+-- implementation exposed here. As expected GeoHash implementations
+-- here will have problems at regions close to the poles.
+newtype GeoHash = GeoHash B.ByteString deriving (Eq, Ord)
 
 instance Show GeoHash where
   show (GeoHash x) = map b32ToChar $ B.unpack x
@@ -82,17 +94,20 @@ cToB32 x
   | x    == 'n'            = 20
   | otherwise              = error $ "geohash: bad character " ++ show x
 
-b32ToChar :: Word8 -> Char
-b32ToChar b32
-  | 0  <= w && w <= 9  = chr (ord '0' + w)
-  | 10 <= w && w <= 16 = chr (ord 'b' + w - 10)
-  | 21 <= w && w <= 32 = chr (ord 'p' + w - 21)
-  | w == 17            = 'j'
-  | w == 18            = 'k'
-  | w == 19            = 'm'
-  | w == 20            = 'n'
+b32ToChar8 :: Word8 -> Word8
+b32ToChar8 b32
+  | 0  <= w && w <= 9  = c2w '0' + w
+  | 10 <= w && w <= 16 = c2w 'b' + w - 10
+  | 21 <= w && w <= 32 = c2w 'p' + w - 21
+  | w == 17            = c2w 'j'
+  | w == 18            = c2w 'k'
+  | w == 19            = c2w 'm'
+  | w == 20            = c2w 'n'
   | otherwise          = error "geohash: fatal this should never happen"
-  where w = fromEnum $ b32 .&. 0x1F
+  where w = b32 .&. 0x1F
+
+b32ToChar :: Word8 -> Char
+b32ToChar = w2c . b32ToChar8
 
 -- Geohash encoding
 -- ---------------
@@ -123,9 +138,9 @@ b32ToChar b32
 -- | Adjust the latitude for encoding.
 adjustEncodeLat :: Latitude -> Angle
 adjustEncodeLat lt
-  | testBit lt 63 = clearBit a 63          -- ^ negative angle (all their starting bits are 0)
-  | testBit a 63  = complement zeroBits    -- ^ +90
-  | otherwise     = setBit a 63
+  | testBit lt 63 = clearBit a 63          -- negative angle (starting bit = 0)
+  | testBit a 63  = complement zeroBits    -- +90
+  | otherwise     = setBit a 63            -- positive angle (starting bit = 1)
   where a = unsafeShiftL (unLat lt) 1
 
 -- | Adjust the angle while decoding.
@@ -142,13 +157,10 @@ adjustEncodeLon = flip complementBit 63 . unLong
 adjustDecodeLon :: Angle -> Longitude
 adjustDecodeLon = Longitude . flip complementBit 63
 
-{-
--- | Generates a 24-byte, base32 encoding of geohash values. This
--- encoding is a little bit lossy; Latitudes lose lower 3-bits and
--- Longitudes loose lower 4-bits of information.
-toByteString :: GeoHash -> ByteString
-toByteString (GeoHash x y) = unsafeCreate 26 $ c_geohash32 x y
--}
+
+-- | Convert the geo hash to bytestring.
+toByteString :: GeoHash -> B.ByteString
+toByteString (GeoHash x) = B.map b32ToChar8 x
 
 --------------- Interleaved base32 encoding ------
 
@@ -168,6 +180,7 @@ interleaveAndMerge (x,y) = (w, (yp, xp))
              .|. unsafeShiftL (wy .&. 1) 1     -- y0 -> w1
 
 
+-- | Encode a geo-location into its GeoHash string.
 encode :: Geo -> GeoHash
 encode (Geo lt lng)  = GeoHash $ fst $ B.unfoldrN outputLength fld (adjustEncodeLon lng , adjustEncodeLat lt)
   where fld = Just . interleaveAndMerge
@@ -190,7 +203,7 @@ splitAndDistribute (x,y) w = (yp,xp)
         bitTo i j = Angle $ fromIntegral $ unsafeShiftL (unsafeShiftR w i .&. 1) j
 
 
-
+-- | Decode the geo-location from its GeoHash string.
 decode :: GeoHash -> Geo
 decode (GeoHash hsh) = Geo lt ln
   where lt     = adjustDecodeLat $ unsafeShiftL y 4

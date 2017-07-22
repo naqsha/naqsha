@@ -92,8 +92,9 @@ script:
   - if [ "$BUILDCMD" == "cabal" ]; then cabal configure --enable-tests --enable-benchmarks; fi
   - $BUILDCMD build
   - $BUILDCMD test
+  - $BUILDCMD haddock
+  - $BUILDCMD sdist
   - if [ "$BUILDCMD" == "cabal" ]; then cabal check; fi
-  - if [ "$BUILDCMD" == "cabal" ]; then cabal sdist; fi
   - if [ "$BUILDCMD" == "cabal" ]; then cabal install --force-reinstalls dist/*-*.tar.gz; fi
 
 after_success:

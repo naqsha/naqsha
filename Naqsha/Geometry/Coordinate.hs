@@ -37,7 +37,7 @@ import           Naqsha.Geometry.Internal
 -- $latandlong$
 --
 -- A point on the globe is specified by giving its geo coordinates
--- captures by the type `Geo`.  It is essentially a pair of the
+-- represented by the type `Geo`.  It is essentially a pair of the
 -- `Latitude` and `Longitude` of the point.
 --
 -- == Examples
@@ -46,7 +46,11 @@ import           Naqsha.Geometry.Internal
 -- > kanpurLatitude  = lat $ degree 26.4477777
 -- > kanpurLongitude :: Longitude
 -- > kanpurLongitude = lon $ degree 80.3461111
+-- > kanpurGeo       :: Geo
+-- > kanpurGeo       = Geo kanpurLatitude kanpurLongitude
 --
+-- You can also specify the latitude and longitude in units of degree,
+-- minute and seconds.
 --
 -- > kanpurLatitude  = lat $ degree 26 <> minute 26 <> second 52
 -- > kanpurLongitude = lon $ degree 80 <> minute 20 <> second 46
@@ -57,11 +61,11 @@ import           Naqsha.Geometry.Internal
 --
 -- == Convention on sign.
 --
--- For latitudes, positive means north and negative means south. For
--- longitudes, positive means east and negative means west. However,
--- if you find these conventions confusing you can use the combinators
--- `north`, `south`, `east`, and `west` when constructing latitudes or
--- longitudes.
+-- For latitudes, positive means north of the equator and negative
+-- means south. In the case of longitudes, positive means east of the
+-- longitude zero and negative means west. However, if you find these
+-- conventions confusing you can use the combinators `north`, `south`,
+-- `east`, and `west` when constructing latitudes or longitudes.
 --
 
 

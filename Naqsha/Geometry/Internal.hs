@@ -3,7 +3,9 @@
 {-# LANGUAGE MultiParamTypeClasses      #-}
 {-# LANGUAGE TypeFamilies               #-}
 
--- | Basic types associated with geometry.
+-- | The internal module that exposes the basic geometric types in
+-- naqsha. This interface is subject to change and hence use with
+-- caution.
 module Naqsha.Geometry.Internal
   ( Angle(..)
   , degree , minute, second

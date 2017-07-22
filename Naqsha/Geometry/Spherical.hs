@@ -1,5 +1,9 @@
 -- | Geometric operations on earth surface assuming that earth is a
 -- sphere of radius 6371008 m.
+--
+-- TODO: Port some calculations from
+-- http://www.movable-type.co.uk/scripts/latlong.html
+--
 module Naqsha.Geometry.Spherical
        (
          -- * Distance calculation.
