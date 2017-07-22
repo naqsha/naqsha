@@ -1,6 +1,6 @@
 # Change log for [naqsha]
 
-## [0.2.0.0] - Pending
+## [0.2.0.0] - 22 July, 2017
 
 * Overall change in module structure.
   - Naqsha.Position becomes Naqsha.Geometry.Coordinate
@@ -16,4 +16,5 @@ Very first release of naqsha.
 
 
 [naqsha]:  <http://github.com/naqsha/naqsha/> "Naqsha library"
+[0.2.0.0]: <https://github.com/naqsha/naqsha/releases/tag/v0.2.0.0> "Release 0.2.0.0"
 [0.1.0.0]: <https://github.com/naqsha/naqsha/releases/tag/v0.1.0.0> "Release 0.1.0.0"
