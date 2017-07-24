@@ -1,5 +1,9 @@
 # Change log for [naqsha]
 
+## [0.2.0.1] - 24 July, 2017
+
+- minor tweaks to make it build with older ghc (i.e. pre-"Monoids and Applicatives in Prelude)
+
 ## [0.2.0.0] - 22 July, 2017
 
 * Overall change in module structure.
