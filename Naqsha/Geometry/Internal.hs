@@ -15,7 +15,7 @@ module Naqsha.Geometry.Internal
   ) where
 
 -- Ugly hack to prevent pre-7.10 ghc warnings
-import           Prelude hiding              ( Monoid, (<$>))
+
 import           Control.Applicative         ( (<$>) )
 import           Control.Monad               ( liftM )
 import           Data.Bits                   ( Bits  )
@@ -23,7 +23,6 @@ import           Data.Fixed
 import           Data.Group
 import           Data.Monoid
 import           Data.Int
-import           Data.Monoid                 ( Monoid(..) )
 import           GHC.Real
 import           Data.Vector.Unboxed         ( MVector(..), Vector, Unbox)
 import qualified Data.Vector.Generic         as GV
