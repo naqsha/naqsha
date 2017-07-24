@@ -20,5 +20,6 @@ Very first release of naqsha.
 
 
 [naqsha]:  <http://github.com/naqsha/naqsha/> "Naqsha library"
+[0.2.0.1]: <https://github.com/naqsha/naqsha/releases/tag/v0.2.0.1> "Release 0.2.0.1"
 [0.2.0.0]: <https://github.com/naqsha/naqsha/releases/tag/v0.2.0.0> "Release 0.2.0.0"
 [0.1.0.0]: <https://github.com/naqsha/naqsha/releases/tag/v0.1.0.0> "Release 0.1.0.0"
