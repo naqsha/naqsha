@@ -18,8 +18,8 @@ addons:
   apt:
     packages:
       - libgmp-dev
-      # - ghc-7.6.3           # For debian8
-      # - cabal-install-1.20  # For debain8
+      - ghc-7.8.4
+      - cabal-install-1.24
       - ghc-head
       - cabal-install-head
       - hlint
@@ -48,6 +48,9 @@ matrix:
     # Build for the GHC head and cabal-install-head
     - os: linux
       env: GHCVER=head CABALVER=head
+
+    - os: linux
+      env: GHCVER=7.8.4 CABALVER=1.24
 
     # Lint the code.
     - os: linux
