@@ -1,5 +1,7 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 module Naqsha.Geometry.CoordinateSpec where
+
+import Control.Applicative ( (<$>), (<*>) )
 import Data.Monoid
 import Data.Fixed
 import Test.QuickCheck
