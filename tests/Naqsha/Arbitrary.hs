@@ -8,7 +8,8 @@
 
 module Naqsha.Arbitrary where
 
-import           Test.QuickCheck
+import Control.Applicative ( (<$>) )
+import Test.QuickCheck
 
 
 import Naqsha.Geometry
