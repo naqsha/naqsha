@@ -60,6 +60,7 @@ test-Suite test
                , QuickCheck                     >= 2.4
                , groups
                , hspec
+               , hspec-discover
                --
                --   This package
                --
