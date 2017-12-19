@@ -55,8 +55,9 @@ import Naqsha.Geometry.Spherical()
 -- $internals$
 --
 -- The basic types like `Latitude` or `Longitude` are exposed as
--- opaque types from this module. For type safety, we encourage the
--- users to use this module mostly when dealing with those times. For
--- the rare case when some non-trivial operations need to be defined,
--- we expose the internal module "Naqsha.Geometry.Internal". However,
--- use this interface with caution.
+-- opaque types from this module. This gives a certain amount of type
+-- safety when working with these quantities. A user should, whenever
+-- possible, only use this module. For the rare case when some
+-- non-trivial operations need to be defined, we expose the internal
+-- module "Naqsha.Geometry.Internal". However, use this interface with
+-- caution.
