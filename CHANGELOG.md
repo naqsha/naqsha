@@ -1,5 +1,9 @@
 # Change log for [naqsha]
 
+## [0.2.0.2] - Pending
+
+- tweaks to make it work with base 4.11.
+
 ## [0.2.0.1] - 24 July, 2017
 
 - minor tweaks to make it build with older ghc (i.e. pre-"Monoids and Applicatives in Prelude)
@@ -20,6 +24,7 @@ Very first release of naqsha.
 
 
 [naqsha]:  <http://github.com/naqsha/naqsha/> "Naqsha library"
+[0.2.0.2]: <https://github.com/naqsha/naqsha/releases/tag/v0.2.0.2> "Release 0.2.0.1"
 [0.2.0.1]: <https://github.com/naqsha/naqsha/releases/tag/v0.2.0.1> "Release 0.2.0.1"
 [0.2.0.0]: <https://github.com/naqsha/naqsha/releases/tag/v0.2.0.0> "Release 0.2.0.0"
 [0.1.0.0]: <https://github.com/naqsha/naqsha/releases/tag/v0.1.0.0> "Release 0.1.0.0"
