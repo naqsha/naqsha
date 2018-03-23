@@ -49,9 +49,6 @@ matrix:
     - os: linux
       env: GHCVER=head CABALVER=head
 
-    - os: linux
-      env: GHCVER=7.8.4 CABALVER=1.24
-
     # Lint the code.
     - os: linux
       env: HLINT="yes"
