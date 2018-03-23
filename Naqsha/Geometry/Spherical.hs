@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP #-}
 -- | Geometric operations on earth surface assuming that earth is a
 -- sphere of radius 6371008 m.
 --
@@ -11,7 +12,9 @@ module Naqsha.Geometry.Spherical
        , rMean
        ) where
 
+#if !MIN_VERSION_base(4,11,0)
 import Data.Monoid
+#endif
 import Data.Group
 import Naqsha.Geometry.Coordinate
 import Naqsha.Geometry.Angle

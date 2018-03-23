@@ -21,8 +21,11 @@ import           Control.Monad               ( liftM )
 import           Data.Bits                   ( Bits  )
 import           Data.Fixed
 import           Data.Group
-import           Data.Monoid
 import           Data.Int
+#if !MIN_VERSION_base(4,11,0)
+import           Data.Monoid     hiding      ((<>))
+import           Data.Semigroup
+#endif
 import           GHC.Real
 import           Data.Vector.Unboxed         ( MVector(..), Vector, Unbox)
 import qualified Data.Vector.Generic         as GV
@@ -45,10 +48,13 @@ import           Text.Read
 --
 newtype Angle = Angle {unAngle :: Int64} deriving (Enum, Eq, Ord, Unbox, Show, Read, Bits)
 
+instance Semigroup Angle where
+  (<>)  (Angle x)  (Angle y) = Angle $ x + y
+
 instance Monoid Angle where
-  mempty                        = Angle 0
-  mappend  (Angle x)  (Angle y) = Angle $ x + y
-  mconcat                       = Angle . sum . map unAngle
+  mempty  = Angle 0
+  mappend = (<>)
+  mconcat = Angle . sum . map unAngle
 
 instance Group Angle where
   invert (Angle x) = Angle $ negate x
@@ -182,7 +188,7 @@ normLat ang | degree (-90)  <= ang && ang < degree 90 = ang
 -- | The longitude of a point. Positive denotes East of the Greenwich
 -- meridian where as negative denotes West.
 newtype Longitude = Longitude { unLong :: Angle }
-  deriving (Eq, Bounded, Ord, Monoid, Group, Bits)
+  deriving (Eq, Bounded, Ord, Semigroup, Monoid, Group, Bits)
 
 -- | Convert angles to longitude.
 lon :: Angle -> Longitude
