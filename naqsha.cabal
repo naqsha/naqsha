@@ -65,3 +65,5 @@ test-Suite test
                --   This package
                --
                , naqsha
+
+ build-tool-depends: hspec-discover:hspec-discover
