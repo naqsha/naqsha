@@ -90,7 +90,6 @@ script:
   - cabal new-build
   - cabal new-test
   - cabal check
-  - $(find ./dist-newstyle -name raaz -type f) info
 
 after_success:
   - echo "All is well."
