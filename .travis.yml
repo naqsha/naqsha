@@ -71,7 +71,7 @@ before_install:
  # Sets up the appropriate freeze.
  - if [ -n "$STACKVER" ]; then
      rm -f cabal.config;
-     wget  https://www.stackage.org/"$1"/cabal.config -c;
+     wget  https://www.stackage.org/"$STACKVER"/cabal.config -c;
      sed -n /naqsha/!p < cabal.config > cabal.project.freeze;
    fi
 
