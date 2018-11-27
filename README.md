@@ -20,6 +20,28 @@ package.
 The word naqsha, or more accurately naqshA (नक़्शा), means a map or a
 sketch.
 
+# Legal
+
+Copyright 2016 Piyush P Kurur
+
+The library is licensed under
+
+* Apache License, Version 2.0
+  <http://www.apache.org/licenses/LICENSE-2.0>
+* BSD 3-Clause license
+  <https://opensource.org/licenses/BSD-3-Clause>
+
+You may not use this software except in compliance with one of the
+above Licenses (*at your option*).
+
+SPDX-License-Identifier: (Apache-2.0 OR  BSD-3-Clause)
+
+Unless required by applicable law or agreed to in writing, software
+distributed under these Licenses is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or
+implied. For the exact terms and conditions see the accompanying
+LICENSE file.
+
 [travis-status]: <https://secure.travis-ci.org/naqsha/naqsha.png> "Build status"
 [travis-naqsha]: <https://travis-ci.org/naqsha/naqsha>
 
