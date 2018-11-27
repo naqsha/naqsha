@@ -1,6 +1,6 @@
 cabal-version: 2.2
 name:        naqsha
-version:     0.2.0.2
+version:     0.3.0.0
 synopsis:    A library for working with anything map related.
 
 description: Naqsha is a library to work with geospatial data types,
