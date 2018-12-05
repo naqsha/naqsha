@@ -49,6 +49,7 @@ library geospatial
                  , Naqsha.Geometry.Internal
                  , Naqsha.Geometry.Spherical
                  , Naqsha.Version
+  autogen-modules: Paths_naqsha
   other-modules: Paths_naqsha
                , Naqsha.Geometry.Angle
                , Naqsha.Geometry.Coordinate
