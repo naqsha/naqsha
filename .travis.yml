@@ -27,23 +27,19 @@ addons:
 matrix:
   include:
     - os: osx
-    # Build with stack package set for 8.0.2
-    - os: linux
-      env: GHCVER=8.0.2 CABALVER=2.0 STACKVER=lts-9.2
-      addons: {apt: {packages: [cabal-install-2.0 ,ghc-8.0.2], sources: [hvr-ghc]}}
-
-    - os: linux
-      env: GHCVER=8.2.2 CABALVER=2.0
-      addons: {apt: {packages: [cabal-install-2.0 ,ghc-8.2.2], sources: [hvr-ghc]}}
 
     # Build with stack package sets
     - os: linux
-      env: GHCVER=8.2.2 CABALVER=2.0 STACKVER=lts
-      addons: {apt: {packages: [cabal-install-2.0 ,ghc-8.2.2], sources: [hvr-ghc]}}
+      env: GHCVER=8.2.2 CABALVER=2.2
+      addons: {apt: {packages: [cabal-install-2.2 ,ghc-8.2.2], sources: [hvr-ghc]}}
 
     - os: linux
-      env: GHCVER=8.4.1 CABALVER=2.0 STACKVER=nightly
-      addons: {apt: {packages: [cabal-install-2.0 ,ghc-8.4.1], sources: [hvr-ghc]}}
+      env: GHCVER=8.4.4 CABALVER=2.2
+      addons: {apt: {packages: [cabal-install-2.2 ,ghc-8.4.4], sources: [hvr-ghc]}}
+
+    - os: linux
+      env: GHCVER=8.6.3 CABALVER=2.4
+      addons: {apt: {packages: [cabal-install-2.4 ,ghc-8.6.3], sources: [hvr-ghc]}}
 
     # Build for the GHC head and cabal-install-head
     - os: linux
@@ -66,15 +62,6 @@ before_install:
    fi
 
  - export PATH=/opt/ghc/$GHCVER/bin:/opt/cabal/$CABALVER/bin:$PATH;
-
-
- # Sets up the appropriate freeze.
- - if [ -n "$STACKVER" ]; then
-     rm -f cabal.config;
-     wget  https://www.stackage.org/"$STACKVER"/cabal.config -c;
-     sed -n /naqsha/!p < cabal.config > cabal.project.freeze;
-   fi
-
  - if [ "$TRAVIS_OS_NAME" == "osx" ]; then brew update; fi
  - if [ "$TRAVIS_OS_NAME" == "osx" ]; then brew install ghc cabal-install; fi
  - if [ "$TRAVIS_OS_NAME" == "osx" ]; then brew info ghc cabal-install ; fi

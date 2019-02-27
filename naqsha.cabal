@@ -1,14 +1,19 @@
+cabal-version: 2.2
 name:        naqsha
-version:     0.2.0.2
-synopsis:    A library for working with geospatial data types.
+version:     0.3.0.0
+synopsis:    A library for working with anything map related.
 
-description: Naqsha is a library to work with geospatial data types like latitudes and longitudes. It provides
-             some basic operations like distance calculations.
+description: Naqsha is a library to work with geospatial data types,
+   like latitudes and longitudes, mapping projects like openstreetmap,
+   various map related file formats.
 
 homepage:    http://github.com/naqsha/naqsha.git
 
-license:      BSD3
-license-file: LICENSE
+
+copyright: (c) 2016 Piyush P Kurur
+license:      Apache-2.0 OR BSD-3-Clause
+license-files: LICENSE-BSD3
+               LICENSE-APACHE-2.0
 
 author:     Piyush P Kurur
 maintainer: ppk@cse.iitk.ac.in
@@ -16,7 +21,7 @@ maintainer: ppk@cse.iitk.ac.in
 category:  Geospatial, Naqsha
 
 build-type:    Simple
-cabal-version: >=1.10
+
 extra-source-files: CHANGELOG.md
                   , README.md
 
@@ -26,18 +31,25 @@ source-repository head
   type: git
   location:  https://github.com/naqsha/naqsha.git
 
-library
-  ghc-options: -Wall
-  build-depends: base                        >= 4.6   && < 4.12
-               , bytestring                  >= 0.9   && < 0.11
-               , groups
-               , vector                      >= 0.7.1 && < 0.13
+----------------------- Common declarations ---------------------------
 
+common defaults
+  default-language: Haskell2010
+  ghc-options: -Wall
+  build-depends: base                   >= 4.10 &&  < 4.13
+               , bytestring             >= 0.10 &&  < 0.11
+               , groups
+               , vector                 >= 0.12 &&  < 0.13
+
+library geospatial
+  import: defaults
+  hs-source-dirs: geospatial
   exposed-modules: Naqsha.Geometry
                  , Naqsha.Geometry.Coordinate.GeoHash
                  , Naqsha.Geometry.Internal
                  , Naqsha.Geometry.Spherical
                  , Naqsha.Version
+  autogen-modules: Paths_naqsha
   other-modules: Paths_naqsha
                , Naqsha.Geometry.Angle
                , Naqsha.Geometry.Coordinate
@@ -45,25 +57,25 @@ library
   default-language: Haskell2010
 
 test-Suite test
+  import: defaults
   default-language: Haskell2010
   type: exitcode-stdio-1.0
   hs-source-dirs: tests
   main-is: Main.hs
-  ghc-options: -Wall
-  other-modules: Naqsha.Arbitrary
-               , Naqsha.Geometry.AngleSpec
-               , Naqsha.Geometry.CoordinateSpec
-               , Naqsha.Geometry.Coordinate.GeoHashSpec
 
-  build-depends: base
+  build-depends:
                , HUnit                          >= 1.2
                , QuickCheck                     >= 2.4
-               , groups
                , hspec
                , hspec-discover
                --
                --   This package
                --
-               , naqsha
+               , geospatial
+
+  other-modules: Naqsha.Arbitrary
+               , Naqsha.Geometry.AngleSpec
+               , Naqsha.Geometry.CoordinateSpec
+               , Naqsha.Geometry.Coordinate.GeoHashSpec
 
  build-tool-depends: hspec-discover:hspec-discover
