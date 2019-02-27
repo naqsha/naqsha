@@ -1,7 +1,10 @@
 # Change log for [naqsha]
 
-## [0.2.0.2] - Pending
+## [0.3.0.0] - Pending
 
+- moved to a multi-library package.
+- license change from BSD-3-Clause to (Apache-2.0 OR BSD-3-Clause)
+  dual licensing.
 - tweaks to make it work with base 4.11.
 
 ## [0.2.0.1] - 24 July, 2017
