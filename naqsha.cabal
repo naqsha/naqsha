@@ -41,6 +41,8 @@ common defaults
                , groups
                , vector                 >= 0.12 &&  < 0.13
 
+---------------------- Components --------------------------------------
+
 library geospatial
   import: defaults
   hs-source-dirs: geospatial
@@ -54,11 +56,11 @@ library geospatial
                , Naqsha.Geometry.Angle
                , Naqsha.Geometry.Coordinate
 
-  default-language: Haskell2010
+
+--------------------------------- Test suits ---------------------------
 
 test-Suite test
   import: defaults
-  default-language: Haskell2010
   type: exitcode-stdio-1.0
   hs-source-dirs: tests
   main-is: Main.hs
