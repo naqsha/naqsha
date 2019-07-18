@@ -1,6 +1,6 @@
 cabal-version: 2.2
 name:        naqsha
-version:     0.3.0.0
+version:     0.3.0.1
 synopsis:    A library for working with anything map related.
 
 description: Naqsha is a library to work with geospatial data types,
@@ -50,11 +50,19 @@ library geospatial
                  , Naqsha.Geometry.Coordinate.GeoHash
                  , Naqsha.Geometry.Internal
                  , Naqsha.Geometry.Spherical
-                 , Naqsha.Version
+  other-modules: Naqsha.Geometry.Angle
+               , Naqsha.Geometry.Coordinate
+
+library
+  import: defaults
+  build-depends: geospatial
+  hs-source-dirs: src
+  exposed-modules: Naqsha.Version
+  reexported-modules: Naqsha.Geometry
+                    , Naqsha.Geometry.Coordinate.GeoHash
+                    , Naqsha.Geometry.Spherical
   autogen-modules: Paths_naqsha
   other-modules: Paths_naqsha
-               , Naqsha.Geometry.Angle
-               , Naqsha.Geometry.Coordinate
 
 
 --------------------------------- Test suits ---------------------------
