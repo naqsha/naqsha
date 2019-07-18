@@ -1,6 +1,10 @@
 # Change log for [naqsha]
 
-## [0.3.0.0] - Pending
+## [0.3.0.1] - 18 July 2019
+
+- expose modules from the main library module.
+
+## [0.3.0.0] - 28 June 2019
 
 - moved to a multi-library package.
 - license change from BSD-3-Clause to (Apache-2.0 OR BSD-3-Clause)
