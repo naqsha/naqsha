@@ -6,7 +6,7 @@
 module Naqsha.Geometry.Coordinate
        ( -- * Basics
          -- $latandlong$
-         Geo(..)
+         Geo(..), GeoRect (..), Interval (..)
        , northPole, southPole
        -- ** Latitudes
        , Latitude
@@ -115,6 +115,13 @@ west = lon . invert
 greenwich :: Longitude
 greenwich = lon $ degree 0
 
+-- | An interval.
+data Interval a = Interval { start :: a
+                           , end   :: a
+                           }
+
+-- | A rectangle on the globe.
+data GeoRect = GeoRect (Interval Latitude) (Interval Longitude)
 
 ------------------- The geometric coordinates. -----------------
 
