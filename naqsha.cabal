@@ -51,6 +51,7 @@ library geospatial
                  , Naqsha.Geometry.Coordinate.GeoHash
                  , Naqsha.Geometry.Internal
                  , Naqsha.Geometry.Spherical
+                 , Naqsha.Magnetic
   other-modules: Naqsha.Geometry.Angle
                , Naqsha.Geometry.Coordinate
 
@@ -60,6 +61,7 @@ library
   hs-source-dirs: src
   exposed-modules: Naqsha.Version
   reexported-modules: Naqsha.Geometry
+                    , Naqsha.Magnetic
                     , Naqsha.Geometry.Coordinate.GeoHash
                     , Naqsha.Geometry.Spherical
   autogen-modules: Paths_naqsha
