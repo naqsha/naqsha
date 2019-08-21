@@ -12,6 +12,7 @@ module Naqsha.Geometry.Internal
   , radian
   , toDegree, toRadian
   , Latitude(..), Longitude(..), lat, lon
+  , Elevation(..),
   ) where
 
 -- Ugly hack to prevent pre-7.10 ghc warnings
@@ -201,6 +202,12 @@ instance Show Longitude where
 instance Read Longitude where
   readPrec = conv <$> readPrec
     where conv  = lon . degree . (toRational :: Nano -> Rational)
+
+--------------------------- Elevation -----------------------------------------
+
+-- | Distance of a point on the surface of the glob from mean sea
+-- level (in metres).
+newtype Elevation = Elevation Double
 
 
 --------------------------- Internal helper functions ------------------------

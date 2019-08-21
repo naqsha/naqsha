@@ -18,6 +18,8 @@ module Naqsha.Geometry.Coordinate
        , Longitude
        , lon, east, west
        , greenwich
+       -- ** Elevation
+       , Elevation
        ) where
 
 import           Control.Monad               ( liftM )
