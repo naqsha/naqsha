@@ -1,5 +1,10 @@
 # Change log for [naqsha]
 
+## 0.4.0.0 - pending
+
+- only supports cabal 3
+
+
 ## [0.3.0.1] - 18 July 2019
 
 - expose modules from the main library module.
