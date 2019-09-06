@@ -16,55 +16,44 @@ before_cache:
   - rm -fv $HOME/.cabal/packages/hackage.haskell.org/01-index.tar.idx
   - rm -rfv $HOME/.cabal/packages/head.hackage
 
-fast_finish: true
-
-addons:
-  apt:
-    packages:
-      - libgmp-dev
-    sources: [hvr-ghc]
-
 matrix:
+  fast_finish: true
   include:
-    - os: osx
+     # Lint the code.
+    - compiler: hlint
+      addons: {apt: {packages: [curl], sources: [hvr-ghc]}}
 
-    # Build with stack package sets
-    - os: linux
-      env: GHCVER=8.2.2 CABALVER=2.2
-      addons: {apt: {packages: [cabal-install-2.2 ,ghc-8.2.2], sources: [hvr-ghc]}}
+    - compiler: ghc-8.4.4
+      addons: {apt: {packages: [cabal-install-3.0 ,ghc-8.4.4], sources: [hvr-ghc]}}
 
-    - os: linux
-      env: GHCVER=8.4.4 CABALVER=2.2
-      addons: {apt: {packages: [cabal-install-2.2 ,ghc-8.4.4], sources: [hvr-ghc]}}
+    - compiler: ghc-8.6.5
+      addons: {apt: {packages: [cabal-install-3.0 ,ghc-8.6.5], sources: [hvr-ghc]}}
 
-    - os: linux
-      env: GHCVER=8.6.3 CABALVER=2.4
-      addons: {apt: {packages: [cabal-install-2.4 ,ghc-8.6.3], sources: [hvr-ghc]}}
+    - compiler: ghc-8.8.1
+      addons: {apt: {packages: [cabal-install-3.0 ,ghc-8.8.1], sources: [hvr-ghc]}}
 
-    # Build for the GHC head and cabal-install-head
-    - os: linux
-      env: GHCVER=head CABALVER=head
+    - compiler: ghc-head
       addons: {apt: {packages: [cabal-install-head ,ghc-head], sources: [hvr-ghc]}}
 
-    # Lint the code.
-    - os: linux
-      env: HLINT="yes"
-      addons: {apt: {packages: [hlint], sources: [hvr-ghc]}}
+    - os: osx
+      compiler: ghc
 
   allow_failures:
-    - env: GHCVER=head CABALVER=head
-    - env: HLINT="yes"
+    - compiler: ghc-head
+    - compiler: ghc-8.8.1
 
 before_install:
- - if [ "$HLINT" == "yes" ]; then
-      hlint "--ignore=Parse error" Naqsha;
+  - uname -a
+  - if [ "$CC" == "hlint" ]; then
+      unset CC;
+      curl -sSL https://raw.github.com/ndmitchell/hlint/master/misc/run.sh | sh -s .;
       exit $?;
    fi
-
- - export PATH=/opt/ghc/$GHCVER/bin:/opt/cabal/$CABALVER/bin:$PATH;
- - if [ "$TRAVIS_OS_NAME" == "osx" ]; then brew update; fi
- - if [ "$TRAVIS_OS_NAME" == "osx" ]; then brew install ghc cabal-install; fi
- - if [ "$TRAVIS_OS_NAME" == "osx" ]; then brew info ghc cabal-install ; fi
+  - export PATH=/opt/ghc/bin:$PATH;
+  - unset CC
+  - if [ "$TRAVIS_OS_NAME" == "osx" ]; then brew update; fi
+  - if [ "$TRAVIS_OS_NAME" == "osx" ]; then brew install ghc cabal-install; fi
+  - if [ "$TRAVIS_OS_NAME" == "osx" ]; then brew info ghc cabal-install; fi
 
 
 install:
