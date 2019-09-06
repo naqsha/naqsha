@@ -9,6 +9,9 @@ import Test.Hspec.QuickCheck
 import Naqsha.Geometry
 import Naqsha.Arbitrary ()
 
+{-# ANN spec "Hlint: ignore Monoid law, right identity" #-}
+{-# ANN spec "Hlint: ignore Monoid law, left identity" #-}
+
 spec :: Spec
 spec = describe "Group laws for Angle" $ do
 
