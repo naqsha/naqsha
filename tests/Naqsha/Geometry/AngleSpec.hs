@@ -19,7 +19,7 @@ spec = describe "Group laws for Angle" $ do
   prop "x <> mempty = x"                          $ \ (x :: Angle)
     -> (x <> mempty) `shouldBe` x
   prop "mempty <> x"                              $ \ (x :: Angle)
-    -> (x <> mempty) `shouldBe` x
+    -> (mempty <> x) `shouldBe` x
 
   prop "(<>) should be commutative"                $ \ (x :: Angle) y
     -> (x <> y) `shouldBe` (y <>  x)
