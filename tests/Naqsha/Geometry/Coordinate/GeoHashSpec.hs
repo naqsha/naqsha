@@ -22,6 +22,6 @@ approxEq (Geo x1 y1) (Geo x2 y2) = abs dx <= err && abs dy <= err
 
 spec :: Spec
 spec = do
-  prop "fromString . show = id"          $ \ (g :: GeoHash) -> (fromString  $ show g) `shouldBe` g
-  prop "encode . decode  = id"           $ \ (g :: GeoHash) -> (encode $ decode g)    `shouldBe` g
-  prop "decode . encode  = id (approx)"  $ \ (g :: Geo)     -> (decode $ encode g)    `approxEq` g
+  prop "fromString . show = id"          $ \ (g :: GeoHash) -> fromString  (show g) `shouldBe` g
+  prop "encode . decode  = id"           $ \ (g :: GeoHash) -> encode (decode g)    `shouldBe` g
+  prop "decode . encode  = id (approx)"  $ \ (g :: Geo)     -> decode (encode g)    `approxEq` g
