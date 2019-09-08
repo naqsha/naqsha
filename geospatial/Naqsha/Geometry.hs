@@ -44,7 +44,8 @@ import Naqsha.Geometry.GeoHash
 -- $latandlong$
 --
 -- The type `LatLon` provides a way to present points on the globe as
--- a pair of its `Latitude` and `Longitude`.
+-- a pair of its `Latitude` and `Longitude`. Rectangles in the
+-- latitude longitude space are provided by `Rect` type.
 --
 -- == Examples
 --
@@ -64,7 +65,7 @@ import Naqsha.Geometry.GeoHash
 -- The show and read instance of the `Latitude` and `Longitude` types
 -- uses degrees for displaying and reading respectively. Show and Read
 -- instances can express these quantities up to Nano degree precision.
---
+-- 
 -- == Convention on sign.
 --
 -- For latitudes, positive means north of the equator and negative
@@ -83,7 +84,7 @@ import Naqsha.Geometry.GeoHash
 -- in database and build into it a sense of location awareness. We support
 -- the following geometric hashing:
 --
--- ["Naqsha.Geometry.Coordinate.GeoHash":] The geohash standard
+-- ["Naqsha.Geometry.GeoHash":] The geohash standard
 -- (<https://en.wikipedia.org/wiki/Geohash>).
 --
 -- None of these modules are imported by default the user may import

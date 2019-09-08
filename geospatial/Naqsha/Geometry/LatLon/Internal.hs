@@ -18,6 +18,7 @@ module Naqsha.Geometry.LatLon.Internal
   , greenwich
   , LatLon(..)
   , northPole, southPole
+  , Interval(..), Rect(..)
   ) where
 
 import           Control.Monad               ( liftM )
@@ -265,6 +266,14 @@ instance Eq LatLon where
     | xlat == maxBound = ylat == maxBound  -- longitude irrelevant for north pole
     | xlat == minBound = ylat == minBound  -- longitude irrelevant for south pole
     | otherwise     = xlat == ylat && xlong == ylong
+
+-- | An interval.
+data Interval a = Interval { start :: a
+                           , end   :: a
+                           }
+
+-- | A rectangle on the globe.
+data Rect = Rect (Interval Latitude) (Interval Longitude)
 
 ----------------------------- Vector Instance for LatLon ---------------------------------------------
 
