@@ -144,9 +144,6 @@ newtype instance MVector s Longitude = MLongV (MVector s Angle)
 newtype instance Vector    Longitude = LongV  (Vector Angle)
 
 
--------------------- Instance for Angle --------------------------------------------
-
-
 -------------------- Instance for latitude --------------------------------------------
 
 instance GVM.MVector MVector Latitude where
@@ -245,7 +242,6 @@ instance GV.Vector Vector Longitude where
 
   basicUnsafeCopy (MLongV mv) (LongV v) = GV.basicUnsafeCopy mv v
   elemseq _ (Longitude x)               = GV.elemseq (undefined :: Vector a) x
-
 
 
 ------------------- The geometric coordinates. -----------------
