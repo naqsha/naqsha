@@ -4,7 +4,7 @@ module Naqsha.Magnetic
        , Dip(..)
        ) where
 
-import  Naqsha.Geometry.Angle
+import  Naqsha.Geometry
 
 -- | The magnetic variation or declination
 -- <https://en.wikipedia.org/wiki/Magnetic_declination Read on Wikipedia>.

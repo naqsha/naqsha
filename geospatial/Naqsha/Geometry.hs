@@ -1,11 +1,10 @@
 -- | The geometric types and values exposed by naqsha.
 module Naqsha.Geometry
-       ( module Naqsha.Geometry.Coordinate
-
-       -- ** Angles and angular quantities.
-       , module Naqsha.Geometry.Angle
-
+       (
+       -- * Latitude, Longitude and LatLng points
+       -- $latandlong$
        -- * Geometric hashing.
+         module Naqsha.Geometry.GeoHash
        -- $geohashing$
 
        -- * Distance calculation.
@@ -15,14 +14,45 @@ module Naqsha.Geometry
 
        -- * Internal details
        -- $internals$
+       , module Naqsha.Geometry.Internal
        ) where
 
-import Naqsha.Geometry.Angle
-import Naqsha.Geometry.Coordinate
+import Naqsha.Geometry.Internal
+import Naqsha.Geometry.GeoHash
 
--- Nothing imported here. Only for docs.
-import Naqsha.Geometry.Spherical()
-
+-- $latandlong$
+--
+-- This module provides the `Latitude` and `Longitude` type and
+-- exposes the type `LatLng` which represents a point on the globe as
+-- a pair of its `Latitude` and `Longitude`.
+--
+-- == Examples
+--
+-- > kanpurLatitude  :: Latitude
+-- > kanpurLatitude  = lat $ degree 26.4477777
+-- > kanpurLongitude :: Longitude
+-- > kanpurLongitude = lon $ degree 80.3461111
+-- > kanpurGeo       :: Geo
+-- > kanpurGeo       = Geo kanpurLatitude kanpurLongitude
+--
+-- You can also specify the latitude and longitude in units of degree,
+-- minute and seconds.
+--
+-- > kanpurLatitude  = lat $ degree 26 <> minute 26 <> second 52
+-- > kanpurLongitude = lon $ degree 80 <> minute 20 <> second 46
+--
+-- The show and read instance of the `Latitude` and `Longitude` types
+-- uses degrees for displaying and reading respectively. Show and Read
+-- instances can express these quantities up to Nano degree precision.
+--
+-- == Convention on sign.
+--
+-- For latitudes, positive means north of the equator and negative
+-- means south. In the case of longitudes, positive means east of the
+-- longitude zero and negative means west. However, if you find these
+-- conventions confusing you can use the combinators `north`, `south`,
+-- `east`, and `west` when constructing latitudes or longitudes.
+--
 
 -- $geohashing$
 --
@@ -59,5 +89,4 @@ import Naqsha.Geometry.Spherical()
 -- safety when working with these quantities. A user should, whenever
 -- possible, only use this module. For the rare case when some
 -- non-trivial operations need to be defined, we expose the internal
--- module "Naqsha.Geometry.Internal". However, use this interface with
--- caution.
+-- module. However, use this interface with caution.

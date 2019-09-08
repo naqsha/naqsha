@@ -48,12 +48,11 @@ library geospatial
   visibility: public
   hs-source-dirs: geospatial
   exposed-modules: Naqsha.Geometry
-                 , Naqsha.Geometry.Coordinate.GeoHash
-                 , Naqsha.Geometry.Internal
-                 , Naqsha.Geometry.Spherical
+                 , Naqsha.Geometry.Angle.Internal
+                 , Naqsha.Geometry.GeoHash
+                 , Naqsha.Geometry.LatLon.Internal
                  , Naqsha.Magnetic
-  other-modules: Naqsha.Geometry.Angle
-               , Naqsha.Geometry.Coordinate
+  other-modules: Naqsha.Geometry.Internal
 
 library
   import: defaults
@@ -62,8 +61,6 @@ library
   exposed-modules: Naqsha.Version
   reexported-modules: Naqsha.Geometry
                     , Naqsha.Magnetic
-                    , Naqsha.Geometry.Coordinate.GeoHash
-                    , Naqsha.Geometry.Spherical
   autogen-modules: Paths_naqsha
   other-modules: Paths_naqsha
 
