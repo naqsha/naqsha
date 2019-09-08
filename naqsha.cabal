@@ -51,6 +51,7 @@ library geospatial
                  , Naqsha.Geometry.Angle.Internal
                  , Naqsha.Geometry.GeoHash
                  , Naqsha.Geometry.LatLon.Internal
+                 , Naqsha.Geometry.Spherical
                  , Naqsha.Magnetic
 
 library
