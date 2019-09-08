@@ -14,10 +14,8 @@ module Naqsha.Geometry.Angle.Internal
   , Angular(..)
   ) where
 
-import           Control.Applicative         ( (<$>) )
 import           Control.Monad               ( liftM )
 import           Data.Bits                   ( Bits  )
-import           Data.Fixed
 import           Data.Group
 import           Data.Int
 #if !MIN_VERSION_base(4,11,0)
@@ -28,7 +26,6 @@ import           GHC.Real
 import           Data.Vector.Unboxed         ( MVector(..), Vector, Unbox)
 import qualified Data.Vector.Generic         as GV
 import qualified Data.Vector.Generic.Mutable as GVM
-import           Text.Read
 
 ----------------------------- Angles and Angular quantities -----------------------
 
