@@ -10,9 +10,10 @@ module Naqsha.Arbitrary where
 import Control.Applicative ( (<$>), (<*>) )
 import Test.QuickCheck
 
+import Naqsha.Geometry.Angle.Internal
+import Naqsha.Geometry.GeoHash
+import Naqsha.Geometry.LatLon.Internal
 
-import Naqsha.Geometry
-import Naqsha.Geometry.Coordinate.GeoHash
 
 
 instance Arbitrary Angle where
@@ -25,11 +26,11 @@ instance Arbitrary Longitude where
   arbitrary = lon <$> arbitrary
 
 
-instance Arbitrary Geo where
-  arbitrary = Geo <$> arbitrary <*> arbitrary
+instance Arbitrary LatLon where
+  arbitrary = LatLon <$> arbitrary <*> arbitrary
 
 
-geoHashRange :: Gen Geo
+geoHashRange :: Gen LatLon
 geoHashRange = suchThat arbitrary ( \ g -> g /= northPole && g /= southPole)
 
 instance Arbitrary GeoHash where
