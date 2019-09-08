@@ -1,5 +1,5 @@
 {-# LANGUAGE ScopedTypeVariables #-}
-module Naqsha.Geometry.CoordinateSpec where
+module Naqsha.Geometry.LatLonSpec where
 
 import Control.Applicative ( (<$>), (<*>) )
 import Data.Monoid

@@ -1,6 +1,6 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE Rank2Types          #-}
-module Naqsha.Geometry.Coordinate.GeoHashSpec where
+module Naqsha.Geometry.GeoHashSpec where
 
 import Data.Bits
 import Data.Group

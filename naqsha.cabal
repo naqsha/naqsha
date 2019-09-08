@@ -85,7 +85,7 @@ test-Suite test
 
   other-modules: Naqsha.Arbitrary
                , Naqsha.Geometry.AngleSpec
-               , Naqsha.Geometry.CoordinateSpec
-               , Naqsha.Geometry.Coordinate.GeoHashSpec
+               , Naqsha.Geometry.LatLonSpec
+               , Naqsha.Geometry.GeoHashSpec
 
  build-tool-depends: hspec-discover:hspec-discover
