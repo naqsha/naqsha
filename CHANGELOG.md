@@ -3,7 +3,7 @@
 ## 0.4.0.0 - pending
 
 - only supports cabal 3
-
+- Magnetic dip and variation added.
 
 ## [0.3.0.1] - 18 July 2019
 
