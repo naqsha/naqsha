@@ -13,7 +13,6 @@ module Naqsha.Geometry
        -- * Distance calculation.
        -- $distance$
        
-       
        -- * Internal details
        -- $internals$
 
@@ -21,7 +20,7 @@ module Naqsha.Geometry
 
 
 import Naqsha.Geometry.Angle.Internal hiding ( Angle )
-import Naqsha.Geometry.Angle.Internal         ( Angle )
+import Naqsha.Geometry.Angle.Internal        ( Angle )
 
 import Naqsha.Geometry.LatLon.Internal hiding (Latitude, Longitude)
 import Naqsha.Geometry.LatLon.Internal        (Latitude, Longitude)
