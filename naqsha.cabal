@@ -52,7 +52,6 @@ library geospatial
                  , Naqsha.Geometry.GeoHash
                  , Naqsha.Geometry.LatLon.Internal
                  , Naqsha.Magnetic
-  other-modules: Naqsha.Geometry.Internal
 
 library
   import: defaults

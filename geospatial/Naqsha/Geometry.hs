@@ -1,29 +1,50 @@
 -- | The geometric types and values exposed by naqsha.
 module Naqsha.Geometry
        (
+       -- * Angles
+         module Naqsha.Geometry.Angle.Internal
        -- * Latitude, Longitude and LatLng points
        -- $latandlong$
+       , module Naqsha.Geometry.LatLon.Internal
        -- * Geometric hashing.
-         module Naqsha.Geometry.GeoHash
-       -- $geohashing$
+         -- $geohashing$
+       , module Naqsha.Geometry.GeoHash
 
        -- * Distance calculation.
-       --
        -- $distance$
-       --
-
+       
+       
        -- * Internal details
        -- $internals$
-       , module Naqsha.Geometry.Internal
+
        ) where
 
-import Naqsha.Geometry.Internal
+
+import Naqsha.Geometry.Angle.Internal hiding ( Angle )
+import Naqsha.Geometry.Angle.Internal         ( Angle )
+
+import Naqsha.Geometry.LatLon.Internal hiding (Latitude, Longitude)
+import Naqsha.Geometry.LatLon.Internal        (Latitude, Longitude)
+
+
 import Naqsha.Geometry.GeoHash
+
+
+-- $internals$
+--
+-- The basic types like `Angle`, `Latitude` or `Longitude` are exposed
+-- as opaque types from this module. This gives a certain amount of
+-- type safety and hence should only use this module. For the rare
+-- case when some non-trivial operations are need to be defined, we
+-- expose the following internal modules.
+--
+-- * "Naqsha.Geometry.Angle.Internal"
+-- * "Naqsha.Geometry.LatLon.Internal"
+
 
 -- $latandlong$
 --
--- This module provides the `Latitude` and `Longitude` type and
--- exposes the type `LatLng` which represents a point on the globe as
+-- The type `LatLon` provides a way to present points on the globe as
 -- a pair of its `Latitude` and `Longitude`.
 --
 -- == Examples
@@ -32,8 +53,8 @@ import Naqsha.Geometry.GeoHash
 -- > kanpurLatitude  = lat $ degree 26.4477777
 -- > kanpurLongitude :: Longitude
 -- > kanpurLongitude = lon $ degree 80.3461111
--- > kanpurGeo       :: Geo
--- > kanpurGeo       = Geo kanpurLatitude kanpurLongitude
+-- > kanpurGeo       :: LatLon
+-- > kanpurGeo       = LatLon kanpurLatitude kanpurLongitude
 --
 -- You can also specify the latitude and longitude in units of degree,
 -- minute and seconds.
@@ -81,12 +102,3 @@ import Naqsha.Geometry.GeoHash
 -- ["Naqsha.Geometry.Spherical": ] Assume a spherical model of the
 -- globe. Distance is calculated using the haversine formula.
 
-
--- $internals$
---
--- The basic types like `Latitude` or `Longitude` are exposed as
--- opaque types from this module. This gives a certain amount of type
--- safety when working with these quantities. A user should, whenever
--- possible, only use this module. For the rare case when some
--- non-trivial operations need to be defined, we expose the internal
--- module. However, use this interface with caution.
