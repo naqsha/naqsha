@@ -1,6 +1,6 @@
 cabal-version: 3.0
 name:        naqsha
-version:     0.3.0.1
+version:     0.4.0.0
 synopsis:    A library for working with anything map related.
 
 description: Naqsha is a library to work with geospatial data types,
@@ -48,11 +48,10 @@ library geospatial
   visibility: public
   hs-source-dirs: geospatial
   exposed-modules: Naqsha.Geometry
-                 , Naqsha.Geometry.Coordinate.GeoHash
-                 , Naqsha.Geometry.Internal
+                 , Naqsha.Geometry.Angle.Internal
+                 , Naqsha.Geometry.GeoHash
+                 , Naqsha.Geometry.LatLon.Internal
                  , Naqsha.Geometry.Spherical
-  other-modules: Naqsha.Geometry.Angle
-               , Naqsha.Geometry.Coordinate
 
 library
   import: defaults
@@ -60,8 +59,6 @@ library
   hs-source-dirs: src
   exposed-modules: Naqsha.Version
   reexported-modules: Naqsha.Geometry
-                    , Naqsha.Geometry.Coordinate.GeoHash
-                    , Naqsha.Geometry.Spherical
   autogen-modules: Paths_naqsha
   other-modules: Paths_naqsha
 
@@ -77,16 +74,18 @@ test-Suite test
   build-depends:
                , HUnit                          >= 1.2
                , QuickCheck                     >= 2.4
+               , smallcheck
                , hspec
+               , hspec-smallcheck
                , hspec-discover
                --
                --   This package
                --
                , geospatial
 
-  other-modules: Naqsha.Arbitrary
+  other-modules: Naqsha.Instances
                , Naqsha.Geometry.AngleSpec
-               , Naqsha.Geometry.CoordinateSpec
-               , Naqsha.Geometry.Coordinate.GeoHashSpec
+               , Naqsha.Geometry.LatLonSpec
+               , Naqsha.Geometry.GeoHashSpec
 
  build-tool-depends: hspec-discover:hspec-discover

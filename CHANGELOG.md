@@ -3,7 +3,8 @@
 ## 0.4.0.0 - pending
 
 - only supports cabal 3
-
+- Geo renamed to LatLon
+- reorganised the modules
 
 ## [0.3.0.1] - 18 July 2019
 

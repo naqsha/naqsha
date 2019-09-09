@@ -2,7 +2,7 @@
 -- https://en.wikipedia.org/wiki/Geohash. To try out geohash encoding
 -- on web visit http://geohash.org
 
-module Naqsha.Geometry.Coordinate.GeoHash
+module Naqsha.Geometry.GeoHash
        ( GeoHash, encode, decode, accuracy, toByteString
        ) where
 
@@ -17,9 +17,8 @@ import           Data.Word                (  Word8 )
 
 
 
-import Naqsha.Geometry.Internal
-import Naqsha.Geometry.Coordinate ( Geo(..) )
-
+import Naqsha.Geometry.Angle.Internal
+import Naqsha.Geometry.LatLon.Internal
 
 
 -- | Precision of encoding measured in base32 digits.
@@ -181,8 +180,8 @@ interleaveAndMerge (x,y) = (w, (yp, xp))
 
 
 -- | Encode a geo-location into its GeoHash string.
-encode :: Geo -> GeoHash
-encode (Geo lt lng)  = GeoHash $ fst $ B.unfoldrN outputLength fld (adjustEncodeLon lng , adjustEncodeLat lt)
+encode :: LatLon -> GeoHash
+encode (LatLon lt lng)  = GeoHash $ fst $ B.unfoldrN outputLength fld (adjustEncodeLon lng , adjustEncodeLat lt)
   where fld = Just . interleaveAndMerge
 
 -------------------------- Decoding --------------------------------
@@ -204,8 +203,8 @@ splitAndDistribute (x,y) w = (yp,xp)
 
 
 -- | Decode the geo-location from its GeoHash string.
-decode :: GeoHash -> Geo
-decode (GeoHash hsh) = Geo lt ln
+decode :: GeoHash -> LatLon
+decode (GeoHash hsh) = LatLon lt ln
   where lt     = adjustDecodeLat $ unsafeShiftL y 4
         ln     = adjustDecodeLon $ unsafeShiftL x 4
         (x,y)  = B.foldl splitAndDistribute (Angle 0,Angle 0) strP

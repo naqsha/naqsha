@@ -16,8 +16,7 @@ module Naqsha.Geometry.Spherical
 import Data.Monoid
 #endif
 import Data.Group
-import Naqsha.Geometry.Coordinate
-import Naqsha.Geometry.Angle
+import Naqsha.Geometry
 
 --------------------- Distance calculation -------------------------------------
 
@@ -30,8 +29,8 @@ rMean = 6371008
 -- | This combinator computes the distance (in meters) between two
 -- geo-locations using the haversine distance between two points. For
 -- `Position` which have an
-distance :: Geo
-         -> Geo
+distance :: LatLon
+         -> LatLon
          -> Double -- ^ Distance in meters.
 distance = distance' rMean
 
@@ -45,11 +44,11 @@ distance = distance' rMean
 -- > distance = distance' rMean
 --
 distance' :: Double  -- ^ Radius (in whatever unit)
-          -> Geo
-          -> Geo
+          -> LatLon
+          -> LatLon
           -> Double
 
-distance' r (Geo lat1 lon1) (Geo lat2 lon2) = r * c
+distance' r (LatLon lat1 lon1) (LatLon lat2 lon2) = r * c
   where p1    = toAngle lat1
         l1    = toAngle lon1
         p2    = toAngle lat2

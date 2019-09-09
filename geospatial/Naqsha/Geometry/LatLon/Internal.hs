@@ -3,161 +3,38 @@
 {-# LANGUAGE MultiParamTypeClasses      #-}
 {-# LANGUAGE TypeFamilies               #-}
 
--- | The internal module that exposes the basic geometric types in
--- naqsha. This interface is subject to change and hence use with
--- caution.
-module Naqsha.Geometry.Internal
-  ( Angle(..)
-  , degree , minute, second
-  , radian
-  , toDegree, toRadian
-  , Latitude(..), Longitude(..), lat, lon
+-- | The internal module that exposes the latitude and longitude
+-- types. Import it only if absolutely required.
+
+module Naqsha.Geometry.LatLon.Internal
+  ( Latitude(..)
+  , lat, lon
+  , north, south
+  , equator
+  , tropicOfCancer
+  , tropicOfCapricon
+  , Longitude(..)
+  , east, west
+  , greenwich
+  , LatLon(..)
+  , northPole, southPole
+  , Interval(..), Rect(..)
   ) where
 
--- Ugly hack to prevent pre-7.10 ghc warnings
-
-import           Control.Applicative         ( (<$>) )
 import           Control.Monad               ( liftM )
-import           Data.Bits                   ( Bits  )
+import           Data.Bits
+import           Data.Group                
 import           Data.Fixed
-import           Data.Group
-import           Data.Int
-#if !MIN_VERSION_base(4,11,0)
-import           Data.Monoid     hiding      ((<>))
-import           Data.Semigroup
-#endif
-import           GHC.Real
-import           Data.Vector.Unboxed         ( MVector(..), Vector, Unbox)
+import           Data.Vector.Unboxed         ( MVector(..), Vector)
 import qualified Data.Vector.Generic         as GV
 import qualified Data.Vector.Generic.Mutable as GVM
 import           Text.Read
 
------------------------------ Angles and Angular quantities -----------------------
-
--- | An abstract angle. Internally, angles are represented as a 64-bit
--- integer with each unit contribute 1/2^64 fraction of a complete
--- circle. This means that angles are accurate up to a resolution of 2
--- π / 2^64 radians. Angles form a group under the angular addition
--- and the fact that these are represented as integers means one can
--- expect high speed accurate angle arithmetic.
---
--- When expressing angles one can use a more convenient notation:
---
--- > myAngle   = degree 21.71167
--- > yourAngle = degree 21 <> minute 42 <> second 42
---
-newtype Angle = Angle {unAngle :: Int64} deriving (Enum, Eq, Ord, Unbox, Show, Read, Bits)
-
-instance Semigroup Angle where
-  (<>)  (Angle x)  (Angle y) = Angle $ x + y
-
-instance Monoid Angle where
-  mempty  = Angle 0
-  mappend = (<>)
-  mconcat = Angle . sum . map unAngle
-
-instance Group Angle where
-  invert (Angle x) = Angle $ negate x
-
-instance Bounded Angle where
-  maxBound = Angle maxBound
-  minBound = Angle minBound
-
--- | Express angle in degrees.
-degree :: Rational -> Angle
-degree = Angle  . fromInteger  . round . (*scale)
-  where scale = (2^(64:: Int)) % 360
-
--- | Express angle in minutes.
-minute :: Rational -> Angle
-minute = degree . (*scale)
-  where scale = 1 % 60
-
--- | Express angle in seconds.
-second :: Rational -> Angle
-second = degree . (*scale)
-    where scale = 1 % 3600
-
--- | Express angle in radians
-radian  :: Double -> Angle
-radian  = Angle . round . (*scale)
-  where scale = (2^(63:: Int)) / pi
-
-
----------------------- Decimal representation of angle ----------------------------------
-
--- | Measure angle in degrees. This conversion may lead to loss of
--- precision.
-toDegree :: Fractional r => Angle -> r
-toDegree  = fromRational  . (*conv) . toRational . unAngle
-  where conv = 360 % (2^(64  :: Int))
-
--- | Measure angle in radians. This conversion may lead to loss of
--- precision.
-toRadian :: Angle -> Double
-toRadian = (*conv) . fromIntegral . unAngle
-  where conv = pi / (2^(63:: Int))
-
-------------------- Making stuff suitable for unboxed vector. --------------------------
-
-newtype instance MVector s Angle = MAngV  (MVector s Int64)
-newtype instance Vector    Angle = AngV   (Vector Int64)
-
-
-instance GVM.MVector MVector Angle where
-  {-# INLINE basicLength #-}
-  {-# INLINE basicUnsafeSlice #-}
-  {-# INLINE basicOverlaps #-}
-  {-# INLINE basicUnsafeNew #-}
-  {-# INLINE basicUnsafeReplicate #-}
-  {-# INLINE basicUnsafeRead #-}
-  {-# INLINE basicUnsafeWrite #-}
-  {-# INLINE basicClear #-}
-  {-# INLINE basicSet #-}
-  {-# INLINE basicUnsafeCopy #-}
-  {-# INLINE basicUnsafeGrow #-}
-  basicLength          (MAngV v)          = GVM.basicLength v
-  basicUnsafeSlice i n (MAngV v)          = MAngV $ GVM.basicUnsafeSlice i n v
-  basicOverlaps (MAngV v1) (MAngV v2)     = GVM.basicOverlaps v1 v2
-
-  basicUnsafeRead  (MAngV v) i            = Angle `liftM` GVM.basicUnsafeRead v i
-  basicUnsafeWrite (MAngV v) i (Angle x)  = GVM.basicUnsafeWrite v i x
-
-  basicClear (MAngV v)                    = GVM.basicClear v
-  basicSet   (MAngV v)         (Angle x)  = GVM.basicSet v x
-
-  basicUnsafeNew n                        = MAngV `liftM` GVM.basicUnsafeNew n
-  basicUnsafeReplicate n     (Angle x)    = MAngV `liftM` GVM.basicUnsafeReplicate n x
-  basicUnsafeCopy (MAngV v1) (MAngV v2)   = GVM.basicUnsafeCopy v1 v2
-  basicUnsafeGrow (MAngV v)   n           = MAngV `liftM` GVM.basicUnsafeGrow v n
-
-#if MIN_VERSION_vector(0,11,0)
-  basicInitialize (MAngV v)               = GVM.basicInitialize v
-#endif
-
-instance GV.Vector Vector Angle where
-  {-# INLINE basicUnsafeFreeze #-}
-  {-# INLINE basicUnsafeThaw #-}
-  {-# INLINE basicLength #-}
-  {-# INLINE basicUnsafeSlice #-}
-  {-# INLINE basicUnsafeIndexM #-}
-  {-# INLINE elemseq #-}
-  basicUnsafeFreeze (MAngV v)         = AngV  `liftM` GV.basicUnsafeFreeze v
-  basicUnsafeThaw (AngV v)            = MAngV `liftM` GV.basicUnsafeThaw v
-  basicLength (AngV v)                = GV.basicLength v
-  basicUnsafeSlice i n (AngV v)       = AngV $ GV.basicUnsafeSlice i n v
-  basicUnsafeIndexM (AngV v) i        = Angle   `liftM`  GV.basicUnsafeIndexM v i
-
-  basicUnsafeCopy (MAngV mv) (AngV v) = GV.basicUnsafeCopy mv v
-  elemseq _ (Angle x)                 = GV.elemseq (undefined :: Vector a) x
-
-------------------------------------- Latitude and Longitude ---------------------------------
-
+import           Naqsha.Geometry.Angle.Internal
 
 -- | The latitude of a point. Positive denotes North of Equator where
 -- as negative South.
 newtype Latitude = Latitude { unLat :: Angle } deriving (Eq, Ord, Bits)
-
 
 instance Show Latitude where
   show = show . (toDegree :: Angle -> Nano) . unLat
@@ -167,21 +44,57 @@ instance Read Latitude where
     where conv = lat . degree . (toRational :: Nano -> Rational)
 
 instance Bounded Latitude where
-  maxBound = lat $ degree 90
-  minBound = lat $ degree (-90)
+  maxBound = Latitude ninetyDegree
+  minBound = Latitude $ invert ninetyDegree
 
+
+instance Angular Latitude where
+  toAngle = unLat
 
 -- | Construct latitude out of an angle.
 lat :: Angle -> Latitude
 lat = Latitude . normLat
 
+-- | angle of 90°.
+ninetyDegree :: Angle
+ninetyDegree = setBit (Angle 0) 62
+
+
 
 -- | normalise latitude values.
 normLat :: Angle -> Angle
-normLat ang | degree (-90)  <= ang && ang < degree 90 = ang
-            | ang > degree 90                         = succ (maxBound  <> invert ang)
-            | otherwise                               = minBound <> invert ang
+normLat ang | mNinety <= ang && ang <= ninetyDegree = ang
+            | ang > ninetyDegree                    = maxBound <> invert ang
+            | otherwise                             = minBound <> invert ang
+            where mNinety = invert ninetyDegree
 
+
+-- | Convert an angle to a northern latitude
+--
+-- > tropicOfCancer = north $ degree 23.5
+--
+north :: Angle -> Latitude
+north = lat
+
+-- | Convert an angle to a southern latitude.
+--
+-- >  tropicOfCapricon = south $ degree 23.5
+--
+south :: Angle -> Latitude
+south = lat . invert
+
+
+-- | The latitude of equator.
+equator :: Latitude
+equator = lat $ degree 0
+
+-- | The latitude corresponding to the Tropic of Cancer.
+tropicOfCancer :: Latitude
+tropicOfCancer = north $ degree 23.5
+
+-- | The latitude corresponding to the Tropic of Capricon
+tropicOfCapricon :: Latitude
+tropicOfCapricon = south $ degree 23.5
 
 -------------------------- Longitude ------------------------------------------
 
@@ -203,6 +116,28 @@ instance Read Longitude where
     where conv  = lon . degree . (toRational :: Nano -> Rational)
 
 
+instance Angular Longitude where
+  toAngle = unLong
+
+
+-- | Convert angle to an eastern longitude.
+--
+-- > kanpurLongitude = east $ degree 80.3461
+--
+east :: Angle -> Longitude
+east = lon
+
+-- | Convert angle to a western longitude
+--
+-- > newyorkLongitude = west $ degree 74.0059
+--
+west :: Angle -> Longitude
+west = lon . invert
+
+-- | The zero longitude.
+greenwich :: Longitude
+greenwich = lon $ degree 0
+
 --------------------------- Internal helper functions ------------------------
 
 
@@ -212,9 +147,6 @@ newtype instance Vector    Latitude = LatV  (Vector Angle)
 
 newtype instance MVector s Longitude = MLongV (MVector s Angle)
 newtype instance Vector    Longitude = LongV  (Vector Angle)
-
-
--------------------- Instance for Angle --------------------------------------------
 
 
 -------------------- Instance for latitude --------------------------------------------
@@ -315,3 +247,90 @@ instance GV.Vector Vector Longitude where
 
   basicUnsafeCopy (MLongV mv) (LongV v) = GV.basicUnsafeCopy mv v
   elemseq _ (Longitude x)               = GV.elemseq (undefined :: Vector a) x
+
+
+------------------- The geometric coordinates. -----------------
+
+-- | The coordinates of a point on the earth's surface.
+data LatLon = LatLon {-# UNPACK #-} !Latitude
+                     {-# UNPACK #-} !Longitude
+         deriving Show
+
+
+-- | The North pole
+northPole :: LatLon
+northPole = LatLon maxBound $ lon $ degree 0
+
+-- | The South pole
+southPole :: LatLon
+southPole = LatLon minBound $ lon $ degree 0
+
+instance Eq LatLon where
+  (==) (LatLon xlat xlong) (LatLon ylat ylong)
+    | xlat == maxBound = ylat == maxBound  -- longitude irrelevant for north pole
+    | xlat == minBound = ylat == minBound  -- longitude irrelevant for south pole
+    | otherwise     = xlat == ylat && xlong == ylong
+
+-- | An interval.
+data Interval a = Interval { start :: a
+                           , end   :: a
+                           }
+
+-- | A rectangle on the globe.
+data Rect = Rect (Interval Latitude) (Interval Longitude)
+
+----------------------------- Vector Instance for LatLon ---------------------------------------------
+
+
+newtype instance MVector s LatLon = MLatLonV (MVector s (Angle,Angle))
+newtype instance Vector    LatLon = LatLonV  (Vector    (Angle,Angle))
+
+
+instance GVM.MVector MVector LatLon where
+  {-# INLINE basicLength          #-}
+  {-# INLINE basicUnsafeSlice     #-}
+  {-# INLINE basicOverlaps        #-}
+  {-# INLINE basicUnsafeNew       #-}
+  {-# INLINE basicUnsafeReplicate #-}
+  {-# INLINE basicUnsafeRead      #-}
+  {-# INLINE basicUnsafeWrite     #-}
+  {-# INLINE basicClear           #-}
+  {-# INLINE basicSet             #-}
+  {-# INLINE basicUnsafeCopy      #-}
+  {-# INLINE basicUnsafeGrow      #-}
+  basicLength          (MLatLonV v)         = GVM.basicLength v
+  basicUnsafeSlice i n (MLatLonV v)         = MLatLonV $ GVM.basicUnsafeSlice i n v
+  basicOverlaps (MLatLonV v1) (MLatLonV v2) = GVM.basicOverlaps v1 v2
+
+  basicUnsafeRead  (MLatLonV v) i           = do (x,y) <- GVM.basicUnsafeRead v i
+                                                 return $ LatLon (Latitude x) $ Longitude y
+  basicUnsafeWrite (MLatLonV v) i (LatLon x y) = GVM.basicUnsafeWrite v i (unLat x, unLong y)
+
+  basicClear (MLatLonV v)                      = GVM.basicClear v
+  basicSet   (MLatLonV v)         (LatLon x y) = GVM.basicSet v (unLat x, unLong y)
+
+  basicUnsafeNew n                       = MLatLonV `liftM` GVM.basicUnsafeNew n
+  basicUnsafeReplicate n   (LatLon x y)  = MLatLonV `liftM` GVM.basicUnsafeReplicate n (unLat x, unLong y)
+  basicUnsafeCopy (MLatLonV v1) (MLatLonV v2)  = GVM.basicUnsafeCopy v1 v2
+  basicUnsafeGrow (MLatLonV v)   n             = MLatLonV `liftM` GVM.basicUnsafeGrow v n
+
+#if MIN_VERSION_vector(0,11,0)
+  basicInitialize (MLatLonV v)              = GVM.basicInitialize v
+#endif
+
+instance GV.Vector Vector LatLon where
+  {-# INLINE basicUnsafeFreeze #-}
+  {-# INLINE basicUnsafeThaw #-}
+  {-# INLINE basicLength #-}
+  {-# INLINE basicUnsafeSlice #-}
+  {-# INLINE basicUnsafeIndexM #-}
+  {-# INLINE elemseq #-}
+  basicUnsafeFreeze (MLatLonV v)         = LatLonV  `liftM` GV.basicUnsafeFreeze v
+  basicUnsafeThaw (LatLonV v)            = MLatLonV `liftM` GV.basicUnsafeThaw v
+  basicLength (LatLonV v)                = GV.basicLength v
+  basicUnsafeSlice i n (LatLonV v)       = LatLonV $ GV.basicUnsafeSlice i n v
+  basicUnsafeIndexM (LatLonV v) i        = do (x,y) <- GV.basicUnsafeIndexM v i
+                                              return $ LatLon (Latitude x) $ Longitude y
+
+  basicUnsafeCopy (MLatLonV mv) (LatLonV v) = GV.basicUnsafeCopy mv v
+  elemseq _ (LatLon x y)                    = GV.elemseq (undefined :: Vector a) (unLat x, unLong y)
