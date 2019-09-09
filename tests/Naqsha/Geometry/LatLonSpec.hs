@@ -31,7 +31,7 @@ inRange (mi,mx) descr prop_test = it msg $ QC.forAll pair prop_test
 
 -- | The epsilon neighbour Hood.
 epsilon :: Monad m => Series m Angle
-epsilon = fmap (Angle .  SC.getNonNegative) $  limit 256 series
+epsilon = Angle .  SC.getNonNegative <$>  limit 256 series
 
 getLatAngle :: LatLon -> Angle
 getLatAngle (LatLon x _) = unLat x
