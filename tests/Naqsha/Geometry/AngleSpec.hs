@@ -7,7 +7,7 @@ import Test.Hspec
 import Test.Hspec.QuickCheck
 
 import Naqsha.Geometry
-import Naqsha.Arbitrary ()
+import Naqsha.Instances ()
 
 {-# ANN spec "Hlint: ignore Monoid law, right identity" #-}
 {-# ANN spec "Hlint: ignore Monoid law, left identity" #-}

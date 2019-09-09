@@ -74,14 +74,16 @@ test-Suite test
   build-depends:
                , HUnit                          >= 1.2
                , QuickCheck                     >= 2.4
+               , smallcheck
                , hspec
+               , hspec-smallcheck
                , hspec-discover
                --
                --   This package
                --
                , geospatial
 
-  other-modules: Naqsha.Arbitrary
+  other-modules: Naqsha.Instances
                , Naqsha.Geometry.AngleSpec
                , Naqsha.Geometry.LatLonSpec
                , Naqsha.Geometry.GeoHashSpec

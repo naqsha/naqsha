@@ -11,8 +11,7 @@ import Test.Hspec
 import Test.Hspec.QuickCheck
 
 import Naqsha.Geometry
-import Naqsha.Arbitrary()
-import Naqsha.Geometry.LatLon.Internal
+import Naqsha.Instances()
 
 approxEq :: LatLon -> LatLon -> Bool
 approxEq (LatLon x1 y1) (LatLon x2 y2) = abs dx <= err && abs dy <= err
