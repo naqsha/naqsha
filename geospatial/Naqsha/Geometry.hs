@@ -12,7 +12,7 @@ module Naqsha.Geometry
 
        -- * Distance calculation.
        -- $distance$
-       
+
        -- * Internal details
        -- $internals$
 
@@ -65,7 +65,7 @@ import Naqsha.Geometry.GeoHash
 -- The show and read instance of the `Latitude` and `Longitude` types
 -- uses degrees for displaying and reading respectively. Show and Read
 -- instances can express these quantities up to Nano degree precision.
--- 
+--
 -- == Convention on sign.
 --
 -- For latitudes, positive means north of the equator and negative
@@ -101,4 +101,3 @@ import Naqsha.Geometry.GeoHash
 --
 -- ["Naqsha.Geometry.Spherical": ] Assume a spherical model of the
 -- globe. Distance is calculated using the haversine formula.
-
