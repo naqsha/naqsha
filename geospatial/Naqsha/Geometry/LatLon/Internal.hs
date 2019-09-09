@@ -22,7 +22,7 @@ module Naqsha.Geometry.LatLon.Internal
   ) where
 
 import           Control.Monad               ( liftM )
-import           Data.Bits                   ( Bits  )
+import           Data.Bits
 import           Data.Group                
 import           Data.Fixed
 import           Data.Vector.Unboxed         ( MVector(..), Vector)
@@ -44,8 +44,8 @@ instance Read Latitude where
     where conv = lat . degree . (toRational :: Nano -> Rational)
 
 instance Bounded Latitude where
-  maxBound = lat $ degree 90
-  minBound = lat $ degree (-90)
+  maxBound = Latitude ninetyDegree
+  minBound = Latitude $ invert ninetyDegree
 
 
 instance Angular Latitude where
@@ -55,14 +55,18 @@ instance Angular Latitude where
 lat :: Angle -> Latitude
 lat = Latitude . normLat
 
+-- | angle of 90°.
+ninetyDegree :: Angle
+ninetyDegree = setBit (Angle 0) 62
+
+
 
 -- | normalise latitude values.
 normLat :: Angle -> Angle
-normLat ang | degree (-90)  <= ang && ang < degree 90 = ang
-            | ang > degree 90                         = succ (maxBound  <> invert ang)
-            | otherwise                               = minBound <> invert ang
-
-
+normLat ang | mNinety <= ang && ang <= ninetyDegree = ang
+            | ang > ninetyDegree                    = maxBound <> invert ang
+            | otherwise                             = minBound <> invert ang
+            where mNinety = invert ninetyDegree
 
 
 -- | Convert an angle to a northern latitude
