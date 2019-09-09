@@ -30,9 +30,9 @@ import qualified Data.Vector.Generic.Mutable as GVM
 ----------------------------- Angles and Angular quantities -----------------------
 
 -- | An abstract angle. Internally, angles are represented as a 64-bit
--- integer with each unit contribute 1/2^64 fraction of a complete
+-- integer with each unit contribute 1/2⁶⁴ fraction of a complete
 -- circle. This means that angles are accurate up to a resolution of 2
--- π / 2^64 radians. Angles form a group under the angular addition
+-- π / 2⁶⁴ radians. Angles form a group under the angular addition
 -- and the fact that these are represented as integers means one can
 -- expect high speed accurate angle arithmetic.
 --
