@@ -4,25 +4,55 @@ module Naqsha.Geometry.LatLonSpec where
 import Control.Applicative ( (<$>), (<*>) )
 import Data.Monoid
 import Data.Fixed
-import Test.QuickCheck
+import Data.Group
+import Test.QuickCheck        as QC
 import Test.Hspec
 import Test.Hspec.QuickCheck
+import Test.Hspec.SmallCheck  as SC
+import Test.SmallCheck        as SC
+import Test.SmallCheck.Series as SC
+
 
 import Naqsha.Geometry
-import Naqsha.Arbitrary ()
+import Naqsha.Geometry.Angle.Internal
+import Naqsha.Instances ()
 
-inRange :: Testable prop
-        => (Angle, Angle) -- ^ Range
+inRange :: (Angle, Angle) -- ^ Range
         -> String         -- ^ description
-        -> ((Angle,Angle) -> prop)
+        -> ((Angle,Angle) -> Bool)
         -> Spec
-inRange (mi,mx) descr prop_test = it msg $ forAll pair prop_test
+inRange (mi,mx) descr prop_test = it msg $ QC.forAll pair prop_test
   where pair  = (,) <$> gen <*> gen
         msg   = "in range " ++ show (toNano mi,toNano mx) ++ ": " ++ descr
         gen   =  toEnum <$> choose (fromEnum mi, fromEnum mx)
 
         toNano :: Angle -> Nano
         toNano = toDegree
+
+-- | The epsilon neighbour Hood.
+epsilon :: Monad m => Series m Angle
+epsilon = fmap (Angle .  SC.getNonNegative) $  limit 256 series
+
+getLatAngle :: LatLon -> Angle
+getLatAngle (LatLon x _) = unLat x
+
+minAtSouthPole :: Spec
+minAtSouthPole = it "have a minima at south pole"
+                 $ SC.property
+                 $ over epsilon
+                 $ \ eps
+                   -> isIncreasing (ang, ang <> eps) &&
+                      isDecreasing (ang <> invert eps, ang)
+  where ang = getLatAngle southPole
+
+maxAtNorthPole :: Spec
+maxAtNorthPole = it "have a maxima at north pole"
+                 $ SC.property
+                 $ over epsilon
+                 $ \ eps
+                   -> isDecreasing (ang, ang <> eps) &&
+                      isIncreasing (ang <> invert eps, ang)
+  where ang = getLatAngle northPole
 
 isIncreasing :: (Angle, Angle) -> Bool
 isIncreasing (x , y)
@@ -56,6 +86,9 @@ spec :: Spec
 spec = do
 
   describe "latitudes" $ do
+
+    minAtSouthPole
+    maxAtNorthPole
 
     inRange (degree (-90),  degree 90)    "increases monotonically" isIncreasing
     inRange (degree 90 ,  maxBound)     "decreases monotonically"   isDecreasing
