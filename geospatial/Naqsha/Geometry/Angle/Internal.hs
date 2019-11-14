@@ -7,7 +7,7 @@
 -- angles. One should use this only if absolutely required as this
 -- breaks type safety and the interface is subject to change.
 module Naqsha.Geometry.Angle.Internal
-  ( Angle(..)
+  ( Angle(..), resolution
   , degree , minute, second
   , radian
   , toDegree, toRadian
@@ -41,6 +41,11 @@ import qualified Data.Vector.Generic.Mutable as GVM
 -- > yourAngle = degree 21 <> minute 42 <> second 42
 --
 newtype Angle = Angle {unAngle :: Int64} deriving (Enum, Eq, Ord, Unbox, Show, Read, Bits)
+
+
+-- | The smallest non-zero positive angle that can be represented in the library.
+resolution :: Angle
+resolution = Angle 1
 
 instance Semigroup Angle where
   (<>)  (Angle x)  (Angle y) = Angle $ x + y
