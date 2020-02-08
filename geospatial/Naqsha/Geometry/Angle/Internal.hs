@@ -14,7 +14,6 @@ module Naqsha.Geometry.Angle.Internal
   , Angular(..)
   ) where
 
-import           Control.Monad               ( liftM )
 import           Data.Bits                   ( Bits  )
 import           Data.Group
 import           Data.Int
@@ -124,16 +123,16 @@ instance GVM.MVector MVector Angle where
   basicUnsafeSlice i n (MAngV v)          = MAngV $ GVM.basicUnsafeSlice i n v
   basicOverlaps (MAngV v1) (MAngV v2)     = GVM.basicOverlaps v1 v2
 
-  basicUnsafeRead  (MAngV v) i            = Angle `liftM` GVM.basicUnsafeRead v i
+  basicUnsafeRead  (MAngV v) i            = Angle <$> GVM.basicUnsafeRead v i
   basicUnsafeWrite (MAngV v) i (Angle x)  = GVM.basicUnsafeWrite v i x
 
   basicClear (MAngV v)                    = GVM.basicClear v
   basicSet   (MAngV v)         (Angle x)  = GVM.basicSet v x
 
-  basicUnsafeNew n                        = MAngV `liftM` GVM.basicUnsafeNew n
-  basicUnsafeReplicate n     (Angle x)    = MAngV `liftM` GVM.basicUnsafeReplicate n x
+  basicUnsafeNew n                        = MAngV <$> GVM.basicUnsafeNew n
+  basicUnsafeReplicate n     (Angle x)    = MAngV <$> GVM.basicUnsafeReplicate n x
   basicUnsafeCopy (MAngV v1) (MAngV v2)   = GVM.basicUnsafeCopy v1 v2
-  basicUnsafeGrow (MAngV v)   n           = MAngV `liftM` GVM.basicUnsafeGrow v n
+  basicUnsafeGrow (MAngV v)   n           = MAngV <$> GVM.basicUnsafeGrow v n
 
 #if MIN_VERSION_vector(0,11,0)
   basicInitialize (MAngV v)               = GVM.basicInitialize v
@@ -146,11 +145,11 @@ instance GV.Vector Vector Angle where
   {-# INLINE basicUnsafeSlice #-}
   {-# INLINE basicUnsafeIndexM #-}
   {-# INLINE elemseq #-}
-  basicUnsafeFreeze (MAngV v)         = AngV  `liftM` GV.basicUnsafeFreeze v
-  basicUnsafeThaw (AngV v)            = MAngV `liftM` GV.basicUnsafeThaw v
+  basicUnsafeFreeze (MAngV v)         = AngV  <$> GV.basicUnsafeFreeze v
+  basicUnsafeThaw (AngV v)            = MAngV <$> GV.basicUnsafeThaw v
   basicLength (AngV v)                = GV.basicLength v
   basicUnsafeSlice i n (AngV v)       = AngV $ GV.basicUnsafeSlice i n v
-  basicUnsafeIndexM (AngV v) i        = Angle   `liftM`  GV.basicUnsafeIndexM v i
+  basicUnsafeIndexM (AngV v) i        = Angle   <$>  GV.basicUnsafeIndexM v i
 
   basicUnsafeCopy (MAngV mv) (AngV v) = GV.basicUnsafeCopy mv v
   elemseq _ (Angle x)                 = GV.elemseq (undefined :: Vector a) x
