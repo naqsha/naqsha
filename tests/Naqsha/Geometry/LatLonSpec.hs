@@ -90,6 +90,9 @@ spec = do
     minAtSouthPole
     maxAtNorthPole
 
+    -- TODO: Make these tests exhaustive by using small check. One
+    -- disadvantage could be that the tests take too much time as
+    -- it will range over 2⁶³ values.
     inRange (degree (-90),  degree 90)    "increases monotonically" isIncreasing
     inRange (degree 90 ,  maxBound)     "decreases monotonically"   isDecreasing
     inRange (minBound , degree (-90)) "decreases monotonically"     isDecreasing
