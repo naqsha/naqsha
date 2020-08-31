@@ -1,4 +1,14 @@
--- | This module implements the geohash encoding of geo-locations.
+
+-- |
+--
+-- Module      : Naqsha.Geometry.GeoHash
+-- Description : Implementation of the GeoHash standard
+-- Copyright   : (c) Piyush P Kurur, 2017, 2019
+-- License     : Apache-2.0 OR BSD-3-Clause
+-- Maintainer  : Piyush P Kurur <ppk@iitpkd.ac.in>
+-- Stability   : experimental
+--
+-- This module implements the geohash encoding of geo-locations.
 -- https://en.wikipedia.org/wiki/Geohash. To try out geohash encoding
 -- on web visit http://geohash.org
 

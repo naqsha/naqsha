@@ -2,9 +2,16 @@
 {-# LANGUAGE MultiParamTypeClasses      #-}
 {-# LANGUAGE TypeFamilies               #-}
 
--- | The internal module that exposes the internal representation of
--- angles. One should use this only if absolutely required as this
--- breaks type safety and the interface is subject to change.
+-- |
+--
+-- Module      : Naqsha.Geometry.Angle.Internal
+-- Description : Internal module containing the definition of Angles
+-- Copyright   : (c) Piyush P Kurur, 2019, 2020
+-- License     : Apache-2.0 OR BSD-3-Clause
+-- Maintainer  : Piyush P Kurur <ppk@iitpkd.ac.in>
+-- Stability   : experimental
+--
+
 module Naqsha.Geometry.Angle.Internal
   ( Angle(..), resolution
   , degree , minute, second

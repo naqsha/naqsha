@@ -2,8 +2,15 @@
 {-# LANGUAGE MultiParamTypeClasses      #-}
 {-# LANGUAGE TypeFamilies               #-}
 
--- | The internal module that exposes the latitude and longitude
--- types. Import it only if absolutely required.
+-- |
+--
+-- Module      : Naqsha.Geometry.LatLon.Internal
+-- Description : Internal module containing Latitude and Logitude
+-- Copyright   : (c) Piyush P Kurur, 2019, 2020
+-- License     : Apache-2.0 OR BSD-3-Clause
+-- Maintainer  : Piyush P Kurur <ppk@iitpkd.ac.in>
+-- Stability   : experimental
+--
 
 module Naqsha.Geometry.LatLon.Internal
   ( Latitude(..)

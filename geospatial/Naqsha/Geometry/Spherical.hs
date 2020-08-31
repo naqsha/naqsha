@@ -1,5 +1,12 @@
--- | Geometric operations on earth surface assuming that earth is a
--- sphere of radius 6371008 m.
+-- |
+--
+-- Module      : Naqsha.Geometry.Spherical
+-- Description : Earth geometry assuming earth is a sphere.
+-- Copyright   : (c) Piyush P Kurur, 2017, 2019
+-- License     : Apache-2.0 OR BSD-3-Clause
+-- Maintainer  : Piyush P Kurur <ppk@iitpkd.ac.in>
+-- Stability   : experimental
+--
 --
 -- TODO: Port some calculations from
 -- http://www.movable-type.co.uk/scripts/latlong.html
