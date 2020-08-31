@@ -31,8 +31,8 @@ module Naqsha.Geometry
 import Naqsha.Geometry.Angle.Internal hiding ( Angle )
 import Naqsha.Geometry.Angle.Internal        ( Angle )
 
-import Naqsha.Geometry.LatLon.Internal hiding (Latitude, Longitude)
-import Naqsha.Geometry.LatLon.Internal        (Latitude, Longitude)
+import Naqsha.Geometry.LatLon.Internal hiding (Latitude, Longitude, LatLon)
+import Naqsha.Geometry.LatLon.Internal        (Latitude, Longitude, LatLon)
 
 
 import Naqsha.Geometry.GeoHash
