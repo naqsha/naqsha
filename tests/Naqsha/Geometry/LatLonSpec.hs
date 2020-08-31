@@ -1,10 +1,8 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 module Naqsha.Geometry.LatLonSpec where
 
-import Control.Applicative ( (<$>), (<*>) )
-import Data.Monoid
+import Naqsha.Prelude
 import Data.Fixed
-import Data.Group
 import Test.QuickCheck        as QC
 import Test.Hspec
 import Test.Hspec.QuickCheck

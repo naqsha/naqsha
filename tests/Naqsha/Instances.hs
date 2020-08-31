@@ -1,4 +1,3 @@
-{-# LANGUAGE CPP                  #-}
 {-# LANGUAGE DataKinds            #-}
 {-# LANGUAGE FlexibleInstances    #-}
 {-# LANGUAGE Rank2Types           #-}
@@ -8,7 +7,6 @@
 
 module Naqsha.Instances where
 
-import Control.Applicative ( (<$>), (<*>) )
 import Test.QuickCheck
 import Test.SmallCheck.Series
 

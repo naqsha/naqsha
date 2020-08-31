@@ -1,8 +1,7 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 module Naqsha.Geometry.AngleSpec where
 
-import Data.Monoid
-import Data.Group
+import Naqsha.Prelude
 import Test.Hspec
 import Test.Hspec.QuickCheck
 

@@ -2,9 +2,7 @@
 {-# LANGUAGE Rank2Types          #-}
 module Naqsha.Geometry.GeoHashSpec where
 
-import Data.Bits
-import Data.Group
-import Data.Monoid
+import Naqsha.Prelude
 import Data.String
 
 import Test.Hspec
