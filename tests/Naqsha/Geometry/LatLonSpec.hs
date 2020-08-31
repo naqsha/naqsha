@@ -13,6 +13,7 @@ import Test.SmallCheck.Series as SC
 
 import Naqsha.Geometry
 import Naqsha.Geometry.Angle.Internal
+import Naqsha.Geometry.LatLon.Internal
 import Naqsha.Instances ()
 
 inRange :: (Angle, Angle) -- ^ Range

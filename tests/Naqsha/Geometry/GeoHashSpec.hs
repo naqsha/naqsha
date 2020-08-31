@@ -9,6 +9,7 @@ import Test.Hspec
 import Test.Hspec.QuickCheck
 
 import Naqsha.Geometry
+import Naqsha.Geometry.LatLon.Internal
 import Naqsha.Instances()
 
 approxEq :: LatLon -> LatLon -> Bool
