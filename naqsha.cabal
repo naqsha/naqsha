@@ -43,9 +43,16 @@ common defaults
 
 ---------------------- Components --------------------------------------
 
+library prelude
+  import: defaults
+  visibility: private
+  hs-source-dirs: prelude
+  exposed-modules: Naqsha.Prelude
+
 library geospatial
   import: defaults
   visibility: public
+  build-depends: prelude
   hs-source-dirs: geospatial
   exposed-modules: Naqsha.Geometry
                  , Naqsha.Geometry.Angle.Internal
@@ -82,7 +89,7 @@ test-Suite test
                --   This package
                --
                , geospatial
-
+               , prelude
   other-modules: Naqsha.Instances
                , Naqsha.Geometry.AngleSpec
                , Naqsha.Geometry.LatLonSpec
