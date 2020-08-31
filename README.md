@@ -1,6 +1,7 @@
 Naqsha
 ------
 
+[![Apache-2.0 OR BSD-3-Clause][shields-license]](#legal)
 [![Build Staus][travis-status]][travis-naqsha]
 [![Hackage][hackage-badge]][hackage]
 [![Hackage Dependencies][hackage-deps-badge]][hackage-deps]
@@ -47,3 +48,6 @@ LICENSE file.
 [hackage-badge]: <https://img.shields.io/hackage/v/naqsha.svg>
 [hackage-deps-badge]: <https://img.shields.io/hackage-deps/v/naqsha.svg>
 [hackage-deps]: <http://packdeps.haskellers.com/feed?needle=naqsha>
+
+
+[shields-license]: <https://img.shields.io/badge/License-Apache--2.0%20OR%20BSD--3--Clause-informational.svg> "Licensed under Appach-2.0 OR BSD-3-Clause"
