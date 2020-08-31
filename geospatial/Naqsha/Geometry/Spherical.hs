@@ -20,6 +20,7 @@ module Naqsha.Geometry.Spherical
 
 import Naqsha.Prelude
 import Naqsha.Geometry
+import Naqsha.Geometry.LatLon.Internal
 
 --------------------- Distance calculation -------------------------------------
 
