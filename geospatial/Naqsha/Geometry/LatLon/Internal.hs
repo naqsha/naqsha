@@ -1,5 +1,4 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
-{-# LANGUAGE CPP                        #-}
 {-# LANGUAGE MultiParamTypeClasses      #-}
 {-# LANGUAGE TypeFamilies               #-}
 
@@ -21,8 +20,7 @@ module Naqsha.Geometry.LatLon.Internal
   , Interval(..), Rect(..)
   ) where
 
-import           Data.Bits
-import           Data.Group                
+import           Naqsha.Prelude
 import           Data.Fixed
 import           Data.Vector.Unboxed         ( MVector(..), Vector)
 import qualified Data.Vector.Generic         as GV
@@ -176,10 +174,7 @@ instance GVM.MVector MVector Latitude where
   basicUnsafeReplicate n     (Latitude x)     = MLatV <$> GVM.basicUnsafeReplicate n x
   basicUnsafeCopy (MLatV v1) (MLatV v2)       = GVM.basicUnsafeCopy v1 v2
   basicUnsafeGrow (MLatV v)   n               = MLatV <$> GVM.basicUnsafeGrow v n
-
-#if MIN_VERSION_vector(0,11,0)
   basicInitialize (MLatV v)                   = GVM.basicInitialize v
-#endif
 
 instance GV.Vector Vector Latitude where
   {-# INLINE basicUnsafeFreeze #-}
@@ -226,10 +221,8 @@ instance GVM.MVector MVector Longitude where
   basicUnsafeReplicate n     (Longitude x)     = MLongV <$> GVM.basicUnsafeReplicate n x
   basicUnsafeCopy (MLongV v1) (MLongV v2)      = GVM.basicUnsafeCopy v1 v2
   basicUnsafeGrow (MLongV v)   n               = MLongV <$> GVM.basicUnsafeGrow v n
-
-#if MIN_VERSION_vector(0,11,0)
   basicInitialize (MLongV v)                   = GVM.basicInitialize v
-#endif
+
 
 instance GV.Vector Vector Longitude where
   {-# INLINE basicUnsafeFreeze #-}
@@ -312,10 +305,7 @@ instance GVM.MVector MVector LatLon where
   basicUnsafeReplicate n   (LatLon x y)  = MLatLonV <$> GVM.basicUnsafeReplicate n (unLat x, unLong y)
   basicUnsafeCopy (MLatLonV v1) (MLatLonV v2)  = GVM.basicUnsafeCopy v1 v2
   basicUnsafeGrow (MLatLonV v)   n             = MLatLonV <$> GVM.basicUnsafeGrow v n
-
-#if MIN_VERSION_vector(0,11,0)
   basicInitialize (MLatLonV v)              = GVM.basicInitialize v
-#endif
 
 instance GV.Vector Vector LatLon where
   {-# INLINE basicUnsafeFreeze #-}

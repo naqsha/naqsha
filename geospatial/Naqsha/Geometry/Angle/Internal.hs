@@ -1,5 +1,4 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
-{-# LANGUAGE CPP                        #-}
 {-# LANGUAGE MultiParamTypeClasses      #-}
 {-# LANGUAGE TypeFamilies               #-}
 
@@ -14,13 +13,7 @@ module Naqsha.Geometry.Angle.Internal
   , Angular(..)
   ) where
 
-import           Data.Bits                   ( Bits  )
-import           Data.Group
-import           Data.Int
-#if !MIN_VERSION_base(4,11,0)
-import           Data.Monoid     hiding      ((<>))
-import           Data.Semigroup
-#endif
+import           Naqsha.Prelude
 import           GHC.Real
 import           Data.Vector.Unboxed         ( MVector(..), Vector, Unbox)
 import qualified Data.Vector.Generic         as GV
@@ -138,10 +131,8 @@ instance GVM.MVector MVector Angle where
   basicUnsafeReplicate n     (Angle x)    = MAngV <$> GVM.basicUnsafeReplicate n x
   basicUnsafeCopy (MAngV v1) (MAngV v2)   = GVM.basicUnsafeCopy v1 v2
   basicUnsafeGrow (MAngV v)   n           = MAngV <$> GVM.basicUnsafeGrow v n
-
-#if MIN_VERSION_vector(0,11,0)
   basicInitialize (MAngV v)               = GVM.basicInitialize v
-#endif
+
 
 instance GV.Vector Vector Angle where
   {-# INLINE basicUnsafeFreeze #-}

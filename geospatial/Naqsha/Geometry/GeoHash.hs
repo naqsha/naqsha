@@ -7,14 +7,12 @@ module Naqsha.Geometry.GeoHash
        ) where
 
 
-import           Data.Bits
+import           Naqsha.Prelude
+
 import qualified Data.ByteString as B
 import           Data.ByteString.Internal ( c2w, w2c      )
 import           Data.Char                ( ord           )
 import           Data.String
-import           Data.Monoid              ( (<>)          )
-import           Data.Word                (  Word8 )
-
 
 
 import Naqsha.Geometry.Angle.Internal
